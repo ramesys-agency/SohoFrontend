@@ -1,41 +1,46 @@
-// Fallback for using MaterialIcons on Android and web.
+// Fallback for using Ionicons on Android and web.
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { SymbolWeight } from "expo-symbols";
+import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
-import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
-
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
+ * Add your SF Symbols to Ionicons mappings here.
  */
 const MAPPING = {
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-} as IconMapping;
+  "house.fill": "home",
+  "paperplane.fill": "paper-plane",
+  "chevron.left.forwardslash.chevron.right": "code-slash",
+  "chevron.right": "chevron-forward",
+  "square.grid.2x2.fill": "grid",
+  "cart.fill": "bag-handle",
+  "heart.fill": "heart",
+  "person.fill": "person",
+} as const;
 
 /**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ * An icon component that uses native SF Symbols on iOS, and Ionicons on Android and web.
+ * This ensures a consistent look across platforms.
  */
 export function IconSymbol({
   name,
   size = 24,
   color,
   style,
+  focused,
 }: {
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
+  focused?: boolean;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const iconBaseName = MAPPING[name];
+  const iconName = focused ? iconBaseName : `${iconBaseName}-outline`;
+
+  return (
+    <Ionicons color={color} size={size} name={iconName as any} style={style} />
+  );
 }
