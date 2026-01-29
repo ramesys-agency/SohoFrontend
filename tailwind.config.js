@@ -8,7 +8,13 @@ module.exports = {
   ],
   presets: [require("nativewind/preset")],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Urbanist"],
+        Urbanist: ["Urbanist"],
+        Classyvogue: ["Classyvogue"],
+      },
+    },
   },
   plugins: [],
 };
