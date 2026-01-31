@@ -1,10 +1,10 @@
 import { StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function PaymentScreen() {
+export default function ForgotPasswordScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Payment</Text>
+      <Text style={styles.text}>Forgot Password</Text>
     </SafeAreaView>
   );
 }

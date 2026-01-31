@@ -17,6 +17,8 @@ const MAPPING = {
   "cart.fill": "bag-handle",
   "heart.fill": "heart",
   "person.fill": "person",
+  "chevron.left": "chevron-back",
+  "checkmark.circle.fill": "checkmark-circle",
 } as const;
 
 /**

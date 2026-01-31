@@ -1,10 +1,10 @@
 import { StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function OrdersScreen() {
+export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>My Orders</Text>
+      <Text style={styles.text}>Login</Text>
     </SafeAreaView>
   );
 }

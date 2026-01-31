@@ -1,10 +1,10 @@
 import { StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ProductDetailScreen() {
+export default function RegisterScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Product Detail</Text>
+      <Text style={styles.text}>Register</Text>
     </SafeAreaView>
   );
 }

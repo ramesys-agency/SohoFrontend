@@ -4,11 +4,8 @@ import { Image, StyleSheet, View } from "react-native";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
@@ -23,9 +20,9 @@ export default function TabLayout() {
         },
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 30,
-          borderTopRightRadius: 30,
-          height: 80,
+          borderTopLeftRadius: 25,
+          borderTopRightRadius: 25,
+          height: 115,
           paddingBottom: 20,
           paddingTop: 10,
           position: "absolute",
@@ -34,10 +31,10 @@ export default function TabLayout() {
           shadowColor: "#000000",
           shadowOffset: {
             width: 0,
-            height: -4,
+            height: -2,
           },
           shadowOpacity: 0.3,
-          shadowRadius: 10,
+          shadowRadius: 4,
         },
       }}
     >
