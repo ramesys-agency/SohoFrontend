@@ -4,9 +4,56 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 interface TopNavBarProps {
   title?: string;
+  showBackButton?: boolean;
+  onBackPress?: () => void;
 }
 
-const TopNavBar: React.FC<TopNavBarProps> = ({ title }) => {
+const TopNavBar: React.FC<TopNavBarProps> = ({
+  title,
+  showBackButton,
+  onBackPress,
+}) => {
+  const isSubPage = showBackButton || title;
+
+  if (isSubPage) {
+    return (
+      <View className="bg-white px-4 pb-2">
+        <View className="flex-row justify-between items-center pt-4">
+          <View className="w-10">
+            {showBackButton && (
+              <TouchableOpacity
+                onPress={onBackPress}
+                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+              >
+                <Feather name="chevron-left" size={24} color="black" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View className="flex-1 items-center">
+            <Text
+              className="text-4xl text-black"
+              style={{ fontFamily: "Classyvogue" }}
+            >
+              {title}
+            </Text>
+          </View>
+
+          <View className="flex-row gap-x-5 w-10 justify-end">
+            <TouchableOpacity activeOpacity={0.7}>
+              <Feather name="search" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.7} className="relative">
+              <Feather name="bell" size={24} color="black" />
+              <View className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Original Home Page Layout
   return (
     <View className="bg-white px-4 pb-2">
       <View className="flex-row justify-end items-center pt-4 pr-1">
@@ -25,7 +72,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ title }) => {
           className="text-8xl text-black"
           style={{ fontFamily: "Classyvogue" }}
         >
-          {title || "Soho"}
+          Soho
         </Text>
       </View>
     </View>

@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -86,12 +87,16 @@ const FEATURED_COLLECTIONS = [
 ];
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <TopNavBar />
       <ScrollView className="flex-1 mb-20" showsVerticalScrollIndicator={false}>
         <View className="py-4">
-          <SectionHeader title="See All" onSeeAllPress={() => {}} />
+          <SectionHeader
+            title="See All"
+            onSeeAllPress={() => navigation.navigate("Offers" as never)}
+          />
           <HeroBanner
             title="50-40% OFF"
             subtitle="Now in Mega Sells"

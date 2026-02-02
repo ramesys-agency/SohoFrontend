@@ -8,6 +8,7 @@ import { Image, View } from "react-native";
 
 // Screens
 import HomeScreen from "../screens/user/home/index";
+import OffersScreen from "../screens/user/home/offers";
 import ProductDetailScreen from "../screens/user/home/product-detail";
 import ProductListScreen from "../screens/user/home/product-list";
 
@@ -35,6 +36,7 @@ function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeIndex" component={HomeScreen} />
+      <Stack.Screen name="Offers" component={OffersScreen} />
       <Stack.Screen name="ProductList" component={ProductListScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
     </Stack.Navigator>
