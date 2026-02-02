@@ -19,6 +19,7 @@ const MAPPING = {
   "person.fill": "person",
   "chevron.left": "chevron-back",
   "checkmark.circle.fill": "checkmark-circle",
+  "arrow.down.right": "arrow-forward",
 } as const;
 
 /**
@@ -43,6 +44,14 @@ export function IconSymbol({
   const iconName = focused ? iconBaseName : `${iconBaseName}-outline`;
 
   return (
-    <Ionicons color={color} size={size} name={iconName as any} style={style} />
+    <Ionicons
+      color={color}
+      size={size}
+      name={iconName as any}
+      style={[
+        name === "arrow.down.right" ? { transform: [{ rotate: "45deg" }] } : {},
+        style,
+      ]}
+    />
   );
 }

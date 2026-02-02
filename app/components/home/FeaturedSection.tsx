@@ -1,4 +1,3 @@
-import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { Image, Text, View } from "react-native";
 
@@ -19,46 +18,57 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
     switch (variant) {
       case "collage":
         return (
-          <View className="mb-10">
-            <View className="flex-row h-72 mb-4">
-              <View className="flex-[2] mr-2">
-                <Image
-                  source={images[0]}
-                  className="w-full h-full rounded-2xl"
-                  resizeMode="cover"
-                />
-              </View>
-              <View className="flex-1">
-                {images[1] && (
-                  <View className="flex-1 mb-2">
-                    <Image
-                      source={images[1]}
-                      className="w-full h-full rounded-2xl"
-                      resizeMode="cover"
-                    />
-                  </View>
-                )}
-                {images[2] && (
-                  <View className="flex-1">
-                    <Image
-                      source={images[2]}
-                      className="w-full h-full rounded-2xl"
-                      resizeMode="cover"
-                    />
-                  </View>
-                )}
-              </View>
+          <View className="flex-row mb-10">
+            {/* Left side large image */}
+            <View className="flex-1 mr-4">
+              <Image
+                source={images[0]}
+                className="w-[160px] h-[260px] rounded-[2px]"
+                resizeMode="cover"
+              />
             </View>
-            <View className="px-1">
-              <Text
-                className="text-3xl text-black"
-                style={{ fontFamily: "Classyvogue" }}
-              >
-                {title}
-              </Text>
-              <Text className="text-gray-500 text-xs font-Urbanist mt-2 leading-relaxed">
-                {description}
-              </Text>
+
+            {/* Right side contents */}
+            <View className="flex-1">
+              <View>
+                <View className="flex-row">
+                  <View className="flex-1 mr-2 aspect-square">
+                    {images[1] && (
+                      <Image
+                        source={images[1]}
+                        className="w-[80px] h-[100px] rounded-[2px]"
+                        resizeMode="cover"
+                      />
+                    )}
+                  </View>
+                  <View className="flex-1 aspect-square">
+                    {images[2] && (
+                      <Image
+                        source={images[2]}
+                        className="w-[80px] h-[100px] rounded-[2px]"
+                        resizeMode="cover"
+                      />
+                    )}
+                  </View>
+                </View>
+
+                <View className="mt-8">
+                  <Image
+                    source={require("../../../assets/images/arrow-down-right.png")}
+                    className="w-5 h-5"
+                    resizeMode="cover"
+                  />
+                  <Text
+                    className="text-[20px] text-black leading-tight mt-4"
+                    style={{ fontFamily: "Classyvogue" }}
+                  >
+                    {title}
+                  </Text>
+                  <Text className="text-gray-500 text-[10px] font-Urbanist mt-2 leading-relaxed">
+                    {description}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         );
@@ -67,27 +77,26 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
           <View className="flex-row items-center mb-6">
             <View className="flex-1 mr-4">
               <View className="mb-2 w-8 h-8">
-                <ExpoImage
-                  source={require("../../../assets/images/ArrowDown.svg")}
-                  className="w-full h-full"
-                  contentFit="contain"
-                  style={{ transform: [{ rotate: "45deg" }] }}
+                <Image
+                  source={require("../../../assets/images/arrow-down-right.png")}
+                  className="w-5 h-5"
+                  resizeMode="cover"
                 />
               </View>
               <Text
-                className="text-3xl text-black leading-tight"
+                className="text-[20px] text-black leading-tight"
                 style={{ fontFamily: "Classyvogue" }}
               >
                 {title}
               </Text>
-              <Text className="text-gray-500 text-xs font-Urbanist mt-2 leading-relaxed">
+              <Text className="text-gray-500 text-[12px] font-Urbanist mt-2 leading-relaxed">
                 {description}
               </Text>
             </View>
             <View className="flex-1 h-80">
               <Image
                 source={images[0]}
-                className="w-full h-full rounded-2xl"
+                className="w-full h-full rounded-[2px]"
                 resizeMode="cover"
               />
             </View>
@@ -96,7 +105,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
       case "horizontal":
         return (
           <View className="mb-8">
-            <View className="h-64 rounded-2xl overflow-hidden mb-4">
+            <View className="h-64 rounded-[2px] overflow-hidden mb-4">
               <Image
                 source={images[0]}
                 className="w-full h-full"
@@ -105,19 +114,19 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
             </View>
             <View className="px-1">
               <View className="mb-2 w-8 h-8">
-                <ExpoImage
-                  source={require("../../../assets/images/ArrowDown.svg")}
-                  className="w-full h-full"
-                  contentFit="contain"
+                <Image
+                  source={require("../../../assets/images/arrow-down-right.png")}
+                  className="w-5 h-5"
+                  resizeMode="cover"
                 />
               </View>
               <Text
-                className="text-3xl text-black"
+                className="text-[20px] text-black"
                 style={{ fontFamily: "Classyvogue" }}
               >
                 {title}
               </Text>
-              <Text className="text-gray-500 text-xs font-Urbanist mt-1 leading-relaxed">
+              <Text className="text-gray-500 text-[14px] font-Urbanist mt-1 leading-relaxed">
                 {description}
               </Text>
             </View>
@@ -126,7 +135,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
       default: // large
         return (
           <View className="mb-10">
-            <View className="h-[450] rounded-2xl overflow-hidden mb-4">
+            <View className="h-[450] rounded-[2px] overflow-hidden mb-4">
               <Image
                 source={images[0]}
                 className="w-full h-full"
@@ -135,12 +144,12 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
             </View>
             <View className="px-1">
               <Text
-                className="text-4xl text-black"
+                className="text-[30px] text-black"
                 style={{ fontFamily: "Classyvogue" }}
               >
                 {title}
               </Text>
-              <Text className="text-gray-500 text-sm font-Urbanist mt-2 leading-relaxed">
+              <Text className="text-gray-500 text-[14px] font-Urbanist mt-2 leading-relaxed">
                 {description}
               </Text>
             </View>
