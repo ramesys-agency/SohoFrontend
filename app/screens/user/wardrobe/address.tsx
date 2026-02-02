@@ -1,14 +1,14 @@
 import { useNavigation } from "@react-navigation/native";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TopNavBar from "../../../components/TopNavBar";
+import SubHeader from "../../../components/SubHeader";
 
 export default function AddressScreen() {
   const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <TopNavBar
+      <SubHeader
         title="Address"
         showBackButton={true}
         showCategorySelector={false}

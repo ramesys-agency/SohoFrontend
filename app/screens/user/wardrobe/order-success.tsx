@@ -2,14 +2,14 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useNavigation } from "@react-navigation/native";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TopNavBar from "../../../components/TopNavBar";
+import SubHeader from "../../../components/SubHeader";
 
 export default function OrderSuccessScreen() {
   const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <TopNavBar
+      <SubHeader
         title="Success"
         showBackButton={false}
         showCategorySelector={false}

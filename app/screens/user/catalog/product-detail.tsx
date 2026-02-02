@@ -1,11 +1,11 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TopNavBar from "../../../components/TopNavBar";
+import SubHeader from "../../../components/SubHeader";
 
 export default function CatalogProductDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <TopNavBar
+      <SubHeader
         title="Catalog Detail"
         showBackButton={true}
         showCategorySelector={false}
