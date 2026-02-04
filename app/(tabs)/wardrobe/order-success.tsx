@@ -1,19 +1,13 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SubHeader from "../../../components/SubHeader";
+import SubHeader from "../../components/navbar/SubHeader";
 
 export default function OrderSuccessScreen() {
-  const navigation = useNavigation<any>();
-
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <SubHeader
-        title="Success"
-        showBackButton={false}
-        showCategorySelector={false}
-      />
+      <SubHeader title="Success" showBackButton={false} />
       <View className="flex-1 p-4 justify-center items-center">
         <IconSymbol name="checkmark.circle.fill" size={80} color="#10B981" />
         <Text className="text-3xl font-bold mt-4 mb-2">Order Success!</Text>
@@ -23,7 +17,7 @@ export default function OrderSuccessScreen() {
 
         <TouchableOpacity
           className="bg-black p-4 rounded-xl w-full items-center"
-          onPress={() => navigation.navigate("WardrobeIndex")}
+          onPress={() => router.push("/wardrobe")}
         >
           <Text className="text-white font-bold">Back to Wardrobe</Text>
         </TouchableOpacity>

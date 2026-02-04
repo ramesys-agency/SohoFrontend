@@ -1,18 +1,16 @@
-import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SubHeader from "../../../components/SubHeader";
+import SubHeader from "../../components/navbar/SubHeader";
 
 export default function WardrobeScreen() {
-  const navigation = useNavigation<any>();
-
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <SubHeader title="Wardrobe" showCategorySelector={false} />
+      <SubHeader title="Wardrobe" showBackButton={false} />
       <View className="flex-1 p-4">
         <TouchableOpacity
           className="bg-black p-4 rounded-xl items-center"
-          onPress={() => navigation.navigate("Address")}
+          onPress={() => router.push("/wardrobe/address")}
         >
           <Text className="text-white font-bold">Checkout (Address)</Text>
         </TouchableOpacity>

@@ -1,12 +1,12 @@
-import { useNavigation } from "@react-navigation/native";
+import TopNavBar from "@/app/components/navbar/TopNavBar";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TopNavBar from "../../../components/TopNavBar";
-import FeaturedSection from "../../../components/home/FeaturedSection";
-import HeroBanner from "../../../components/home/HeroBanner";
-import ProductCard from "../../../components/home/ProductCard";
-import SectionHeader from "../../../components/home/SectionHeader";
+import FeaturedSection from "../../components/home/FeaturedSection";
+import HeroBanner from "../../components/home/HeroBanner";
+import ProductCard from "../../components/home/ProductCard";
+import SectionHeader from "../../components/home/SectionHeader";
 
 const HERO_IMAGE = {
   uri: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=800&auto=format&fit=crop",
@@ -87,7 +87,6 @@ const FEATURED_COLLECTIONS = [
 ];
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <TopNavBar />
@@ -95,7 +94,7 @@ export default function HomeScreen() {
         <View className="py-4">
           <SectionHeader
             title="See All"
-            onSeeAllPress={() => navigation.navigate("Offers" as never)}
+            onSeeAllPress={() => router.push("/(tabs)/home/offers")}
           />
           <HeroBanner
             title="50-40% OFF"

@@ -1,9 +1,9 @@
-import SubHeader from "@/app/components/SubHeader";
+import SubHeader from "@/app/components/navbar/SubHeader";
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { OfferCard, OfferItem } from "../../../components/home/OfferCard";
+import { OfferCard, OfferItem } from "../../components/home/OfferCard";
 
 const OFFERS: OfferItem[] = [
   {

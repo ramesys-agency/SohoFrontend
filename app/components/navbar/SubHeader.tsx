@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import { NavigationContext } from "@react-navigation/native";
+import React, { useContext } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface SubHeaderProps {
@@ -14,12 +14,13 @@ const SubHeader: React.FC<SubHeaderProps> = ({
   showBackButton = false,
   onBackPress,
 }) => {
-  const navigation = useNavigation<any>();
+  // Safely access navigation context - it may not be available if not within NavigationContainer
+  const navigation = useContext(NavigationContext);
 
   const handleBackPress = () => {
     if (onBackPress) {
       onBackPress();
-    } else {
+    } else if (navigation?.canGoBack()) {
       navigation.goBack();
     }
   };
