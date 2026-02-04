@@ -7,12 +7,16 @@ interface SubHeaderProps {
   title: string;
   showBackButton?: boolean;
   onBackPress?: () => void;
+  hideSearch?: boolean;
+  hideNotification?: boolean;
 }
 
 const SubHeader: React.FC<SubHeaderProps> = ({
   title,
   showBackButton = false,
   onBackPress,
+  hideSearch = false,
+  hideNotification = false,
 }) => {
   // Safely access navigation context - it may not be available if not within NavigationContainer
   const navigation = useContext(NavigationContext);
@@ -48,12 +52,16 @@ const SubHeader: React.FC<SubHeaderProps> = ({
         </View>
 
         <View className="flex-row gap-x-5">
-          <TouchableOpacity activeOpacity={0.7}>
-            <Feather name="search" size={26} color="black" />
-          </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Feather name="bell" size={26} color="black" />
-          </TouchableOpacity>
+          {!hideSearch && (
+            <TouchableOpacity activeOpacity={0.7}>
+              <Feather name="search" size={26} color="black" />
+            </TouchableOpacity>
+          )}
+          {!hideNotification && (
+            <TouchableOpacity activeOpacity={0.7}>
+              <Feather name="bell" size={26} color="black" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>

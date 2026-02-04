@@ -23,6 +23,20 @@ const MAPPING = {
   trash: "trash",
   minus: "remove",
   plus: "add",
+  pencil: "create",
+  "list.bullet": "list",
+  "arrow.counterclockwise": "refresh",
+  creditcard: "card",
+  map: "location",
+  bell: "notifications",
+  moon: "moon",
+  "rectangle.portrait.and.arrow.right": "log-out",
+  person: "person",
+  "person.2": "people",
+  phone: "call",
+  envelope: "mail",
+  "figure.stand": "body",
+  "square.and.pencil": "create",
 } as const;
 
 /**
