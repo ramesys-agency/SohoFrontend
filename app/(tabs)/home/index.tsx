@@ -108,7 +108,11 @@ export default function HomeScreen() {
           <SectionHeader title="Best Sellers" onSeeAllPress={() => {}} />
           <View className="flex-row flex-wrap justify-between px-4">
             {PRODUCTS.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onPress={() => router.push(`/product/${product.id}`)}
+              />
             ))}
           </View>
         </View>

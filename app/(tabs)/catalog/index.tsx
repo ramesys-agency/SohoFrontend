@@ -1,5 +1,6 @@
 import SubHeader from "@/app/components/navbar/SubHeader";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -108,6 +109,7 @@ const banners = [
 
 export default function CatalogScreen() {
   const [activeCategory, setActiveCategory] = useState("women");
+  const router = useRouter();
 
   const segments = [
     { label: "Women", value: "women" },
@@ -119,9 +121,8 @@ export default function CatalogScreen() {
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
       <View>
         <SubHeader title="Catalog" />
-        <View className="pb-2"></View>
         <SegmentedControl
-          style={{ marginHorizontal: 16 }}
+          style={{ marginHorizontal: 16, marginBottom: 10 }}
           backgroundColor="#F3F3F3"
           values={segments.map((s) => s.label)}
           selectedIndex={segments.findIndex((s) => s.value === activeCategory)}
@@ -149,13 +150,32 @@ export default function CatalogScreen() {
               key={item.id}
               name={item.name}
               image={item.image}
-              onPress={() => {}}
+              onPress={() => {
+                router.push({
+                  pathname: "/(tabs)/catalog/[category]",
+                  params: {
+                    category: item.name.toLowerCase(),
+                    gender: activeCategory,
+                  },
+                });
+              }}
             />
           ))}
         </ScrollView>
 
         {/* Promotional Banner */}
-        <BannerCarousel banners={banners} />
+        <BannerCarousel
+          banners={banners}
+          onPress={(item) => {
+            router.push({
+              pathname: "/(tabs)/catalog/[category]",
+              params: {
+                category: item.title,
+                gender: activeCategory, // Also pass the currently selected gender
+              },
+            });
+          }}
+        />
 
         {/* Categories Grid */}
         <View className="flex-row flex-wrap -mx-1">
@@ -164,7 +184,15 @@ export default function CatalogScreen() {
               <CategoryGridItem
                 name={item.name}
                 image={item.image}
-                onPress={() => {}}
+                onPress={() => {
+                  router.push({
+                    pathname: "/(tabs)/catalog/[category]",
+                    params: {
+                      category: item.name.toLowerCase(),
+                      gender: activeCategory,
+                    },
+                  });
+                }}
               />
             </View>
           ))}

@@ -6,6 +6,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -22,9 +23,13 @@ interface BannerItem {
 
 interface BannerCarouselProps {
   banners: BannerItem[];
+  onPress?: (item: BannerItem) => void;
 }
 
-const BannerCarousel: React.FC<BannerCarouselProps> = ({ banners }) => {
+const BannerCarousel: React.FC<BannerCarouselProps> = ({
+  banners,
+  onPress,
+}) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -40,31 +45,37 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ banners }) => {
       style={{ width: BANNER_WIDTH }}
       className="h-60 rounded-2xl overflow-hidden mr-4"
     >
-      <ImageBackground
-        source={{ uri: item.image }}
-        className="w-full h-full justify-center px-6"
-        resizeMode="cover"
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => onPress && onPress(item)}
+        className="flex-1"
       >
-        <View className="bg-black/10 absolute inset-0" />
-        <Text
-          className="text-white text-3xl mb-1"
-          style={{ fontFamily: "Classyvogue" }}
+        <ImageBackground
+          source={{ uri: item.image }}
+          className="w-full h-full justify-center px-6"
+          resizeMode="cover"
         >
-          {item.title}
-        </Text>
-        <Text
-          className="text-white text-base mb-4 opacity-90"
-          style={{ fontFamily: "Urbanist" }}
-        >
-          {item.subtitle}
-        </Text>
-        <Text
-          className="text-white text-4xl font-bold"
-          style={{ fontFamily: "Urbanist" }}
-        >
-          {item.discount}
-        </Text>
-      </ImageBackground>
+          <View className="bg-black/10 absolute inset-0" />
+          <Text
+            className="text-white text-3xl mb-1"
+            style={{ fontFamily: "Classyvogue" }}
+          >
+            {item.title}
+          </Text>
+          <Text
+            className="text-white text-base mb-4 opacity-90"
+            style={{ fontFamily: "Urbanist" }}
+          >
+            {item.subtitle}
+          </Text>
+          <Text
+            className="text-white text-4xl font-bold"
+            style={{ fontFamily: "Urbanist" }}
+          >
+            {item.discount}
+          </Text>
+        </ImageBackground>
+      </TouchableOpacity>
     </View>
   );
 
