@@ -20,6 +20,9 @@ const MAPPING = {
   "chevron.left": "chevron-back",
   "checkmark.circle.fill": "checkmark-circle",
   "arrow.down.right": "arrow-forward",
+  trash: "trash",
+  minus: "remove",
+  plus: "add",
 } as const;
 
 /**
