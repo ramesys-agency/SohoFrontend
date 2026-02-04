@@ -26,7 +26,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({
   };
 
   return (
-    <View className="bg-white px-4 pb-2">
+    <View className="bg-white px-4">
       <View className="flex-row justify-between items-center py-4">
         <View className="flex-row items-center flex-1">
           {showBackButton && (
