@@ -20,6 +20,7 @@ export default function RootLayout() {
     "Urbanist-Medium": require("../assets/fonts/Urbanist-Medium.ttf"),
     "Urbanist-SemiBold": require("../assets/fonts/Urbanist-SemiBold.ttf"),
     "Urbanist-Bold": require("../assets/fonts/Urbanist-Bold.ttf"),
+    AlexBrush: require("../assets/fonts/AlexBrush-Regular.ttf"),
   });
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Stack
+        initialRouteName="index"
         screenOptions={{
           headerShown: false,
         }}

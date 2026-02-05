@@ -37,6 +37,12 @@ const MAPPING = {
   envelope: "mail",
   "figure.stand": "body",
   "square.and.pencil": "create",
+  eye: "eye",
+  "eye.slash": "eye-off",
+  "exclamationmark.circle.fill": "alert-circle",
+  "apple.logo": "logo-apple",
+  "google.logo": "logo-google",
+  "facebook.logo": "logo-facebook",
 } as const;
 
 /**
@@ -58,7 +64,10 @@ export function IconSymbol({
   focused?: boolean;
 }) {
   const iconBaseName = MAPPING[name];
-  const iconName = focused ? iconBaseName : `${iconBaseName}-outline`;
+  const iconName =
+    focused || iconBaseName.startsWith("logo-")
+      ? iconBaseName
+      : `${iconBaseName}-outline`;
 
   return (
     <Ionicons

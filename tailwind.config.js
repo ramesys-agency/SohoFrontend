@@ -19,6 +19,7 @@ module.exports = {
         "Urbanist-SemiBold": ["Urbanist-SemiBold"],
         "Urbanist-Bold": ["Urbanist-Bold"],
         Classyvogue: ["Classyvogue"],
+        AlexBrush: ["AlexBrush"],
       },
     },
   },

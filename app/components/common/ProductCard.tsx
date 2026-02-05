@@ -38,7 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row justify-between items-center mb-1">
+      <View className="flex-row justify-between items-center">
         <Text
           className="text-base text-black flex-1 mr-2"
           numberOfLines={1}
@@ -59,12 +59,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <View className="flex-row justify-between items-center">
         <Text
-          className="text-md text-black font-semibold mt-1 font-Urbanist"
+          className="text-lg text-black font-Urbanist-Bold mt-1"
           numberOfLines={1}
         >
-          {name}
+          Price
         </Text>
-        <Text className="text-sm text-gray-500 font-Urbanist">{price}</Text>
+        <Text className="text-lg text-black font-Urbanist-Bold">{price}</Text>
       </View>
     </TouchableOpacity>
   );
