@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -13,6 +14,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   showBackButton,
   onBackPress,
 }) => {
+  const router = useRouter();
   const isSubPage = showBackButton || title;
 
   if (isSubPage) {
@@ -40,10 +42,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           </View>
 
           <View className="flex-row gap-x-5 w-10 justify-end">
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push("/search")}
+            >
               <Feather name="search" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.7} className="relative">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              className="relative"
+              onPress={() => router.push("/notifications")}
+            >
               <Feather name="bell" size={24} color="black" />
               <View className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white" />
             </TouchableOpacity>
@@ -58,10 +67,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
     <View className="bg-white px-4 pb-2">
       <View className="flex-row justify-end items-center pt-4 pr-1">
         <View className="flex-row gap-x-5">
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/search")}
+          >
             <Feather name="search" size={26} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7} className="relative">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            className="relative"
+            onPress={() => router.push("/notifications")}
+          >
             <Feather name="bell" size={26} color="black" />
             <View className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
           </TouchableOpacity>

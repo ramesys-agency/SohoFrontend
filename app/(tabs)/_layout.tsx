@@ -14,7 +14,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: "#000000",
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "500",
+          fontFamily: "Urbanist-Medium",
         },
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
@@ -104,7 +104,7 @@ export default function TabsLayout() {
           title: "",
           tabBarIcon: ({ focused }) => (
             <View
-              className={`w-8 h-8 rounded-full overflow-hidden border ${
+              className={`w-10 h-10 rounded-full overflow-hidden border ${
                 focused ? "border-black" : "border-transparent"
               }`}
             >

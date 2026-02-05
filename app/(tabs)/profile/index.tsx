@@ -51,7 +51,11 @@ export default function ProfileScreen() {
           <MenuItem icon="house.fill" label="Addresses" onPress={() => {}} />
           <MenuItem icon="creditcard" label="Payment" onPress={() => {}} />
           <MenuItem icon="map" label="Region and language" onPress={() => {}} />
-          <MenuItem icon="bell" label="Notification" onPress={() => {}} />
+          <MenuItem
+            icon="bell"
+            label="Notification"
+            onPress={() => router.push("/notifications")}
+          />
         </View>
 
         {/* Dark Theme */}

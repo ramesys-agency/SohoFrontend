@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { NavigationContext } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useContext } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -18,8 +19,8 @@ const SubHeader: React.FC<SubHeaderProps> = ({
   hideSearch = false,
   hideNotification = false,
 }) => {
-  // Safely access navigation context - it may not be available if not within NavigationContainer
   const navigation = useContext(NavigationContext);
+  const router = useRouter();
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -53,12 +54,18 @@ const SubHeader: React.FC<SubHeaderProps> = ({
 
         <View className="flex-row gap-x-5">
           {!hideSearch && (
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push("/search")}
+            >
               <Feather name="search" size={26} color="black" />
             </TouchableOpacity>
           )}
           {!hideNotification && (
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push("/notifications")}
+            >
               <Feather name="bell" size={26} color="black" />
             </TouchableOpacity>
           )}
