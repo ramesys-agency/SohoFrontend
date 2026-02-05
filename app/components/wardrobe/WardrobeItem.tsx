@@ -40,7 +40,7 @@ export default function WardrobeItem({
         <View>
           <View className="flex-row justify-between items-start">
             <Text
-              className="text-base font-medium text-gray-900 flex-1 mr-2"
+              className="text-base font-Urbanist-Bold text-gray-900 flex-1 mr-2"
               numberOfLines={1}
             >
               {item.title}
@@ -54,7 +54,7 @@ export default function WardrobeItem({
         </View>
 
         <View className="flex-row justify-between items-end">
-          <Text className="text-base font-bold">
+          <Text className="text-base font-Urbanist-Bold">
             ৳{item.price * item.quantity}
           </Text>
 
@@ -67,7 +67,9 @@ export default function WardrobeItem({
               <IconSymbol name="minus" size={14} color="#000" />
             </TouchableOpacity>
 
-            <Text className="px-3 text-sm font-medium">{item.quantity}</Text>
+            <Text className="px-3 text-sm font-Urbanist-Bold">
+              {item.quantity}
+            </Text>
 
             <TouchableOpacity
               onPress={onIncrement}

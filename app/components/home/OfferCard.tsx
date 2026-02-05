@@ -14,7 +14,7 @@ interface OfferCardProps {
   item: OfferItem;
 }
 
-export const OfferCard = ({ item }: OfferCardProps) => {
+export default function OfferCard({ item }: OfferCardProps) {
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -38,9 +38,11 @@ export const OfferCard = ({ item }: OfferCardProps) => {
           <Text className="text-white text-lg font-Urbanist mb-1">
             {item.subtitle}
           </Text>
-          <Text className="text-white text-3xl font-bold">{item.discount}</Text>
+          <Text className="text-white text-3xl font-Urbanist-Bold">
+            {item.discount}
+          </Text>
         </LinearGradient>
       </ImageBackground>
     </TouchableOpacity>
   );
-};
+}

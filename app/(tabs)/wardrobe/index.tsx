@@ -3,11 +3,11 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SubHeader from "../../components/navbar/SubHeader";
@@ -95,7 +95,7 @@ export default function WardrobeScreen() {
           <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
             <IconSymbol name="cart.fill" size={40} color="#9CA3AF" />
           </View>
-          <Text className="text-xl font-bold text-gray-900 mb-2 w-full text-center">
+          <Text className="text-xl font-Urbanist-Bold text-gray-900 mb-2 w-full text-center">
             Your wardrobe is empty
           </Text>
           <Text className="text-gray-500 text-center mb-8">
@@ -156,7 +156,7 @@ export default function WardrobeScreen() {
                 onChangeText={setPromoCode}
               />
               <TouchableOpacity className="bg-black justify-center px-6 rounded-r-lg">
-                <Text className="text-white font-medium">Apply</Text>
+                <Text className="text-white font-Urbanist-Bold">Apply</Text>
               </TouchableOpacity>
             </View>
 
@@ -176,14 +176,14 @@ export default function WardrobeScreen() {
               </View>
               <View className="flex-row justify-between items-center mt-2">
                 <View>
-                  <Text className="text-gray-900 text-2xl font-bold">
+                  <Text className="text-gray-900 text-2xl font-Urbanist-Bold">
                     Total
                   </Text>
                   <Text className="text-gray-500 text-xs">
                     Including $5.00 in taxes
                   </Text>
                 </View>
-                <Text className="text-gray-900 text-2xl font-bold">
+                <Text className="text-gray-900 text-2xl font-Urbanist-Bold">
                   ৳{total.toLocaleString()}
                 </Text>
               </View>
@@ -200,7 +200,9 @@ export default function WardrobeScreen() {
                 color="white"
                 style={{ marginRight: 8 }}
               />
-              <Text className="text-white text-lg font-bold">Checkout</Text>
+              <Text className="text-white text-lg font-Urbanist-Bold">
+                Checkout
+              </Text>
             </TouchableOpacity>
           </View>
         </>

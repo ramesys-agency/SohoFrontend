@@ -12,7 +12,7 @@ export default function PaymentScreen() {
           className="bg-black p-4 rounded-xl items-center"
           onPress={() => router.push("/wardrobe/order-success")}
         >
-          <Text className="text-white font-bold">Complete Order</Text>
+          <Text className="text-white font-Urbanist-Bold">Complete Order</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

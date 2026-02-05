@@ -48,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Text>
         <View className="flex-row items-center">
           <Text
-            className="text-xs text-black font-medium mr-1"
+            className="text-xs text-black font-Urbanist-Bold mr-1"
             style={{ fontFamily: "Urbanist" }}
           >
             {rating}
@@ -59,17 +59,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <View className="flex-row justify-between items-center">
         <Text
-          className="text-base text-gray-500"
-          style={{ fontFamily: "Urbanist" }}
+          className="text-md text-black font-semibold mt-1 font-Urbanist"
+          numberOfLines={1}
         >
-          Price
+          {name}
         </Text>
-        <Text
-          className="text-lg text-black font-bold"
-          style={{ fontFamily: "UrbanistBold" }}
-        >
-          {price}
-        </Text>
+        <Text className="text-sm text-gray-500 font-Urbanist">{price}</Text>
       </View>
     </TouchableOpacity>
   );

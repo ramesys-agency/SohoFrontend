@@ -10,14 +10,16 @@ export default function ProductListScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <IconSymbol name="chevron.left" size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold">Product List</Text>
+        <Text className="text-xl font-Urbanist-Bold">Product List</Text>
       </View>
       <View className="p-4">
         <TouchableOpacity
           className="bg-black p-4 rounded-xl items-center"
           onPress={() => router.push("/home/product-detail")}
         >
-          <Text className="text-white font-bold">View Product Detail</Text>
+          <Text className="text-white font-Urbanist-Bold">
+            View Product Detail
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

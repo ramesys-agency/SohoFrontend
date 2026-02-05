@@ -56,7 +56,7 @@ export default function EditProfileScreen() {
         <TouchableOpacity className="mt-16 items-center">
           <View className="flex-row items-center gap-2">
             <IconSymbol name="trash" size={20} color="#dc2626" />
-            <Text className="text-red-600 font-bold text-base">
+            <Text className="text-red-600 font-Urbanist-Bold text-base">
               Delete account
             </Text>
           </View>
@@ -82,7 +82,9 @@ function EditProfileItem({
     >
       <View className="flex-row items-center gap-3">
         <IconSymbol name={icon} size={20} color="#000" />
-        <Text className="text-black font-medium text-base">{label}</Text>
+        <Text className="text-black font-Urbanist-Regular text-base">
+          {label}
+        </Text>
       </View>
       <IconSymbol name="chevron.right" size={16} color="#000" />
     </TouchableOpacity>

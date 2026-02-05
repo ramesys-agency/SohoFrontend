@@ -32,14 +32,17 @@ export default function OrderDetailsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <SubHeader title="Track Your Order" showBackButton={true} />
+      <SubHeader
+        title="Order Details"
+        hideSearch
+        hideNotification
+        showBackButton={true}
+      />
       <ScrollView
-        className="flex-1 px-4"
+        className="flex-1 px-8"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
-        <Text className="text-xl font-bold mb-4 mt-2">Order details</Text>
-
         {/* Product Card */}
         <View className="bg-gray-50 rounded-2xl p-4 mb-8">
           <Image
@@ -65,7 +68,7 @@ export default function OrderDetailsScreen() {
           </View>
         </View>
 
-        <Text className="text-xl font-bold mb-6">Order Status</Text>
+        <Text className="text-xl font-Urbanist-Bold mb-6">Order Status</Text>
 
         {/* Timeline */}
         <View className="bg-gray-50 rounded-2xl p-6 mb-8">
@@ -85,7 +88,9 @@ export default function OrderDetailsScreen() {
           className="bg-black py-4 rounded-full items-center mb-8"
           onPress={() => router.back()}
         >
-          <Text className="text-white font-medium text-lg">Cancel Order</Text>
+          <Text className="text-white font-Urbanist-Bold text-lg">
+            Cancel Order
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -103,8 +108,10 @@ function DetailRow({
 }) {
   return (
     <View className="flex-row justify-between items-center">
-      <Text className="text-gray-500 text-base">{label}</Text>
-      <Text className={`text-black text-base ${boldValue ? "font-bold" : ""}`}>
+      <Text className="text-black font-Urbanist text-base">{label}</Text>
+      <Text
+        className={`text-black font-Urbanist text-base w-1/2 text-right ${boldValue ? "font-Urbanist-Bold" : ""}`}
+      >
         {value}
       </Text>
     </View>
@@ -132,10 +139,10 @@ function TimelineStep({
         )}
       </View>
       <View className="pb-6">
-        <Text className="text-black font-bold text-base leading-none mb-1">
+        <Text className="text-black font-Urbanist-Bold text-base leading-none mb-1">
           {step.title}
         </Text>
-        <Text className="text-gray-500 text-xs">{step.date}</Text>
+        <Text className="text-gray-500 text-xs font-Urbanist">{step.date}</Text>
       </View>
     </View>
   );

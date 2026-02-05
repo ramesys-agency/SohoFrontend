@@ -1,11 +1,11 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import {
-  Image,
-  ImageSourcePropType,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    ImageSourcePropType,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 interface WishlistItemProps {
@@ -39,7 +39,7 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
           {name}
         </Text>
         <Text className="text-sm text-gray-500 mb-2">Size: {size}</Text>
-        <Text className="text-base font-bold text-black">{price}</Text>
+        <Text className="text-base font-Urbanist-Bold text-black">{price}</Text>
       </View>
 
       {/* Delete Button */}

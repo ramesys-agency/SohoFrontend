@@ -90,7 +90,7 @@ const WishlistScreen = () => {
           <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
             <IconSymbol name="heart.fill" size={40} color="#9CA3AF" />
           </View>
-          <Text className="text-xl font-bold text-gray-900 mb-2 w-full text-center">
+          <Text className="text-xl font-Urbanist-Bold text-gray-900 mb-2 w-full text-center">
             Your wishlist is empty
           </Text>
           <Text className="text-gray-500 text-center mb-8">

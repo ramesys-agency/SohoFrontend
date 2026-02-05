@@ -13,7 +13,13 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     Classyvogue: require("../assets/fonts/Classyvogueregular.ttf"),
-    Urbanist: require("../assets/fonts/Urbanist[wght].ttf"),
+    Urbanist: require("../assets/fonts/Urbanist-Regular.ttf"),
+    "Urbanist-Thin": require("../assets/fonts/Urbanist-Thin.ttf"),
+    "Urbanist-ExtraLight": require("../assets/fonts/Urbanist-ExtraLight.ttf"),
+    "Urbanist-Light": require("../assets/fonts/Urbanist-Light.ttf"),
+    "Urbanist-Medium": require("../assets/fonts/Urbanist-Medium.ttf"),
+    "Urbanist-SemiBold": require("../assets/fonts/Urbanist-SemiBold.ttf"),
+    "Urbanist-Bold": require("../assets/fonts/Urbanist-Bold.ttf"),
   });
 
   useEffect(() => {

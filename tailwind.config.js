@@ -12,6 +12,12 @@ module.exports = {
       fontFamily: {
         sans: ["Urbanist"],
         Urbanist: ["Urbanist"],
+        "Urbanist-Thin": ["Urbanist-Thin"],
+        "Urbanist-ExtraLight": ["Urbanist-ExtraLight"],
+        "Urbanist-Light": ["Urbanist-Light"],
+        "Urbanist-Medium": ["Urbanist-Medium"],
+        "Urbanist-SemiBold": ["Urbanist-SemiBold"],
+        "Urbanist-Bold": ["Urbanist-Bold"],
         Classyvogue: ["Classyvogue"],
       },
     },

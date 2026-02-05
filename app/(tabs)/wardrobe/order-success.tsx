@@ -10,7 +10,9 @@ export default function OrderSuccessScreen() {
       <SubHeader title="Success" showBackButton={false} />
       <View className="flex-1 p-4 justify-center items-center">
         <IconSymbol name="checkmark.circle.fill" size={80} color="#10B981" />
-        <Text className="text-3xl font-bold mt-4 mb-2">Order Success!</Text>
+        <Text className="text-3xl font-Urbanist-Bold mt-4 mb-2">
+          Order Success!
+        </Text>
         <Text className="text-gray-500 text-center mb-8">
           Your order has been placed successfully.
         </Text>
@@ -19,7 +21,9 @@ export default function OrderSuccessScreen() {
           className="bg-black p-4 rounded-xl w-full items-center"
           onPress={() => router.push("/wardrobe")}
         >
-          <Text className="text-white font-bold">Back to Wardrobe</Text>
+          <Text className="text-white font-Urbanist-Bold">
+            Back to Wardrobe
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

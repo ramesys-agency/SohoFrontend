@@ -1,13 +1,13 @@
 import React, { useRef, useState } from "react";
 import {
-  Dimensions,
-  FlatList,
-  ImageBackground,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    FlatList,
+    ImageBackground,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -69,7 +69,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
             {item.subtitle}
           </Text>
           <Text
-            className="text-white text-4xl font-bold"
+            className="text-white text-4xl font-Urbanist-Bold"
             style={{ fontFamily: "Urbanist" }}
           >
             {item.discount}

@@ -12,7 +12,7 @@ export default function AddressScreen() {
           className="bg-black p-4 rounded-xl items-center"
           onPress={() => router.push("/wardrobe/payment")}
         >
-          <Text className="text-white font-bold">Go to Payment</Text>
+          <Text className="text-white font-Urbanist-Bold">Go to Payment</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

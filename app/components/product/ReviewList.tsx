@@ -46,7 +46,7 @@ export default function ReviewList({
         <View className="items-center mr-6">
           <View className="flex-row items-center">
             <Text
-              className="text-5xl font-bold mr-2 text-black"
+              className="text-5xl font-Urbanist-Bold mr-2 text-black"
               style={{ fontFamily: "UrbanistBold" }}
             >
               {ratingBreakdown.average}
@@ -183,13 +183,13 @@ export default function ReviewList({
           <View className="flex-row items-center space-x-5 mt-1">
             <TouchableOpacity className="flex-row items-center p-1">
               <Feather name="heart" size={16} color="black" />
-              <Text className="ml-2 text-xs text-gray-500 font-medium">
+              <Text className="ml-2 text-xs text-gray-500 font-Urbanist-Bold">
                 {review.likes || 0} Likes
               </Text>
             </TouchableOpacity>
             <TouchableOpacity className="flex-row items-center p-1">
               <MaterialIcons name="reply" size={16} color="black" />
-              <Text className="ml-2 text-xs text-gray-500 font-medium">
+              <Text className="ml-2 text-xs text-gray-500 font-Urbanist-Bold">
                 Reply
               </Text>
             </TouchableOpacity>

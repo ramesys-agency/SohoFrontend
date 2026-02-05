@@ -12,7 +12,7 @@ export default function ProductDetailScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <IconSymbol name="chevron.left" size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold">Product Detail</Text>
+        <Text className="text-xl font-Urbanist-Bold">Product Detail</Text>
       </View>
       <View className="flex-1 justify-center items-center">
         <Text className="text-lg">Product Information Content</Text>

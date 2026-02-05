@@ -33,7 +33,12 @@ const MOCK_ORDERS = [
 export default function OrdersListScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <SubHeader title="My Orders" showBackButton={true} />
+      <SubHeader
+        title="My Orders"
+        hideSearch
+        hideNotification
+        showBackButton={true}
+      />
       <ScrollView
         className="flex-1 px-4 pt-4"
         showsVerticalScrollIndicator={false}
@@ -54,20 +59,24 @@ export default function OrdersListScreen() {
               <View>
                 <View className="flex-row justify-between items-start">
                   <Text
-                    className="font-bold text-base text-black"
+                    className="font-Urbanist-Bold text-base text-black font-Urbanist"
                     numberOfLines={1}
                   >
                     {order.items}
                   </Text>
-                  <Text className="text-gray-500 text-xs">{order.date}</Text>
+                  <Text className="text-gray-500 text-xs font-Urbanist">
+                    {order.date}
+                  </Text>
                 </View>
-                <Text className="text-gray-500 text-sm mt-1">
+                <Text className="text-gray-500 text-sm mt-1 font-Urbanist">
                   Order No: {order.id}
                 </Text>
               </View>
 
               <View className="flex-row justify-between items-end mt-2">
-                <Text className="font-bold text-base">{order.total}</Text>
+                <Text className="font-Urbanist-Bold text-base font-Urbanist">
+                  {order.total}
+                </Text>
                 <OrderStatusBadge status={order.status} />
               </View>
             </View>
@@ -95,7 +104,9 @@ function OrderStatusBadge({ status }: { status: string }) {
 
   return (
     <View className={`${bg} px-3 py-1 rounded-full`}>
-      <Text className={`${text} text-xs font-medium`}>{status}</Text>
+      <Text className={`${text} text-xs font-Urbanist-Bold font-Urbanist`}>
+        {status}
+      </Text>
     </View>
   );
 }
