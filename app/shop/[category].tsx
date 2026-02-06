@@ -14,7 +14,7 @@ const products = [
     rating: 4.5,
     image:
       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop",
-    category: "saree",
+    category: "mega sells",
     gender: "women",
   },
   {
@@ -24,7 +24,7 @@ const products = [
     rating: 4.5,
     image:
       "https://images.unsplash.com/photo-1585487000160-6ebcfceb00dc?q=80&w=400&auto=format&fit=crop",
-    category: "saree",
+    category: "winter collection",
     gender: "women",
   },
   {
@@ -34,7 +34,7 @@ const products = [
     rating: 4.5,
     image:
       "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=400&auto=format&fit=crop",
-    category: "modern",
+    category: "cool casuals",
     gender: "women",
   },
   {
@@ -67,19 +67,40 @@ const products = [
     category: "ethnic",
     gender: "women",
   },
+  {
+    id: "7",
+    name: "Classic Silk Saree",
+    price: "৳3500",
+    rating: 4.6,
+    image:
+      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop",
+    category: "saree",
+    gender: "women",
+  },
 ];
 
 export default function CategoryScreen() {
   const { category, gender } = useLocalSearchParams();
   const router = useRouter();
   const categoryName = typeof category === "string" ? category : "Clothing";
-  const genderName = typeof gender === "string" ? gender : "Women";
+  const genderName = typeof gender === "string" ? gender : undefined;
 
   // Format the category name for display (capitalize first letter)
   const displayTitle =
     categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-  const displayGender =
-    genderName.charAt(0).toUpperCase() + genderName.slice(1);
+  const displayGender = genderName
+    ? genderName.charAt(0).toUpperCase() + genderName.slice(1)
+    : "All";
+
+  // Filter products based on category and optional gender
+  // const filteredProducts = products.filter((p) => {
+  //   const categoryMatch =
+  //     p.category.toLowerCase() === categoryName.toLowerCase();
+  //   const genderMatch = genderName
+  //     ? p.gender.toLowerCase() === genderName.toLowerCase()
+  //     : true;
+  //   return categoryMatch && genderMatch;
+  // });
 
   return (
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
@@ -87,7 +108,8 @@ export default function CategoryScreen() {
       <View>
         <SubHeader title={displayTitle} showBackButton={true} />
 
-        {/* Gender Filter Button */}
+        {/* Gender Filter Button - Only show if gender is selected or we want to allow filtering (optional requirement, keeping simple for now) */}
+        {/* For now, we show "All" if no gender is selected, or the specific gender */}
         <View className="px-4 pb-4">
           <TouchableOpacity
             className="border border-gray-200 rounded-lg px-6 py-2 self-start"

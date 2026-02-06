@@ -101,11 +101,15 @@ export default function HomeScreen() {
             subtitle="Now in Mega Sells"
             description="Available in Our Shop"
             image={HERO_IMAGE}
+            onPress={() => router.push("/shop/Mega Sells")}
           />
         </View>
 
         <View className="py-6">
-          <SectionHeader title="Best Sellers" onSeeAllPress={() => {}} />
+          <SectionHeader
+            title="Best Sellers"
+            onSeeAllPress={() => router.push("/shop/Best Sellers")}
+          />
           <View className="flex-row flex-wrap justify-between px-4">
             {PRODUCTS.map((product) => (
               <ProductCard

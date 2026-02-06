@@ -1,5 +1,6 @@
 import SubHeader from "@/app/components/navbar/SubHeader";
 import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import React from "react";
 import { FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -50,7 +51,12 @@ const OffersScreen = () => {
       <FlatList
         className="px-10 pt-10 mb-10"
         data={OFFERS}
-        renderItem={({ item }) => <OfferCard item={item} />}
+        renderItem={({ item }) => (
+          <OfferCard
+            item={item}
+            onPress={() => router.push(`/shop/${item.title}`)}
+          />
+        )}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}

@@ -12,12 +12,14 @@ export interface OfferItem {
 
 interface OfferCardProps {
   item: OfferItem;
+  onPress?: () => void;
 }
 
-export default function OfferCard({ item }: OfferCardProps) {
+export default function OfferCard({ item, onPress }: OfferCardProps) {
   return (
     <TouchableOpacity
       activeOpacity={0.9}
+      onPress={onPress}
       className="mb-6 rounded-3xl overflow-hidden shadow-lg"
       style={{ height: 400 }}
     >
