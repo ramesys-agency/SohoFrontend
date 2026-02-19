@@ -119,6 +119,14 @@ export default function TabsLayout() {
           tabBarLabel: () => null,
         }}
       />
+
+      {/* Shop - hidden from tab bar, but keeps tab bar visible */}
+      <Tabs.Screen
+        name="shop/[category]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
