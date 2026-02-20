@@ -79,7 +79,7 @@ const products = [
   },
 ];
 
-export default function CategoryScreen() {
+export function CategoryScreenContent() {
   const { category, gender } = useLocalSearchParams();
   const router = useRouter();
   const categoryName = typeof category === "string" ? category : "Clothing";
@@ -92,24 +92,12 @@ export default function CategoryScreen() {
     ? genderName.charAt(0).toUpperCase() + genderName.slice(1)
     : "All";
 
-  // Filter products based on category and optional gender
-  // const filteredProducts = products.filter((p) => {
-  //   const categoryMatch =
-  //     p.category.toLowerCase() === categoryName.toLowerCase();
-  //   const genderMatch = genderName
-  //     ? p.gender.toLowerCase() === genderName.toLowerCase()
-  //     : true;
-  //   return categoryMatch && genderMatch;
-  // });
-
   return (
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View>
         <SubHeader title={displayTitle} showBackButton={true} />
 
-        {/* Gender Filter Button - Only show if gender is selected or we want to allow filtering (optional requirement, keeping simple for now) */}
-        {/* For now, we show "All" if no gender is selected, or the specific gender */}
         <View className="px-4 pb-4">
           <TouchableOpacity
             className="border border-gray-200 rounded-lg px-6 py-2 self-start"

@@ -152,7 +152,7 @@ export default function CatalogScreen() {
               image={item.image}
               onPress={() => {
                 router.push({
-                  pathname: "/shop/[category]",
+                  pathname: "/(tabs)/catalog/shop/[category]",
                   params: {
                     category: item.name.toLowerCase(),
                     gender: activeCategory,
@@ -168,7 +168,7 @@ export default function CatalogScreen() {
           banners={banners}
           onPress={(item) => {
             router.push({
-              pathname: "/shop/[category]",
+              pathname: "/(tabs)/catalog/shop/[category]",
               params: {
                 category: item.title,
                 gender: activeCategory, // Also pass the currently selected gender
@@ -186,7 +186,7 @@ export default function CatalogScreen() {
                 image={item.image}
                 onPress={() => {
                   router.push({
-                    pathname: "/shop/[category]",
+                    pathname: "/(tabs)/catalog/shop/[category]",
                     params: {
                       category: item.name.toLowerCase(),
                       gender: activeCategory,
