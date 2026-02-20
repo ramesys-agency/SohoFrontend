@@ -1,19 +1,69 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
+import { authApi } from "../../api/auth.api";
 import { AuthButton } from "../../components/auth/AuthButton";
 import { AuthInput } from "../../components/auth/AuthInput";
 import { SocialLogin } from "../../components/auth/SocialLogin";
+import { useAuthStore } from "../../store/authStore";
+import { useToastStore } from "../../store/toastStore";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("milansarker4321@gmail.com");
-  const [password, setPassword] = useState("Nothing");
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "test@example.com",
+      password: "password123",
+    },
+  });
 
-  const handleLogin = () => {
-    // Navigate to home tabs
-    router.replace("/(tabs)/home");
+  const { login, isLoading: isAuthLoading } = useAuthStore();
+  const showToast = useToastStore((state) => state.showToast);
+
+  const loginMutation = useMutation({
+    mutationFn: authApi.login,
+    onSuccess: async (data) => {
+      const { user, accessToken, refreshToken } = data;
+      await login(user, accessToken, refreshToken);
+      // showToast({ message: "Login successful!", type: "success" });
+      // Navigation is handled by the protected layout effect automatically
+    },
+    onError: (error: any) => {
+      console.error("Login failed:", error.response?.data || error.message);
+      showToast({
+        message:
+          error?.response?.data?.error ||
+          "Something went wrong. Please try again.",
+        type: "error",
+      });
+    },
+  });
+
+  const onSubmit = (data: LoginFormValues) => {
+    loginMutation.mutate(data);
   };
 
   return (
@@ -33,18 +83,34 @@ export default function LoginScreen() {
         </View>
 
         <View className="mb-6">
-          <AuthInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AuthInput
+                label="Email"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={errors.email?.message}
+              />
+            )}
           />
-          <AuthInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            isPassword
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AuthInput
+                label="Password"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                isPassword
+                error={errors.password?.message}
+              />
+            )}
           />
           <TouchableOpacity
             onPress={() => router.push("/(auth)/forgot-password")}
@@ -56,7 +122,13 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <AuthButton title="Login" onPress={handleLogin} className="mb-6" />
+        <AuthButton
+          title={
+            loginMutation.isPending || isAuthLoading ? "Logging in..." : "Login"
+          }
+          onPress={handleSubmit(onSubmit)}
+          className="mb-6"
+        />
 
         <View className="flex-row justify-center">
           <Text className="text-[#999999] text-sm font-Urbanist">

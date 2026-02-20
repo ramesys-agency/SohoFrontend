@@ -87,7 +87,7 @@ export default function AppEntry() {
         clearInterval(dotInterval);
       };
     }
-  }, [appState]);
+  }, [appState, opacity, scale]);
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {

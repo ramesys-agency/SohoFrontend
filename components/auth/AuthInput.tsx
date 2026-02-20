@@ -27,7 +27,11 @@ export function AuthInput({
     <View className="mb-4">
       <View
         className={`bg-[#F2F2F2] rounded-xl px-4 py-3 border ${
-          isFocused ? "border-[#0055D4]" : "border-transparent"
+          error
+            ? "border-red-500"
+            : isFocused
+              ? "border-[#0055D4]"
+              : "border-transparent"
         }`}
       >
         <Text className="text-[#999999] text-xs font-Urbanist mb-1">
@@ -62,9 +66,9 @@ export function AuthInput({
           <IconSymbol
             name="exclamationmark.circle.fill"
             size={14}
-            color="#FF0000"
+            color="#EF4444"
           />
-          <Text className="text-[#999999] text-xs font-Urbanist ml-1">
+          <Text className="text-red-500 text-xs font-Urbanist ml-1">
             {error}
           </Text>
         </View>
