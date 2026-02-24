@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { API_ROUTES } from "../config";
 import { API_URL } from "../config/env";
 import { useAuthStore } from "../store/authStore";
-import { tokenStorage } from "./secureStore"; // or use values from store directly if preferred
+import { tokenStorage } from "../store/secureStore"; // or use values from store directly if preferred
 
 // Separate instance for refresh logic to avoid circular interceptors
 const refreshInstance = axios.create({
@@ -25,11 +25,9 @@ apiClient.interceptors.request.use(
   async (config) => {
     // Get token from store or secure storage (store is faster if synced)
     const token = useAuthStore.getState().accessToken;
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => {
@@ -54,7 +52,9 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;

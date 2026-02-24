@@ -12,4 +12,10 @@ export const API_ROUTES = {
     LIST: "/api/v1/products",
     DETAILS: (id: string) => `/api/v1/products/${id}`,
   },
+  COLLECTION: {
+    GET_COLLECTIONS: "/api/v1/collections",
+  },
+  PRODUCT: {
+    GET_PRODUCTS: "/api/v1/products",
+  },
 } as const;

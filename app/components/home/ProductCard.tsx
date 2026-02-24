@@ -7,7 +7,7 @@ interface ProductCardProps {
     id: string;
     name: string;
     price: string;
-    image: any;
+    primaryImage: string;
     rating: number;
   };
   onPress?: () => void;
@@ -27,7 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       <View className="relative bg-[#F2F2F2] rounded-2xl overflow-hidden aspect-[3/4]">
         <Image
-          source={product.image}
+          source={{ uri: product.primaryImage }}
           className="w-full h-full"
           resizeMode="cover"
         />

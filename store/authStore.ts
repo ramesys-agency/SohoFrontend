@@ -1,4 +1,4 @@
-import { tokenStorage } from "@/api/secureStore";
+import { tokenStorage } from "@/store/secureStore";
 import { create } from "zustand";
 
 interface User {
