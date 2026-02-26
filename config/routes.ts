@@ -4,7 +4,7 @@ export const API_ROUTES = {
     REGISTER: "/api/v1/auth/register",
     REFRESH_TOKEN: "/api/v1/auth/refresh-token",
     LOGOUT: "/api/v1/auth/logout",
-    ME: "/api/v1/users/me", // or similar for checking session
+    ME: "/api/v1/auth/me",
     UPDATE_PROFILE: "/api/v1/users/profile",
   },
   // Add other routes here as needed

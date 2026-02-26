@@ -1,3 +1,4 @@
+import { authApi } from "@/api/auth.api";
 import { tokenStorage } from "@/store/secureStore";
 import { create } from "zustand";
 
@@ -76,19 +77,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const refreshToken = await tokenStorage.getRefreshToken();
 
       if (accessToken && refreshToken) {
-        // Here, you might want to validate the token or fetch user profile
-        // For now, we assume valid if token exists, but ideally verify with API
-        // The axios interceptor will handle 401 if invalid
-        set({ accessToken, isAuthenticated: true });
+        // Set token in state first so axios interceptor can attach it to /me request
+        set({ accessToken });
 
-        // Note: User data isn't persisted here explicitly to secure store in this simple version
-        // You might want to fetch /me endpoint here if user data is missing
+        // Validate token server-side and fetch fresh user data
+        const user = await authApi.getProfile();
+        set({ user, isAuthenticated: true });
       } else {
-        set({ isAuthenticated: false, accessToken: null });
+        set({ isAuthenticated: false, accessToken: null, user: null });
       }
-    } catch (error) {
-      console.error("Hydration failed:", error);
-      set({ isAuthenticated: false, accessToken: null });
+    } catch (error: any) {
+      // 401 errors are handled upstream by the axios interceptor:
+      //   → It tries the refresh token automatically.
+      //   → If refresh also fails, interceptor calls logout() which clears SecureStore + state.
+      // Here we only handle remaining cases:
+      const isNetworkError = !error.response; // no response = offline / timeout / DNS failure
+
+      if (isNetworkError) {
+        // Don't punish the user for being offline — tokens may still be valid.
+        // Keep accessToken in state so the interceptor can retry on next API call.
+        // Block access to the app (isAuthenticated: false) but preserve tokens.
+        console.warn("Hydration skipped: network unavailable");
+        set({ isAuthenticated: false });
+      } else {
+        // Unexpected server error (5xx, etc.) — clear everything to be safe.
+        console.error("Hydration failed:", error);
+        set({ isAuthenticated: false, accessToken: null, user: null });
+      }
     } finally {
       set({ isLoading: false });
     }

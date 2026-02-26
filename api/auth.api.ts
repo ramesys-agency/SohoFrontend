@@ -6,5 +6,9 @@ export const authApi = {
     const response = await apiClient.post(API_ROUTES.AUTH.LOGIN, credentials);
     return response.data.data || response.data;
   },
-  // Add other authentication API calls here, e.g., register, logout, refreshToken
+
+  getProfile: async () => {
+    const response = await apiClient.get(API_ROUTES.AUTH.ME);
+    return response.data.data?.user || response.data.data || response.data;
+  },
 };
