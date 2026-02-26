@@ -1,87 +1,28 @@
+import { categoryApi } from "@/api/category.api";
+import { productApi } from "@/api/product.api";
 import ProductCard from "@/app/components/common/ProductCard";
 import SubHeader from "@/app/components/navbar/SubHeader";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Mock data for products
-const products = [
-  {
-    id: "1",
-    name: "Rose Mist Long kurta",
-    price: "৳4500",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop",
-    category: "mega sells",
-    gender: "women",
-  },
-  {
-    id: "2",
-    name: "Cotton Salwar",
-    price: "৳2200",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1585487000160-6ebcfceb00dc?q=80&w=400&auto=format&fit=crop",
-    category: "winter collection",
-    gender: "women",
-  },
-  {
-    id: "3",
-    name: "Women Tops",
-    price: "৳600",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=400&auto=format&fit=crop",
-    category: "cool casuals",
-    gender: "women",
-  },
-  {
-    id: "4",
-    name: "Women Pants",
-    price: "৳900",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1506619216599-9d16d0903dfd?q=80&w=400&auto=format&fit=crop",
-    category: "modern",
-    gender: "women",
-  },
-  {
-    id: "5",
-    name: "Ethnic Silk",
-    price: "৳5500",
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop",
-    category: "ethnic",
-    gender: "women",
-  },
-  {
-    id: "6",
-    name: "Designer Wear",
-    price: "৳7500",
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1550614000-4b9519e090e2?q=80&w=400&auto=format&fit=crop",
-    category: "ethnic",
-    gender: "women",
-  },
-  {
-    id: "7",
-    name: "Classic Silk Saree",
-    price: "৳3500",
-    rating: 4.6,
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop",
-    category: "saree",
-    gender: "women",
-  },
-];
-
 export function CategoryScreenContent() {
-  const { category, gender } = useLocalSearchParams();
-  const router = useRouter();
+  const { category, gender, collectionId, collectionSlug, categoryId } =
+    useLocalSearchParams<{
+      category?: string;
+      gender?: string;
+      collectionId?: string;
+      collectionSlug?: string;
+      categoryId?: string;
+    }>();
   const categoryName = typeof category === "string" ? category : "Clothing";
   const genderName = typeof gender === "string" ? gender : undefined;
 
@@ -92,11 +33,64 @@ export function CategoryScreenContent() {
     ? genderName.charAt(0).toUpperCase() + genderName.slice(1)
     : "All";
 
+  // Build query params — only one of collectionId | collectionSlug | categoryId
+  // is included at a time; optional fields like gender are omitted when absent.
+  const queryParams = React.useMemo(() => {
+    const params: Record<string, any> = { isPublished: true };
+
+    if (collectionId) {
+      params.collectionId = collectionId;
+    } else if (collectionSlug) {
+      params.collectionSlug = collectionSlug;
+    } else if (categoryId) {
+      params.categoryId = categoryId;
+    }
+
+    if (genderName) {
+      params.gender = genderName.toUpperCase();
+    }
+
+    return params;
+  }, [collectionId, collectionSlug, categoryId, genderName]);
+
+  // Identifier-only params for the page-title API (no isPublished / gender)
+  const titleParams = React.useMemo(() => {
+    const params: Record<string, any> = {};
+    if (collectionId) {
+      params.collectionId = collectionId;
+    } else if (collectionSlug) {
+      params.collectionSlug = collectionSlug;
+    } else if (categoryId) {
+      params.categoryId = categoryId;
+    }
+    return params;
+  }, [collectionId, collectionSlug, categoryId]);
+
+  const { data: pageTitleData } = useQuery({
+    queryKey: ["pageTitle", titleParams],
+    queryFn: () => categoryApi.getPageTitle(titleParams),
+    enabled: !!(collectionId || collectionSlug || categoryId),
+  });
+
+  const {
+    data: productsData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["products", queryParams],
+    queryFn: () => productApi.getProducts(queryParams),
+  });
+
+  const products = productsData?.products ?? productsData ?? [];
+
   return (
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View>
-        <SubHeader title={displayTitle} showBackButton={true} />
+        <SubHeader
+          title={pageTitleData?.name ?? displayTitle ?? "Soho"}
+          showBackButton={true}
+        />
 
         <View className="px-4 pb-4">
           <TouchableOpacity
@@ -113,23 +107,46 @@ export function CategoryScreenContent() {
         </View>
       </View>
 
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductCard
-            id={item.id}
-            name={item.name}
-            image={item.image}
-            price={item.price}
-            rating={item.rating}
-            onPress={() => router.push(`/product/${item.id}`)}
-          />
-        )}
-        numColumns={2}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading && (
+        <View className="flex-1 items-center justify-center py-16">
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      )}
+
+      {isError && (
+        <View className="flex-1 items-center justify-center py-16">
+          <Text style={{ fontFamily: "Urbanist" }} className="text-red-500">
+            Failed to load products. Please try again.
+          </Text>
+        </View>
+      )}
+
+      {products.length === 0 && (
+        <View className="flex-1 items-center justify-center py-16">
+          <Text style={{ fontFamily: "Urbanist" }} className="text-gray-500">
+            No products found.
+          </Text>
+        </View>
+      )}
+
+      {!isLoading && !isError && (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ProductCard
+              id={item.id}
+              name={item.name}
+              image={item.primaryImage}
+              price={item.price}
+              rating={item.rating}
+            />
+          )}
+          numColumns={2}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 }

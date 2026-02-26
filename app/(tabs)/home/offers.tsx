@@ -65,7 +65,14 @@ const OffersScreen = () => {
             <OfferCard
               item={item}
               onPress={() =>
-                router.push(`(tabs)/home/shop/${item.title}` as any)
+                router.push({
+                  pathname: "/(tabs)/home/shop/[category]",
+                  params: {
+                    category: (item.title || "").toLowerCase(),
+                    gender: "",
+                    collectionId: item.id,
+                  },
+                })
               }
             />
           )}

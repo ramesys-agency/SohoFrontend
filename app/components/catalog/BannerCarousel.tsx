@@ -39,8 +39,6 @@ const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
   };
 
   const renderItem = ({ item }: { item: BannerItem }) => {
-    const displayTitle = item.title || item.name;
-
     return (
       <View
         style={{ width: BANNER_WIDTH }}
@@ -57,14 +55,14 @@ const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
             resizeMode="cover"
           >
             <View className="bg-black/10 absolute inset-0" />
-            {displayTitle && (
+            {/* {displayTitle && (
               <Text
                 className="text-white text-3xl mb-1"
                 style={{ fontFamily: "Classyvogue" }}
               >
                 {displayTitle}
               </Text>
-            )}
+            )} */}
             {item.subtitle && (
               <Text
                 className="text-white text-base mb-4 opacity-90"

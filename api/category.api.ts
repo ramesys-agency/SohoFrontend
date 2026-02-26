@@ -8,4 +8,11 @@ export const categoryApi = {
     });
     return response.data.data || response.data;
   },
+
+  getPageTitle: async (params: Record<string, any>) => {
+    const response = await apiClient.get(API_ROUTES.CATEGORY.GET_PAGE_TITLE, {
+      params,
+    });
+    return response.data.data || response.data;
+  },
 };

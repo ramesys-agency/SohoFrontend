@@ -515,10 +515,7 @@ export default function ProductDetailsScreen() {
               >
                 {RELATED_PRODUCTS.map((item) => (
                   <View key={item.id} className="w-40 mr-4">
-                    <ProductCard
-                      {...item}
-                      onPress={() => router.push(`/product/${item.id}`)}
-                    />
+                    <ProductCard {...item} />
                   </View>
                 ))}
               </ScrollView>

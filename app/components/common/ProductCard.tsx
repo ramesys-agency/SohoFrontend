@@ -1,4 +1,5 @@
 import { AntDesign, Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
@@ -8,20 +9,20 @@ interface ProductCardProps {
   image: string;
   price: string;
   rating: number;
-  onPress?: () => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
+  id,
   name,
   image,
   price,
   rating,
-  onPress,
 }) => {
+  const router = useRouter();
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={onPress}
+      onPress={() => router.push(`/product/${id}`)}
       className="flex-1 m-2 mb-4"
     >
       <View className="relative aspect-[3/4] rounded-xl overflow-hidden mb-2 bg-gray-100">
@@ -64,7 +65,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         >
           Price
         </Text>
-        <Text className="text-lg text-black font-Urbanist-Bold">{price}</Text>
+        <Text className="text-lg text-black font-Urbanist-Bold">৳ {price}</Text>
       </View>
     </TouchableOpacity>
   );

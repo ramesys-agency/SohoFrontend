@@ -20,5 +20,6 @@ export const API_ROUTES = {
   },
   CATEGORY: {
     GET_CATEGORIES: "/api/v1/categories",
+    GET_PAGE_TITLE: "/api/v1/categories/page-title",
   },
 } as const;

@@ -131,6 +131,7 @@ export default function CatalogScreen() {
                     params: {
                       category: item.name.toLowerCase(),
                       gender: genderCategory,
+                      categoryId: item.id,
                     },
                   });
                 }}
@@ -148,6 +149,7 @@ export default function CatalogScreen() {
                   params: {
                     category: (item.name || item.title || "").toLowerCase(),
                     gender: genderCategory, // Also pass the currently selected gender
+                    collectionId: item.id,
                   },
                 });
               }}
@@ -169,6 +171,7 @@ export default function CatalogScreen() {
                         params: {
                           category: collection.name.toLowerCase(),
                           gender: genderCategory,
+                          collectionId: collection.id,
                         },
                       });
                     }}

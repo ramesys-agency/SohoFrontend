@@ -1,5 +1,6 @@
 import { collectionApi } from "@/api/collection.api";
 import { productApi } from "@/api/product.api";
+import ProductCard from "@/app/components/common/ProductCard";
 import TopNavBar from "@/app/components/navbar/TopNavBar";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -7,7 +8,6 @@ import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FeaturedSection from "../../components/home/FeaturedSection";
 import HeroBanner from "../../components/home/HeroBanner";
-import ProductCard from "../../components/home/ProductCard";
 import SectionHeader from "../../components/home/SectionHeader";
 
 const FEATURED_COLLECTIONS = [
@@ -115,9 +115,15 @@ export default function HomeScreen() {
             <HeroBanner
               image={{ uri: homeBanner[0].collectionPlacements[0].imageUrl }}
               onPress={() =>
-                router.push(
-                  `/(tabs)/home/shop/${homeBanner[0].collectionPlacements[0].collection.name}`,
-                )
+                router.push({
+                  pathname: "/(tabs)/home/shop/[category]",
+                  params: {
+                    category: "Something",
+                    gender: "",
+                    collectionId:
+                      homeBanner[0].collectionPlacements[0].collection.id,
+                  },
+                })
               }
             />
           )}
@@ -126,15 +132,27 @@ export default function HomeScreen() {
         <View className="py-6">
           <SectionHeader
             title="Best Sellers"
-            onSeeAllPress={() => router.push("/(tabs)/home/shop/Best Sellers")}
+            onSeeAllPress={() =>
+              router.push({
+                pathname: "/(tabs)/home/shop/[category]",
+                params: {
+                  category: "Best Sellers",
+                  gender: "",
+                  collectionSlug: "best-sellers",
+                },
+              })
+            }
           />
           <View className="flex-row flex-wrap justify-between px-4">
             {bestSellerProducts &&
               bestSellerProducts.products.map((product: any) => (
                 <ProductCard
                   key={product.id}
-                  product={product}
-                  onPress={() => router.push(`/product/${product.id}`)}
+                  id={product.id}
+                  name={product.name}
+                  image={product.primaryImage}
+                  price={product.price}
+                  rating={product.rating}
                 />
               ))}
           </View>

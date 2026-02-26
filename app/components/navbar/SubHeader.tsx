@@ -44,7 +44,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({
             </TouchableOpacity>
           )}
           <Text
-            className="text-4xl text-black tracking-tight"
+            className="text-4xl text-black tracking-tight w-[80%]"
             numberOfLines={1}
             style={{ fontFamily: "Classyvogue" }}
           >
