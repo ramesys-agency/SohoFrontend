@@ -18,4 +18,7 @@ export const API_ROUTES = {
   PRODUCT: {
     GET_PRODUCTS: "/api/v1/products",
   },
+  CATEGORY: {
+    GET_CATEGORIES: "/api/v1/categories",
+  },
 } as const;

@@ -1,6 +1,5 @@
-import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { ImageBackground, Text, TouchableOpacity } from "react-native";
+import { ImageBackground, TouchableOpacity } from "react-native";
 
 export interface OfferItem {
   id: string;
@@ -25,9 +24,9 @@ export default function OfferCard({ item, onPress }: OfferCardProps) {
     >
       <ImageBackground
         source={item.image}
-        className="w-full h-full justify-end"
+        className="w-full h-full object-cover justify-end"
       >
-        <LinearGradient
+        {/* <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.8)"]}
           className="p-6 h-1/2 justify-end"
         >
@@ -43,7 +42,7 @@ export default function OfferCard({ item, onPress }: OfferCardProps) {
           <Text className="text-white text-3xl font-Urbanist-Bold">
             {item.discount}
           </Text>
-        </LinearGradient>
+        </LinearGradient> */}
       </ImageBackground>
     </TouchableOpacity>
   );

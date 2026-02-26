@@ -1,43 +1,48 @@
+import { collectionApi } from "@/api/collection.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
 import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
-import React from "react";
-import { FlatList } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OfferCard, { OfferItem } from "../../components/home/OfferCard";
 
-const OFFERS: OfferItem[] = [
-  {
-    id: "1",
-    title: "Winter Collection",
-    subtitle: "For Selected Items",
-    discount: "20% OFF",
-    image: {
-      uri: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=800&auto=format&fit=crop",
-    },
-  },
-  {
-    id: "2",
-    title: "Cool Casuals",
-    subtitle: "For Selected Items",
-    discount: "25% OFF",
-    image: {
-      uri: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
-    },
-  },
-  {
-    id: "3",
-    title: "Stock Clearance",
-    subtitle: "For Selected Items",
-    discount: "25% OFF",
-    image: {
-      uri: "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop",
-    },
-  },
-];
-
 const OffersScreen = () => {
   const navigation = useNavigation();
+  const [offers, setOffers] = useState<OfferItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchOffers = async () => {
+    try {
+      const data = await collectionApi.getCollections({
+        isActive: true,
+        placementPage: "OFFER",
+        placementIsActive: true,
+      });
+
+      const formattedOffers: OfferItem[] = data.map((collection: any) => ({
+        id: collection.id,
+        title: collection.name,
+        subtitle: "For Selected Items",
+        discount: "",
+        image: {
+          uri:
+            collection.collectionPlacements?.[0]?.imageUrl ||
+            "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=800&auto=format&fit=crop",
+        },
+      }));
+
+      setOffers(formattedOffers);
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -48,19 +53,27 @@ const OffersScreen = () => {
       />
 
       {/* Offers List */}
-      <FlatList
-        className="px-10 pt-10 mb-10"
-        data={OFFERS}
-        renderItem={({ item }) => (
-          <OfferCard
-            item={item}
-            onPress={() => router.push(`/shop/${item.title}`)}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      ) : (
+        <FlatList
+          className="px-10 pt-10 mb-10"
+          data={offers}
+          renderItem={({ item }) => (
+            <OfferCard
+              item={item}
+              onPress={() =>
+                router.push(`(tabs)/home/shop/${item.title}` as any)
+              }
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
     </SafeAreaView>
   );
 };

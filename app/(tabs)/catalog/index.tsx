@@ -1,114 +1,21 @@
+import { categoryApi } from "@/api/category.api";
+import { collectionApi } from "@/api/collection.api";
+import BannerCarousel from "@/app/components/catalog/BannerCarousel";
 import SubHeader from "@/app/components/navbar/SubHeader";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BannerCarousel from "../../components/catalog/BannerCarousel";
 import CategoryCircle from "../../components/catalog/CategoryCircle";
 import CategoryGridItem from "../../components/catalog/CategoryGridItem";
 
-const circularCategories = [
-  {
-    id: "1",
-    name: "Saree",
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Modern",
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=200&auto=format&fit=crop",
-  },
-  {
-    id: "3",
-    name: "Ethnic",
-    image:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop",
-  },
-  {
-    id: "4",
-    name: "Shoes",
-    image:
-      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=200&auto=format&fit=crop",
-  },
-  {
-    id: "5",
-    name: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1576053139778-7e32f2ae3cfd?q=80&w=200&auto=format&fit=crop",
-  },
-];
-
-const gridItems = [
-  {
-    id: "1",
-    name: "New Arrival",
-    image:
-      "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Trending",
-    image:
-      "https://images.unsplash.com/photo-1475180098004-ca77a652e95c?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    id: "3",
-    name: "Clothing",
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    id: "4",
-    name: "Shoes",
-    image:
-      "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    id: "5",
-    name: "New Arrival",
-    image:
-      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    id: "6",
-    name: "Trending",
-    image:
-      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=400&auto=format&fit=crop",
-  },
-];
-
-const banners = [
-  {
-    id: "1",
-    title: "Stock Clearance",
-    subtitle: "For Selected Items",
-    discount: "25% OFF",
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    title: "New Collection",
-    subtitle: "Summer vibes",
-    discount: "FREE SHIPPING",
-    image:
-      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    id: "3",
-    title: "Season Sale",
-    subtitle: "Winter collection",
-    discount: "UP TO 50%",
-    image:
-      "https://images.unsplash.com/photo-1445205174273-59396092d3af?q=80&w=800&auto=format&fit=crop",
-  },
-];
-
 export default function CatalogScreen() {
-  const [activeCategory, setActiveCategory] = useState("women");
+  const [genderCategory, setGenderCategory] = useState("women");
+  const [categories, setCategories] = useState<any[]>([]);
+  const [gridCollections, setGridCollections] = useState<any[]>([]);
+  const [rowCollections, setRowCollections] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
   const segments = [
@@ -116,6 +23,69 @@ export default function CatalogScreen() {
     { label: "Men", value: "men" },
     { label: "Kids", value: "kids" },
   ];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryApi.getCategories({
+          isActive: true,
+          gender: genderCategory.toUpperCase(),
+        });
+
+        const formattedCategories: any[] = data.map((category: any) => ({
+          id: category.id,
+          name: category.name,
+          image: category.imageUrl,
+        }));
+
+        setCategories(formattedCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchCollections = async () => {
+      try {
+        const data = await collectionApi.getCollections({
+          isActive: true,
+          placementPage: genderCategory.toUpperCase(),
+          placementIsActive: true,
+        });
+
+        const formattedGridCollections: any[] = data.map(
+          (collection: any) =>
+            collection?.collectionPlacements?.[0]?.section ===
+              "GRID_SECTION" && {
+              id: collection.id,
+              name: collection.name,
+              image: collection.collectionPlacements?.[0]?.imageUrl,
+            },
+        );
+
+        const formattedRowCollections: any[] = data.map(
+          (collection: any) =>
+            collection?.collectionPlacements?.[0]?.section ===
+              "FEATURED_ROW" && {
+              id: collection.id,
+              name: collection.name,
+              image: collection.collectionPlacements?.[0]?.imageUrl,
+            },
+        );
+
+        setGridCollections(formattedGridCollections);
+        setRowCollections(formattedRowCollections);
+      } catch (error) {
+        console.error("Error fetching collections:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+    fetchCollections();
+  }, [genderCategory]);
 
   return (
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
@@ -125,79 +95,89 @@ export default function CatalogScreen() {
           style={{ marginHorizontal: 16, marginBottom: 10 }}
           backgroundColor="#F3F3F3"
           values={segments.map((s) => s.label)}
-          selectedIndex={segments.findIndex((s) => s.value === activeCategory)}
+          selectedIndex={segments.findIndex((s) => s.value === genderCategory)}
           onChange={(event) => {
-            setActiveCategory(
+            setGenderCategory(
               segments[event.nativeEvent.selectedSegmentIndex].value,
             );
           }}
         />
       </View>
 
-      <ScrollView
-        className="flex-1 px-4 pt-2"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      >
-        {/* Horizontal Categories */}
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      ) : (
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="py-4"
+          className="flex-1 px-4 pt-2"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
-          {circularCategories.map((item) => (
-            <CategoryCircle
-              key={item.id}
-              name={item.name}
-              image={item.image}
-              onPress={() => {
-                router.push({
-                  pathname: "/(tabs)/catalog/shop/[category]",
-                  params: {
-                    category: item.name.toLowerCase(),
-                    gender: activeCategory,
-                  },
-                });
-              }}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Promotional Banner */}
-        <BannerCarousel
-          banners={banners}
-          onPress={(item) => {
-            router.push({
-              pathname: "/(tabs)/catalog/shop/[category]",
-              params: {
-                category: item.title,
-                gender: activeCategory, // Also pass the currently selected gender
-              },
-            });
-          }}
-        />
-
-        {/* Categories Grid */}
-        <View className="flex-row flex-wrap -mx-1">
-          {gridItems.map((item) => (
-            <View key={item.id} className="w-1/2 p-1">
-              <CategoryGridItem
+          {/* Horizontal Categories */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="py-4"
+          >
+            {categories.map((item) => (
+              <CategoryCircle
+                key={item.id}
                 name={item.name}
-                image={item.image}
+                image={item.imageUrl}
                 onPress={() => {
                   router.push({
                     pathname: "/(tabs)/catalog/shop/[category]",
                     params: {
                       category: item.name.toLowerCase(),
-                      gender: activeCategory,
+                      gender: genderCategory,
                     },
                   });
                 }}
               />
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+            ))}
+          </ScrollView>
+
+          {/* Promotional Banner */}
+          {rowCollections.filter((collection) => collection).length > 0 && (
+            <BannerCarousel
+              banners={rowCollections.filter((collection) => collection)}
+              onPress={(item) => {
+                router.push({
+                  pathname: "/(tabs)/catalog/shop/[category]",
+                  params: {
+                    category: (item.name || item.title || "").toLowerCase(),
+                    gender: genderCategory, // Also pass the currently selected gender
+                  },
+                });
+              }}
+            />
+          )}
+
+          {/* Collection Grid */}
+          <View className="flex-row flex-wrap -mx-1">
+            {gridCollections
+              .filter((collection) => collection)
+              .map((collection) => (
+                <View key={collection.id} className="w-1/2 p-1">
+                  <CategoryGridItem
+                    name={collection.name}
+                    image={collection.image}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/(tabs)/catalog/shop/[category]",
+                        params: {
+                          category: collection.name.toLowerCase(),
+                          gender: genderCategory,
+                        },
+                      });
+                    }}
+                  />
+                </View>
+              ))}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

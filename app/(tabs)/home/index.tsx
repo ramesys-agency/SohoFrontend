@@ -101,11 +101,6 @@ export default function HomeScreen() {
     fetchBestSellerProducts();
   }, []);
 
-  console.log(
-    "bestSellerProducts",
-    JSON.stringify(bestSellerProducts, null, 2),
-  );
-
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <TopNavBar />
