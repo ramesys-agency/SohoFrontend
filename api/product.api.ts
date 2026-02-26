@@ -8,4 +8,9 @@ export const productApi = {
     });
     return response.data.data || response.data;
   },
+
+  getProductById: async (id: string) => {
+    const response = await apiClient.get(API_ROUTES.PRODUCTS.DETAILS(id));
+    return response.data.data || response.data;
+  },
 };

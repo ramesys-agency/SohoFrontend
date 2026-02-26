@@ -1,0 +1,47 @@
+import { Feather } from "@expo/vector-icons";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+
+interface ProductBottomBarProps {
+  onShopNow: () => void;
+  onAddToCart: () => void;
+}
+
+export default function ProductBottomBar({
+  onShopNow,
+  onAddToCart,
+}: ProductBottomBarProps) {
+  return (
+    <View className="absolute bottom-0 left-0 right-0 px-6 py-3 bg-white border-t border-gray-100 flex-row items-center gap-3 pb-8 z-30">
+      {/* Shop Now */}
+      <TouchableOpacity
+        className="flex-1 py-4 rounded-lg bg-white border border-gray-300 items-center justify-center flex-row"
+        activeOpacity={0.6}
+        onPress={onShopNow}
+      >
+        <Feather name="shopping-bag" size={20} color="black" className="mr-2" />
+        <Text
+          className="text-black font-semibold text-md"
+          style={{ fontFamily: "UrbanistBold" }}
+        >
+          Shop Now
+        </Text>
+      </TouchableOpacity>
+
+      {/* Add to Wardrobe */}
+      <TouchableOpacity
+        className="flex-1 py-4 rounded-lg bg-black items-center justify-center flex-row"
+        activeOpacity={0.8}
+        onPress={onAddToCart}
+      >
+        <Feather name="plus" size={20} color="white" className="mr-2" />
+        <Text
+          className="text-white font-semibold text-md"
+          style={{ fontFamily: "UrbanistBold" }}
+        >
+          Add to Wardrobe
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
