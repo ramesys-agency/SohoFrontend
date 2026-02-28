@@ -124,7 +124,7 @@ export default function CatalogScreen() {
               <CategoryCircle
                 key={item.id}
                 name={item.name}
-                image={item.imageUrl}
+                image={item.image}
                 onPress={() => {
                   router.push({
                     pathname: "/(tabs)/catalog/shop/[category]",

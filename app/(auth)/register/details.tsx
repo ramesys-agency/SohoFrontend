@@ -1,17 +1,71 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
+import { useAuthStore } from "../../../store/authStore";
 
 export default function RegisterStep2() {
   const router = useRouter();
-  const [fullName, setFullName] = useState("Milan Sarker");
-  const [phone, setPhone] = useState("01712345678");
-  const [password, setPassword] = useState("..........");
-  const [confirmPassword, setConfirmPassword] = useState("..........");
+  const { email } = useLocalSearchParams<{ email: string }>();
+
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const login = useAuthStore((s) => s.login);
+
+  const handleRegister = async () => {
+    if (!fullName.trim()) {
+      Alert.alert("Error", "Please enter your full name.");
+      return;
+    }
+    if (!phone.trim() || phone.length < 10) {
+      Alert.alert("Error", "Please enter a valid phone number.");
+      return;
+    }
+    if (password.length < 8) {
+      Alert.alert("Error", "Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await authApi.register({
+        email: email ?? "",
+        password,
+        fullName,
+        phone,
+      });
+
+      const user = {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.fullName,
+        role: result.user.role,
+      };
+
+      await login(user, result.accessToken, result.refreshToken);
+
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        "Registration failed. Please try again.";
+      Alert.alert("Error", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -34,7 +88,7 @@ export default function RegisterStep2() {
             Create your soho account
           </Text>
           <Text className="text-[#999999] text-sm font-Urbanist">
-            Start shopping form soho.
+            Start shopping from soho.
           </Text>
         </View>
 
@@ -45,35 +99,23 @@ export default function RegisterStep2() {
             onChangeText={setFullName}
           />
 
-          <View className="mb-4">
-            <View className="bg-[#F2F2F2] rounded-xl px-4 py-3">
-              <Text className="text-[#999999] text-xs font-Urbanist mb-1">
-                Phone number
-              </Text>
-              <View className="flex-row items-center">
-                <TouchableOpacity className="flex-row items-center mr-3 border-r border-[#CCCCCC] pr-3">
-                  <View className="w-6 h-4 bg-green-700 mr-1" />
-                  {/* BD Flag placeholder */}
-                  <IconSymbol
-                    name="chevron.right"
-                    size={12}
-                    color="#999999"
-                    style={{ transform: [{ rotate: "90deg" }] }}
-                  />
-                </TouchableOpacity>
-                <Text className="text-[#000000] text-base font-Urbanist-Medium">
-                  01712345678
-                </Text>
-              </View>
-            </View>
-          </View>
+          <AuthInput
+            label="Phone number"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+          />
 
           <AuthInput
             label="Create password"
             value={password}
             onChangeText={setPassword}
             isPassword
-            error="Password must be at least 8 characters"
+            error={
+              password.length > 0 && password.length < 8
+                ? "Password must be at least 8 characters"
+                : undefined
+            }
           />
 
           <AuthInput
@@ -81,14 +123,17 @@ export default function RegisterStep2() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             isPassword
+            error={
+              confirmPassword.length > 0 && password !== confirmPassword
+                ? "Passwords do not match"
+                : undefined
+            }
           />
         </View>
 
         <AuthButton
-          title="Continue"
-          onPress={() => {
-            router.push("/(auth)/register/verify");
-          }}
+          title={isLoading ? "Creating account..." : "Continue"}
+          onPress={handleRegister}
           className="mt-4 mb-10"
         />
       </ScrollView>

@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
@@ -9,10 +10,53 @@ import { IconSymbol } from "../../../components/ui/icon-symbol";
 export default function ForgotPasswordEmail() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendCode = () => {
-    // In a real app, send OTP logic here
-    router.push("/(auth)/forgot-password/verify");
+  const handleSendCode = async () => {
+    if (!email.trim()) {
+      Alert.alert("Error", "Please enter your email address.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await authApi.forgotPassword({ email });
+
+      // Backend returns a resetLink containing the token
+      // e.g. http://frontend/reset-password?token=<jwt>
+      const resetLink: string = result?.resetLink ?? "";
+      const token = resetLink.includes("?token=")
+        ? resetLink.split("?token=")[1]
+        : "";
+
+      Alert.alert(
+        "Check your email",
+        result?.message ?? "A password reset link has been sent to your email.",
+        [
+          {
+            text: "Continue",
+            onPress: () => {
+              router.push({
+                pathname: "/(auth)/forgot-password/reset",
+                params: { token },
+              });
+            },
+          },
+        ],
+      );
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      Alert.alert("Error", message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -36,7 +80,7 @@ export default function ForgotPasswordEmail() {
             Forgot Password
           </Text>
           <Text className="text-[#999999] text-sm font-Urbanist text-center px-10">
-            Enter your email address below to receive a password reset code.
+            Enter your email address below to receive a password reset link.
           </Text>
         </View>
 
@@ -51,7 +95,7 @@ export default function ForgotPasswordEmail() {
         </View>
 
         <AuthButton
-          title="Send Code"
+          title={isLoading ? "Sending..." : "Send Reset Link"}
           onPress={handleSendCode}
           className="mb-8"
         />

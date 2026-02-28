@@ -18,6 +18,8 @@ const MAPPING = {
   "heart.fill": "heart",
   "person.fill": "person",
   "chevron.left": "chevron-back",
+  "chevron.down": "chevron-down",
+  "chevron.up": "chevron-up",
   "checkmark.circle.fill": "checkmark-circle",
   "arrow.down.right": "arrow-forward",
   trash: "trash",

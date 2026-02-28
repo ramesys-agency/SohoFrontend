@@ -6,11 +6,22 @@ export const API_ROUTES = {
     LOGOUT: "/api/v1/auth/logout",
     ME: "/api/v1/auth/me",
     UPDATE_PROFILE: "/api/v1/users/profile",
+    FORGOT_PASSWORD: "/api/v1/auth/forgot-password",
+    RESET_PASSWORD: "/api/v1/auth/reset-password",
   },
   // Add other routes here as needed
+  USERS: {
+    PROFILE: "/api/v1/users/profile",
+  },
+  ADDRESS: {
+    BASE: "/api/v1/addresses",
+    DETAILS: (id: string) => `/api/v1/addresses/${id}`,
+    DEFAULT: (id: string) => `/api/v1/addresses/${id}/default`,
+  },
   PRODUCTS: {
     LIST: "/api/v1/products",
     DETAILS: (id: string) => `/api/v1/products/${id}`,
+    SEARCH: "/api/v1/products/search",
   },
   COLLECTION: {
     GET_COLLECTIONS: "/api/v1/collections",

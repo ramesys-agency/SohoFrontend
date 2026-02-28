@@ -1,9 +1,11 @@
+import { productApi } from "@/api/product.api";
 import ProductCard from "@/app/components/common/ProductCard";
 import FilterModal from "@/app/components/search/FilterModal";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Text,
   TextInput,
@@ -12,129 +14,73 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Mock data for products (Shared or similar to [category].tsx)
-const mockProducts = [
-  {
-    id: "1",
-    name: "Rose Mist Long kurta",
-    price: "৳4500",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop",
-    category: "Clothes",
-    brand: "Gucci",
-    size: "M",
-    color: "#000000",
-  },
-  {
-    id: "2",
-    name: "Cotton Salwar",
-    price: "৳2200",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1585487000160-6ebcfceb00dc?q=80&w=400&auto=format&fit=crop",
-    category: "Clothes",
-    brand: "Fendi",
-    size: "S",
-    color: "#1E88E5",
-  },
-  {
-    id: "3",
-    name: "Women Tops",
-    price: "৳600",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=400&auto=format&fit=crop",
-    category: "Clothes",
-    brand: "Adidas",
-    size: "L",
-    color: "#F44336",
-  },
-  {
-    id: "4",
-    name: "Women Pants",
-    price: "৳900",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1506619216599-9d16d0903dfd?q=80&w=400&auto=format&fit=crop",
-    category: "Clothes",
-    brand: "Gucci",
-    size: "XL",
-    color: "#FFB300",
-  },
-  {
-    id: "5",
-    name: "Leather Bag",
-    price: "৳5500",
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=400&auto=format&fit=crop",
-    category: "Bags",
-    brand: "Fendi",
-    size: "L",
-    color: "#000000",
-  },
-  {
-    id: "6",
-    name: "Running Shoes",
-    price: "৳7500",
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop",
-    category: "Shoes",
-    brand: "Adidas",
-    size: "M",
-    color: "#1E88E5",
-  },
-];
-
 export default function SearchScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [filters, setFilters] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    applyFilters(query, filters);
-  };
+  const fetchResults = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setResults([]);
+      setError(null);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await productApi.searchProducts(query, 10);
+      // API may return { products: [...] } or an array directly
+      const products = Array.isArray(data)
+        ? data
+        : (data?.products ?? data?.items ?? []);
+      setResults(products);
+    } catch {
+      setError("Failed to load results. Please try again.");
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      fetchResults(searchQuery);
+    }, 400);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [searchQuery, fetchResults]);
 
   const handleApplyFilters = (newFilters: any) => {
     setFilters(newFilters);
-    applyFilters(searchQuery, newFilters);
   };
 
-  const applyFilters = (query: string, currentFilters: any) => {
-    if (!query && !currentFilters) {
-      setResults([]);
-      return;
-    }
-
-    let filtered = mockProducts.filter((product) =>
-      product.name.toLowerCase().includes(query.toLowerCase()),
-    );
-
-    if (currentFilters) {
-      if (currentFilters.size) {
-        filtered = filtered.filter((p) => p.size === currentFilters.size);
-      }
-      if (currentFilters.color) {
-        filtered = filtered.filter((p) => p.color === currentFilters.color);
-      }
-      if (currentFilters.category && currentFilters.category !== "Custom") {
-        filtered = filtered.filter(
-          (p) => p.category === currentFilters.category,
-        );
-      }
-      if (currentFilters.brand && currentFilters.brand !== "Custom") {
-        filtered = filtered.filter((p) => p.brand === currentFilters.brand);
-      }
-      // Price range filtering would need more logic to parse strings like "0 - 20,000"
-    }
-
-    setResults(filtered);
-  };
+  // Apply client-side filters on top of API results
+  const filteredResults = filters
+    ? results.filter((p) => {
+        if (filters.size && p.size !== filters.size) return false;
+        if (filters.color && p.color !== filters.color) return false;
+        if (
+          filters.category &&
+          filters.category !== "Custom" &&
+          p.category !== filters.category
+        )
+          return false;
+        if (
+          filters.brand &&
+          filters.brand !== "Custom" &&
+          p.brand !== filters.brand
+        )
+          return false;
+        return true;
+      })
+    : results;
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -153,17 +99,23 @@ export default function SearchScreen() {
             placeholder="Search your product"
             placeholderTextColor="#999"
             value={searchQuery}
-            onChangeText={handleSearch}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+            returnKeyType="search"
             style={{ fontFamily: "Urbanist" }}
           />
-          <TouchableOpacity onPress={() => setIsFilterVisible(true)}>
-            <Feather name="sliders" size={20} color="#666" />
-          </TouchableOpacity>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#666" />
+          ) : (
+            <TouchableOpacity onPress={() => setIsFilterVisible(true)}>
+              <Feather name="sliders" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       {/* Results Header */}
-      {results.length > 0 && (
+      {filteredResults.length > 0 && (
         <View className="px-4 pb-4">
           <Text
             className="text-2xl"
@@ -172,53 +124,71 @@ export default function SearchScreen() {
             {searchQuery ? `Results for "${searchQuery}"` : "Filtered Products"}
           </Text>
           <Text className="text-gray-400" style={{ fontFamily: "Urbanist" }}>
-            {results.length} results found
+            {filteredResults.length} results found
+          </Text>
+        </View>
+      )}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <View className="items-center justify-center py-10 px-8">
+          <Feather name="alert-circle" size={40} color="#F44336" />
+          <Text
+            className="mt-3 text-base text-red-500 text-center"
+            style={{ fontFamily: "Urbanist-Medium" }}
+          >
+            {error}
           </Text>
         </View>
       )}
 
       {/* Results List */}
-      <FlatList
-        data={results}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductCard
-            id={item.id}
-            name={item.name}
-            variantId={item.variantId}
-            isWishlisted={item.isWishlisted}
-            image={item.image}
-            price={item.price}
-            rating={item.rating}
-          />
-        )}
-        numColumns={2}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          searchQuery || filters ? (
-            <View className="items-center justify-center py-20">
-              <Feather name="search" size={64} color="#E5E5E5" />
-              <Text
-                className="mt-4 text-xl text-gray-400"
-                style={{ fontFamily: "Urbanist-Medium" }}
-              >
-                No products found
-              </Text>
-            </View>
-          ) : (
-            <View className="items-center justify-center py-20">
-              <Feather name="search" size={64} color="#E5E5E5" />
-              <Text
-                className="mt-4 text-xl text-gray-400"
-                style={{ fontFamily: "Urbanist-Medium" }}
-              >
-                Search your products
-              </Text>
-            </View>
-          )
-        }
-      />
+      {!error && (
+        <FlatList
+          data={filteredResults}
+          keyExtractor={(item, index) => item.id ?? String(index)}
+          renderItem={({ item }) => (
+            <ProductCard
+              id={item.id}
+              name={item.name}
+              variantId={item.variantId}
+              isWishlisted={item.isWishlisted ?? false}
+              image={
+                item.primaryImage ||
+                "https://dummyimage.com/600x800/cccccc/000000&text=No+Image"
+              }
+              price={item.price ?? item.basePrice ?? "0"}
+              rating={item.averageRating ?? item.rating ?? 0}
+            />
+          )}
+          numColumns={2}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            isLoading ? null : searchQuery || filters ? (
+              <View className="items-center justify-center py-20">
+                <Feather name="search" size={64} color="#E5E5E5" />
+                <Text
+                  className="mt-4 text-xl text-gray-400"
+                  style={{ fontFamily: "Urbanist-Medium" }}
+                >
+                  No products found
+                </Text>
+              </View>
+            ) : (
+              <View className="items-center justify-center py-20">
+                <Feather name="search" size={64} color="#E5E5E5" />
+                <Text
+                  className="mt-4 text-xl text-gray-400"
+                  style={{ fontFamily: "Urbanist-Medium" }}
+                >
+                  Search your products
+                </Text>
+              </View>
+            )
+          }
+        />
+      )}
 
       <FilterModal
         visible={isFilterVisible}

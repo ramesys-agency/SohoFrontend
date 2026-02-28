@@ -1,19 +1,61 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
 
 export default function ForgotPasswordReset() {
   const router = useRouter();
+  const { token } = useLocalSearchParams<{ token: string }>();
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleReset = () => {
-    // In a real app, reset password logic here
-    router.replace("/(auth)/login");
+  const handleReset = async () => {
+    if (newPassword.length < 8) {
+      Alert.alert("Error", "Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+    if (!token) {
+      Alert.alert(
+        "Error",
+        "Reset token is missing. Please restart the process.",
+      );
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await authApi.resetPassword({
+        token,
+        password: newPassword,
+      });
+      Alert.alert(
+        "Success",
+        result?.message ?? "Your password has been reset successfully.",
+        [
+          {
+            text: "Log in",
+            onPress: () => router.replace("/(auth)/login"),
+          },
+        ],
+      );
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        "Failed to reset password. The link may have expired.";
+      Alert.alert("Error", message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,17 +87,27 @@ export default function ForgotPasswordReset() {
             value={newPassword}
             onChangeText={setNewPassword}
             isPassword
+            error={
+              newPassword.length > 0 && newPassword.length < 8
+                ? "Password must be at least 8 characters"
+                : undefined
+            }
           />
           <AuthInput
             label="Confirm Password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             isPassword
+            error={
+              confirmPassword.length > 0 && newPassword !== confirmPassword
+                ? "Passwords do not match"
+                : undefined
+            }
           />
         </View>
 
         <AuthButton
-          title="Reset Password"
+          title={isLoading ? "Resetting..." : "Reset Password"}
           onPress={handleReset}
           className="mb-8"
         />

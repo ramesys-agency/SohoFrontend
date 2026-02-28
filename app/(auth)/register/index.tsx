@@ -1,6 +1,6 @@
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
@@ -9,8 +9,28 @@ import { IconSymbol } from "../../../components/ui/icon-symbol";
 
 export default function RegisterStep1() {
   const router = useRouter();
-  const [email, setEmail] = useState("milansarker4321@gmail.com");
+  const [email, setEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const handleContinue = () => {
+    if (!email.trim()) {
+      Alert.alert("Error", "Please enter your email address.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
+    }
+    if (!termsAccepted) {
+      Alert.alert("Error", "Please accept the terms and conditions.");
+      return;
+    }
+    router.push({
+      pathname: "/(auth)/register/details",
+      params: { email },
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -70,9 +90,7 @@ export default function RegisterStep1() {
 
         <AuthButton
           title="Create account"
-          onPress={() => {
-            router.push("/(auth)/register/details");
-          }}
+          onPress={handleContinue}
           className="mb-8"
         />
 

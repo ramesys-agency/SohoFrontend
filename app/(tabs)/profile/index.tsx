@@ -1,14 +1,16 @@
+import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { userApi } from "../../../api/user.api";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
 import { useAuthStore } from "../../../store/authStore";
 import SubHeader from "../../components/navbar/SubHeader";
@@ -16,6 +18,11 @@ import SubHeader from "../../components/navbar/SubHeader";
 export default function ProfileScreen() {
   const { logout } = useAuthStore();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const { data: profileData, isLoading } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: userApi.getProfile,
+  });
 
   const handleLogout = async () => {
     try {
@@ -39,24 +46,35 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Card */}
-        <View className="bg-gray-100 h-28 p-3 rounded-xl flex-row items-center mb-6">
-          <Image
-            source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-            className="w-20 h-full rounded-xl mr-4"
-          />
-          <View className="flex-1">
-            <Text className="text-lg font-Urbanist-Bold text-black font-Urbanist">
-              Milan Sarker
-            </Text>
-            <Text className="text-gray-500 text-sm font-Urbanist">
-              milansarker4321@gmail.com
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push("/profile/edit-profile")}
-          >
-            <IconSymbol name="pencil" size={20} color="#000" />
-          </TouchableOpacity>
+        <View className="bg-gray-100 min-h-[7rem] p-3 rounded-xl flex-row items-center mb-6">
+          {isLoading ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator color="#000" />
+            </View>
+          ) : (
+            <>
+              <Image
+                source={{
+                  uri:
+                    profileData?.avatar || "https://i.pravatar.cc/150?img=12",
+                }}
+                className="w-20 h-20 rounded-xl mr-4"
+              />
+              <View className="flex-1">
+                <Text className="text-lg font-Urbanist-Bold text-black font-Urbanist">
+                  {profileData?.fullName || "User"}
+                </Text>
+                <Text className="text-gray-500 text-sm font-Urbanist">
+                  {profileData?.email || "No email available"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push("/profile/edit-profile")}
+              >
+                <IconSymbol name="pencil" size={20} color="#000" />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Menu Items */}
@@ -66,15 +84,19 @@ export default function ProfileScreen() {
             label="My orders"
             onPress={() => router.push("/profile/orders")}
           />
-          <MenuItem
+          {/* <MenuItem
             icon="arrow.counterclockwise"
             label="Returns"
             onPress={() => {}}
-          />
+          /> */}
           {/* Note: 'house.fill' maps to 'home' (filled) in our icon set, which is close enough for Address */}
-          <MenuItem icon="house.fill" label="Addresses" onPress={() => {}} />
-          <MenuItem icon="creditcard" label="Payment" onPress={() => {}} />
-          <MenuItem icon="map" label="Region and language" onPress={() => {}} />
+          <MenuItem
+            icon="house.fill"
+            label="Addresses"
+            onPress={() => router.push("/profile/addresses")}
+          />
+          {/* <MenuItem icon="creditcard" label="Payment" onPress={() => {}} /> */}
+          <MenuItem icon="map" label="Region" onPress={() => {}} />
           <MenuItem
             icon="bell"
             label="Notification"

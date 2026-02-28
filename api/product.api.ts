@@ -13,4 +13,11 @@ export const productApi = {
     const response = await apiClient.get(API_ROUTES.PRODUCTS.DETAILS(id));
     return response.data.data || response.data;
   },
+
+  searchProducts: async (q: string, limit: number = 10) => {
+    const response = await apiClient.get(API_ROUTES.PRODUCTS.SEARCH, {
+      params: { q, limit },
+    });
+    return response.data.data || response.data;
+  },
 };
