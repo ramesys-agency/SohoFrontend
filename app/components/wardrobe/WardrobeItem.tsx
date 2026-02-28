@@ -8,6 +8,7 @@ interface WardrobeItemProps {
     title: string;
     price: number;
     size: string;
+    color?: string;
     image: string;
     quantity: number;
   };
@@ -50,7 +51,9 @@ export default function WardrobeItem({
             </TouchableOpacity>
           </View>
 
-          <Text className="text-gray-500 text-xs mt-1">Size: {item.size}</Text>
+          <Text className="text-gray-500 text-xs mt-1">
+            Size: {item.size} {item.color ? `• Color: ${item.color}` : ""}
+          </Text>
         </View>
 
         <View className="flex-row justify-between items-end">

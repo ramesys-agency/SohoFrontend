@@ -1,102 +1,93 @@
 import { cartApi } from "@/api/cart.api";
 import WardrobeItem from "@/app/components/wardrobe/WardrobeItem";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
+  ActivityIndicator,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SubHeader from "../../components/navbar/SubHeader";
 
-const initialItems = [
-  {
-    id: "1",
-    title: "Rose Mist Long kurta",
-    size: "M",
-    price: 4500,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1583391733956-6c78276477e2?q=80&w=300&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    title: "Cotton Salwar",
-    size: "L",
-    price: 2200,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?q=80&w=300&auto=format&fit=crop",
-  },
-  {
-    id: "3",
-    title: "Pink Saree",
-    size: "L",
-    price: 8200,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=300&auto=format&fit=crop",
-  },
-  {
-    id: "4",
-    title: "Women White Top",
-    size: "L",
-    price: 1500,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1534964645224-bca2fd1d0a5e?q=80&w=300&auto=format&fit=crop",
-  },
-];
-
 export default function WardrobeScreen() {
   const router = useRouter();
-  const [items, setItems] = useState(initialItems);
-  const [promoCode, setPromoCode] = useState("");
+  const queryClient = useQueryClient();
 
-  const { data: cartData, error } = useQuery({
+  const {
+    data: cartData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["cart"],
     queryFn: cartApi.getCart,
   });
 
-  useEffect(() => {
-    if (cartData) {
-      console.log("Cart API Response:", JSON.stringify(cartData, null, 2));
-    }
-    if (error) {
-      console.error("Error fetching cart data via React Query:", error);
-    }
-  }, [cartData, error]);
+  const addToCartMutation = useMutation({
+    mutationFn: cartApi.addToCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+  });
 
-  const handleIncrement = (id: string) => {
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
-      ),
-    );
+  const removeFromCartMutation = useMutation({
+    mutationFn: cartApi.removeFromCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+  });
+
+  const decrementCartMutation = useMutation({
+    mutationFn: cartApi.decrementCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+  });
+
+  const items = React.useMemo(() => {
+    if (!cartData?.data) return [];
+    return cartData.data.map((cartItem: any) => {
+      const variant = cartItem.variant || {};
+      const product = variant.product || {};
+      return {
+        id: cartItem.id,
+        variantId: variant.id,
+        productId: product.id,
+        title: product.name || "Unknown Product",
+        size: variant.size || "N/A",
+        color: variant.colorName || "N/A",
+        price: parseFloat(variant.basePrice) || 0,
+        quantity: cartItem.quantity || 1,
+        image: variant.images?.[0]?.imageUrl,
+      };
+    });
+  }, [cartData]);
+
+  if (error) {
+    console.error("Error fetching cart data via React Query:", error);
+  }
+
+  const handleIncrement = (variantId: string) => {
+    if (!variantId) return;
+    addToCartMutation.mutate(variantId);
   };
 
-  const handleDecrement = (id: string) => {
-    setItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id === id && item.quantity > 1) {
-          return { ...item, quantity: item.quantity - 1 };
-        }
-        return item;
-      }),
-    );
+  const handleDecrement = (variantId: string) => {
+    if (!variantId) return;
+    decrementCartMutation.mutate(variantId);
   };
 
-  const handleRemove = (id: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  const handleRemove = (variantId: string) => {
+    if (!variantId) return;
+    removeFromCartMutation.mutate(variantId);
   };
 
   const subTotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum: number, item: any) => sum + item.price * item.quantity,
     0,
   );
   const shipping = items.length > 0 ? 150 : 0;
@@ -106,7 +97,11 @@ export default function WardrobeScreen() {
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <SubHeader title="Wardrobe" showBackButton={false} />
 
-      {items.length === 0 ? (
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      ) : items.length === 0 ? (
         <View className="flex-1 justify-center items-center p-4">
           <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
             <IconSymbol name="cart.fill" size={40} color="#9CA3AF" />
@@ -135,21 +130,21 @@ export default function WardrobeScreen() {
             <View className="h-4" />
 
             {/* Items List */}
-            {items.map((item) => (
+            {items.map((item: any) => (
               <WardrobeItem
                 key={item.id}
                 item={item}
-                onIncrement={() => handleIncrement(item.id)}
-                onDecrement={() => handleDecrement(item.id)}
-                onRemove={() => handleRemove(item.id)}
-                onPress={() => router.push(`/product/${item.id}`)}
+                onIncrement={() => handleIncrement(item.variantId)}
+                onDecrement={() => handleDecrement(item.variantId)}
+                onRemove={() => handleRemove(item.variantId)}
+                onPress={() => router.push(`/product/${item.productId}`)}
               />
             ))}
           </ScrollView>
 
           {/* Fixed Bottom Section */}
           <View
-            className="bg-gray-100 rounded-t-3xl p-6 absolute bottom-0 left-0 right-0"
+            className="bg-gray-100 py-6 px-6 absolute bottom-3 left-0 right-0"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -4 },
@@ -158,68 +153,24 @@ export default function WardrobeScreen() {
               elevation: 10,
             }}
           >
-            {/* Drag Handle Indicator */}
-            <View className="items-center mb-6">
-              <View className="w-12 h-1 bg-gray-300 rounded-full" />
-            </View>
-
-            {/* Promo Code */}
-            <View className="mb-4 flex-row">
-              <TextInput
-                className="flex-1 bg-white rounded-l-lg px-4 py-0 text-base"
-                placeholder="Add Promo Code"
-                value={promoCode}
-                onChangeText={setPromoCode}
-              />
-              <TouchableOpacity className="bg-black justify-center px-6 rounded-r-lg">
-                <Text className="text-white font-Urbanist-Bold">Apply</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Price Summary */}
-            <View className="space-y-3 mb-8">
-              <View className="flex-row justify-between">
-                <Text className="text-gray-600 text-base">Sub Total</Text>
-                <Text className="text-gray-900 text-base font-semibold">
-                  ৳{subTotal.toLocaleString()}
-                </Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-gray-600 text-base">Shipping</Text>
-                <Text className="text-gray-900 text-base font-semibold">
-                  ৳{shipping.toLocaleString()}
-                </Text>
-              </View>
-              <View className="flex-row justify-between items-center mt-2">
-                <View>
-                  <Text className="text-gray-900 text-2xl font-Urbanist-Bold">
-                    Total
-                  </Text>
-                  <Text className="text-gray-500 text-xs">
-                    Including $5.00 in taxes
-                  </Text>
-                </View>
+            <View className="flex-row justify-between items-center mb-24">
+              <View>
+                <Text className="text-gray-500 font-medium mb-1">Total</Text>
                 <Text className="text-gray-900 text-2xl font-Urbanist-Bold">
                   ৳{total.toLocaleString()}
                 </Text>
               </View>
-            </View>
 
-            {/* Checkout Button */}
-            <TouchableOpacity
-              className="bg-black p-4 rounded-xl items-center flex-row justify-center mb-28"
-              onPress={() => router.push("/wardrobe/address")}
-            >
-              <IconSymbol
-                name="checkmark.circle.fill"
-                size={20}
-                color="white"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="text-white text-lg font-Urbanist-Bold">
-                Checkout
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                className="bg-black px-6 py-3 rounded-md flex-row items-center"
+                onPress={() => router.push("/wardrobe/address")}
+              >
+                <Text className="text-white text-lg font-Urbanist-Bold mr-2">
+                  Proceed
+                </Text>
+                <IconSymbol name="chevron.right" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </>
       )}

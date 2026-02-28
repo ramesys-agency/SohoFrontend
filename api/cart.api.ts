@@ -17,4 +17,10 @@ export const cartApi = {
     );
     return response.data;
   },
+  decrementCart: async (variantId: string) => {
+    const response = await apiClient.get(
+      `/api/v1/cart/decrement?variantId=${variantId}`,
+    );
+    return response.data;
+  },
 };
