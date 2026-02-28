@@ -1,13 +1,15 @@
+import { cartApi } from "@/api/cart.api";
 import WardrobeItem from "@/app/components/wardrobe/WardrobeItem";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SubHeader from "../../components/navbar/SubHeader";
@@ -55,6 +57,20 @@ export default function WardrobeScreen() {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [promoCode, setPromoCode] = useState("");
+
+  const { data: cartData, error } = useQuery({
+    queryKey: ["cart"],
+    queryFn: cartApi.getCart,
+  });
+
+  useEffect(() => {
+    if (cartData) {
+      console.log("Cart API Response:", JSON.stringify(cartData, null, 2));
+    }
+    if (error) {
+      console.error("Error fetching cart data via React Query:", error);
+    }
+  }, [cartData, error]);
 
   const handleIncrement = (id: string) => {
     setItems((prevItems) =>

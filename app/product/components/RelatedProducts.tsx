@@ -2,19 +2,7 @@ import ProductCard from "@/app/components/common/ProductCard";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 
-interface RelatedProduct {
-  id: string;
-  name: string;
-  price: string;
-  rating: number;
-  image: string;
-}
-
-interface RelatedProductsProps {
-  products: RelatedProduct[];
-}
-
-export default function RelatedProducts({ products }: RelatedProductsProps) {
+export default function RelatedProducts({ products }: any) {
   return (
     <View className="mt-8 mb-4">
       <Text
@@ -31,9 +19,17 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
         showsHorizontalScrollIndicator={false}
         className="-mx-5 px-5"
       >
-        {products.map((item) => (
+        {products.map((item: any) => (
           <View key={item.id} className="w-40 mr-4">
-            <ProductCard {...item} />
+            <ProductCard
+              id={item.id}
+              name={item.name}
+              variantId={item.variantId}
+              isWishlisted={item.isWishlisted}
+              image={item.image}
+              price={item.price}
+              rating={item.rating}
+            />
           </View>
         ))}
       </ScrollView>

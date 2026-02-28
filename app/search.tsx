@@ -185,10 +185,11 @@ export default function SearchScreen() {
           <ProductCard
             id={item.id}
             name={item.name}
+            variantId={item.variantId}
+            isWishlisted={item.isWishlisted}
             image={item.image}
             price={item.price}
             rating={item.rating}
-            onPress={() => router.push(`/product/${item.id}`)}
           />
         )}
         numColumns={2}

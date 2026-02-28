@@ -82,6 +82,7 @@ export function CategoryScreenContent() {
   });
 
   const products = productsData?.products ?? productsData ?? [];
+  console.log("products: ", products);
 
   return (
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
@@ -136,6 +137,8 @@ export function CategoryScreenContent() {
           renderItem={({ item }) => (
             <ProductCard
               id={item.id}
+              variantId={item.variantId}
+              isWishlisted={item.isWishlisted}
               name={item.name}
               image={item.primaryImage}
               price={item.price}

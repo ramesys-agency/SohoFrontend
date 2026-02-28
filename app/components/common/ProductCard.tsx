@@ -1,10 +1,14 @@
-import { AntDesign, Feather } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { wishlistApi } from "../../../api/wishlist.api";
 
 interface ProductCardProps {
   id: string;
+  variantId?: string;
+  isWishlisted?: boolean;
   name: string;
   image: string;
   price: string;
@@ -13,12 +17,41 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({
   id,
+  variantId,
+  isWishlisted = false,
   name,
   image,
   price,
   rating,
 }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [isFavorite, setIsFavorite] = useState(isWishlisted);
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: () => wishlistApi.toggleWishlist(variantId || id),
+    onMutate: () => {
+      // Optimistic update
+      setIsFavorite((prev) => !prev);
+    },
+    onError: () => {
+      // Revert on error
+      setIsFavorite((prev) => !prev);
+    },
+    onSuccess: () => {
+      // Invalidating queries to refresh fetched product lists
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    },
+  });
+
+  const handleToggleWishlist = () => {
+    // Only fire if not already mutating to avoid race condition spam
+    if (!toggleWishlistMutation.isPending) {
+      toggleWishlistMutation.mutate();
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -34,8 +67,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <TouchableOpacity
           className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full items-center justify-center shadow-sm"
           activeOpacity={0.7}
+          onPress={handleToggleWishlist}
         >
-          <Feather name="heart" size={16} color="black" />
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={16}
+            color={isFavorite ? "red" : "black"}
+          />
         </TouchableOpacity>
       </View>
 

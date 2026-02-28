@@ -1,4 +1,3 @@
-import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import {
   Dimensions,
@@ -6,7 +5,6 @@ import {
   Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Animated from "react-native-reanimated";
@@ -59,16 +57,6 @@ export default function ProductImageCarousel({
             }`}
           />
         ))}
-      </View>
-
-      {/* Action Buttons (Wishlist & Share) */}
-      <View className="absolute bottom-16 right-4 flex-row gap-2">
-        <TouchableOpacity className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm">
-          <AntDesign name="heart" size={18} color="#DB0034" />
-        </TouchableOpacity>
-        <TouchableOpacity className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm">
-          <MaterialIcons name="share" size={20} color="black" />
-        </TouchableOpacity>
       </View>
     </Animated.View>
   );

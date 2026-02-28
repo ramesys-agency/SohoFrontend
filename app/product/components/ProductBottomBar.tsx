@@ -5,11 +5,19 @@ import { Text, TouchableOpacity, View } from "react-native";
 interface ProductBottomBarProps {
   onShopNow: () => void;
   onAddToCart: () => void;
+  onRemoveFromCart: () => void;
+  isAddedToCart: boolean;
+  isAdding: boolean;
+  isRemoving: boolean;
 }
 
 export default function ProductBottomBar({
   onShopNow,
   onAddToCart,
+  onRemoveFromCart,
+  isAddedToCart,
+  isAdding,
+  isRemoving,
 }: ProductBottomBarProps) {
   return (
     <View className="absolute bottom-0 left-0 right-0 px-6 py-3 bg-white border-t border-gray-100 flex-row items-center gap-3 pb-8 z-30">
@@ -28,20 +36,42 @@ export default function ProductBottomBar({
         </Text>
       </TouchableOpacity>
 
-      {/* Add to Wardrobe */}
-      <TouchableOpacity
-        className="flex-1 py-4 rounded-lg bg-black items-center justify-center flex-row"
-        activeOpacity={0.8}
-        onPress={onAddToCart}
-      >
-        <Feather name="plus" size={20} color="white" className="mr-2" />
-        <Text
-          className="text-white font-semibold text-md"
-          style={{ fontFamily: "UrbanistBold" }}
+      {/* Add/Remove Wardrobe */}
+      {isAddedToCart ? (
+        <TouchableOpacity
+          className={`flex-1 py-4 rounded-lg bg-red-50 items-center justify-center flex-row border border-red-200 ${
+            isRemoving ? "opacity-50" : ""
+          }`}
+          activeOpacity={0.8}
+          onPress={onRemoveFromCart}
+          disabled={isRemoving}
         >
-          Add to Wardrobe
-        </Text>
-      </TouchableOpacity>
+          <Feather name="minus" size={20} color="#ef4444" className="mr-2" />
+          <Text
+            className="text-red-500 font-semibold text-md"
+            style={{ fontFamily: "UrbanistBold" }}
+          >
+            {isRemoving ? "Removing..." : "Remove from Wardrobe"}
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          className={`flex-1 py-4 rounded-lg bg-black items-center justify-center flex-row ${
+            isAdding ? "opacity-50" : ""
+          }`}
+          activeOpacity={0.8}
+          onPress={onAddToCart}
+          disabled={isAdding}
+        >
+          <Feather name="plus" size={20} color="white" className="mr-2" />
+          <Text
+            className="text-white font-semibold text-md"
+            style={{ fontFamily: "UrbanistBold" }}
+          >
+            {isAdding ? "Adding..." : "Add to Wardrobe"}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

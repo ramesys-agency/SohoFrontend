@@ -149,6 +149,8 @@ export default function HomeScreen() {
                 <ProductCard
                   key={product.id}
                   id={product.id}
+                  variantId={product.variantId}
+                  isWishlisted={product.isWishlisted}
                   name={product.name}
                   image={product.primaryImage}
                   price={product.price}

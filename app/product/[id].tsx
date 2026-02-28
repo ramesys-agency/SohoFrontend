@@ -1,18 +1,22 @@
+import { cartApi } from "@/api/cart.api";
 import { productApi } from "@/api/product.api";
+import { wishlistApi } from "@/api/wishlist.api";
 import ReviewList, {
   RatingBreakdown,
   Review,
 } from "@/app/components/product/ReviewList";
-import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useToastStore } from "@/store/toastStore";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import Animated, {
@@ -88,6 +92,9 @@ export default function ProductDetailsScreen() {
   const router = useRouter();
 
   // ── React Query ──────────────────────────────────────────────────────────
+  const queryClient = useQueryClient();
+  const showToast = useToastStore((state) => state.showToast);
+
   const {
     data: product,
     isLoading,
@@ -105,6 +112,7 @@ export default function ProductDetailsScreen() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [activeTab, setActiveTab] = useState("Details");
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // ── Derived variant helpers ──────────────────────────────────────────────
   // Unique color options from variants
@@ -133,7 +141,7 @@ export default function ProductDetailsScreen() {
   }, [product, selectedColor, colorOptions]);
 
   // Initialise selections when product data arrives
-  React.useEffect(() => {
+  useEffect(() => {
     if (product) {
       if (colorOptions.length && !selectedColor) {
         // Default to the variant marked isDefault, or fall back to the first color
@@ -212,12 +220,91 @@ export default function ProductDetailsScreen() {
     );
   }, [product, selectedColor, selectedSize, colorOptions, availableSizes]);
 
+  // Sync local isFavorite state with the currently selected variant
+  useEffect(() => {
+    if (selectedVariant) {
+      const wishlisted = selectedVariant.isWishlisted;
+      setIsFavorite(wishlisted === true || wishlisted === "true");
+    }
+  }, [selectedVariant]);
+
   const displayPrice = selectedVariant?.basePrice
     ? `৳${selectedVariant.basePrice}`
     : "";
   const displayOriginalPrice = selectedVariant?.originalPrice
     ? `৳${selectedVariant.originalPrice}`
     : "";
+
+  const addToCartMutation = useMutation({
+    mutationFn: () => cartApi.addToCart(selectedVariant?.id || id),
+    onSuccess: () => {
+      showToast({ message: "Product added to wardrobe", type: "success" });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+    },
+    onError: (error: any) => {
+      showToast({
+        message: error?.response?.data?.error || "Failed to add to wardrobe.",
+        type: "error",
+      });
+    },
+  });
+
+  const removeFromCartMutation = useMutation({
+    mutationFn: () => cartApi.removeFromCart(selectedVariant?.id || id),
+    onSuccess: () => {
+      showToast({ message: "Product removed from wardrobe", type: "success" });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+    },
+    onError: (error: any) => {
+      showToast({
+        message:
+          error?.response?.data?.error || "Failed to remove from wardrobe.",
+        type: "error",
+      });
+    },
+  });
+
+  const handleAddToCart = () => {
+    if (!addToCartMutation.isPending) {
+      addToCartMutation.mutate();
+    }
+  };
+
+  const handleRemoveFromCart = () => {
+    if (!removeFromCartMutation.isPending) {
+      removeFromCartMutation.mutate();
+    }
+  };
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: () => wishlistApi.toggleWishlist(selectedVariant?.id || id),
+    onMutate: () => {
+      // Optimistic update
+      setIsFavorite((prev) => !prev);
+    },
+    onError: () => {
+      // Revert on error
+      setIsFavorite((prev) => !prev);
+      showToast({
+        message: "Failed to update wishlist.",
+        type: "error",
+      });
+    },
+    onSuccess: () => {
+      // Invalidating queries to refresh fetched product lists
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    },
+  });
+
+  const handleToggleWishlist = () => {
+    if (!toggleWishlistMutation.isPending) {
+      toggleWishlistMutation.mutate();
+    }
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -281,13 +368,14 @@ export default function ProductDetailsScreen() {
       {/* Sticky Back Button */}
       <View className="absolute top-0 left-0 right-0 z-20">
         <SafeAreaView edges={["top"]} className="bg-transparent">
-          <View className="px-4 py-2">
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color="black"
+          <View className="px-4 py-2 flex-row justify-between items-center">
+            <TouchableOpacity
+              className="w-10 h-10 bg-white/70 rounded-full items-center justify-center"
+              activeOpacity={0.7}
               onPress={() => router.back()}
-            />
+            >
+              <Ionicons name="arrow-back" size={24} color="black" />
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </View>
@@ -299,14 +387,36 @@ export default function ProductDetailsScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        {/* Hero Image Carousel */}
-        <ProductImageCarousel
-          images={images}
-          activeImageIndex={activeImageIndex}
-          imageHeight={IMAGE_HEIGHT}
-          headerStyle={headerStyle}
-          onScroll={onImageScroll}
-        />
+        <View>
+          <ProductImageCarousel
+            images={images}
+            activeImageIndex={activeImageIndex}
+            imageHeight={IMAGE_HEIGHT}
+            headerStyle={headerStyle}
+            onScroll={onImageScroll}
+          />
+
+          {/* Action Buttons (Wishlist & Share) */}
+          <View className="absolute bottom-16 right-4 flex-row gap-2 z-10">
+            <TouchableOpacity
+              className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
+              activeOpacity={0.8}
+              onPress={handleToggleWishlist}
+            >
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={22}
+                color={isFavorite ? "#DB0034" : "black"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="share" size={20} color="black" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Scrollable Content Sheet */}
         <View className="bg-white -mt-6 rounded-t-3xl px-5 pt-8 min-h-screen shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
@@ -368,9 +478,14 @@ export default function ProductDetailsScreen() {
         onShopNow={() => {
           /* Handle Shop Now */
         }}
-        onAddToCart={() => {
-          /* Handle Add to Cart */
-        }}
+        onAddToCart={handleAddToCart}
+        onRemoveFromCart={handleRemoveFromCart}
+        isAddedToCart={
+          selectedVariant?.isAddedToCart === true ||
+          selectedVariant?.isAddedToCart === "true"
+        }
+        isAdding={addToCartMutation.isPending}
+        isRemoving={removeFromCartMutation.isPending}
       />
     </View>
   );
