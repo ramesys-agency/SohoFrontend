@@ -33,4 +33,18 @@ export const API_ROUTES = {
     GET_CATEGORIES: "/api/v1/categories",
     GET_PAGE_TITLE: "/api/v1/categories/page-title",
   },
+  LOGISTICS: {
+    DIVISIONS: "/api/v1/logistics/divisions",
+    DISTRICTS: "/api/v1/logistics/districts",
+    THANAS: "/api/v1/logistics/thanas",
+    AREAS: "/api/v1/logistics/areas",
+    AGGREGATORS: "/api/v1/logistics/aggregators",
+  },
+  ORDERS: {
+    BASE: "/api/v1/orders",
+    DETAILS: (id: string) => `/api/v1/orders/${id}`,
+  },
+  COUPONS: {
+    VALIDATE: "/api/v1/coupons/validate",
+  },
 } as const;

@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SubHeader from "./components/navbar/SubHeader";
 
@@ -37,6 +37,15 @@ const notifications = [
 
 export default function NotificationsScreen() {
   const [activeTab, setActiveTab] = useState(0); // 0 for Unread, 1 for Read
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Simulate a reload
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
   const filteredNotifications = notifications.filter((n) =>
     activeTab === 0 ? !n.isRead : n.isRead,
@@ -79,7 +88,13 @@ export default function NotificationsScreen() {
         />
       </View>
 
-      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1 px-4"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {sections.length > 0 ? (
           sections.map((section) => (
             <View key={section} className="mb-6">

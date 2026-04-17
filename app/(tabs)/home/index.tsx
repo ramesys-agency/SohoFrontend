@@ -4,7 +4,7 @@ import ProductCard from "@/app/components/common/ProductCard";
 import TopNavBar from "@/app/components/navbar/TopNavBar";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FeaturedSection from "../../components/home/FeaturedSection";
 import HeroBanner from "../../components/home/HeroBanner";
@@ -66,6 +66,13 @@ const FEATURED_COLLECTIONS = [
 export default function HomeScreen() {
   const [homeBanner, setHomeBanner] = useState<any>(null);
   const [bestSellerProducts, setBestSellerProducts] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchCollections(), fetchBestSellerProducts()]);
+    setRefreshing(false);
+  }, []);
 
   const fetchCollections = async () => {
     try {
@@ -104,7 +111,13 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <TopNavBar />
-      <ScrollView className="flex-1 mb-20" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1 mb-20"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View className="py-4">
           <SectionHeader
             title="See All"

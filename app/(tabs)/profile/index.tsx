@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -19,7 +20,11 @@ export default function ProfileScreen() {
   const { logout } = useAuthStore();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const { data: profileData, isLoading } = useQuery({
+  const {
+    data: profileData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["userProfile"],
     queryFn: userApi.getProfile,
   });
@@ -44,6 +49,9 @@ export default function ProfileScreen() {
       <ScrollView
         className="flex-1 px-4 pt-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refetch} />
+        }
       >
         {/* Profile Card */}
         <View className="bg-gray-100 min-h-[7rem] p-3 rounded-xl flex-row items-center mb-6">
@@ -61,7 +69,7 @@ export default function ProfileScreen() {
                 className="w-20 h-20 rounded-xl mr-4"
               />
               <View className="flex-1">
-                <Text className="text-lg font-Urbanist-Bold text-black font-Urbanist">
+                <Text className="text-lg font-Urbanist-Bold text-black">
                   {profileData?.fullName || "User"}
                 </Text>
                 <Text className="text-gray-500 text-sm font-Urbanist">
@@ -136,7 +144,7 @@ export default function ProfileScreen() {
                 size={24}
                 color="#dc2626"
               />
-              <Text className="text-red-600 font-Urbanist-Bold text-lg ml-2 font-Urbanist">
+              <Text className="text-red-600 text-lg ml-2 font-Urbanist">
                 Log out
               </Text>
             </>
@@ -165,9 +173,7 @@ function MenuItem({
         <View className="w-8 items-center mr-3">
           <IconSymbol name={icon} size={22} color="#000" />
         </View>
-        <Text className="text-black font-Urbanist-Bold text-[16px] font-Urbanist">
-          {label}
-        </Text>
+        <Text className="text-black text-[16px] font-Urbanist">{label}</Text>
       </View>
       <IconSymbol name="chevron.right" size={20} color="#000" />
     </TouchableOpacity>

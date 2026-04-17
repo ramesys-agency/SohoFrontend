@@ -3,7 +3,7 @@ import SubHeader from "@/app/components/navbar/SubHeader";
 import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OfferCard, { OfferItem } from "../../components/home/OfferCard";
 
@@ -11,6 +11,7 @@ const OffersScreen = () => {
   const navigation = useNavigation();
   const [offers, setOffers] = useState<OfferItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchOffers = async () => {
     try {
@@ -39,6 +40,12 @@ const OffersScreen = () => {
       setLoading(false);
     }
   };
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchOffers();
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     fetchOffers();
@@ -79,6 +86,8 @@ const OffersScreen = () => {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
         />
       )}
     </SafeAreaView>

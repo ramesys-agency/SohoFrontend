@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   Text,
   TextInput,
   TouchableOpacity,
@@ -22,6 +23,7 @@ export default function SearchScreen() {
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchResults = useCallback(async (query: string) => {
@@ -46,6 +48,12 @@ export default function SearchScreen() {
       setIsLoading(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchResults(searchQuery);
+    setRefreshing(false);
+  }, [fetchResults, searchQuery]);
 
   useEffect(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -164,6 +172,9 @@ export default function SearchScreen() {
           numColumns={2}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           ListEmptyComponent={
             isLoading ? null : searchQuery || filters ? (
               <View className="items-center justify-center py-20">

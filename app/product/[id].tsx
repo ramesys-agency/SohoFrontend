@@ -15,6 +15,7 @@ import {
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  RefreshControl,
   Text,
   TouchableOpacity,
   View,
@@ -99,13 +100,13 @@ export default function ProductDetailsScreen() {
     data: product,
     isLoading,
     isError,
+    refetch,
+    isRefetching,
   } = useQuery({
     queryKey: ["product", id],
     queryFn: () => productApi.getProductById(id!),
     enabled: !!id,
   });
-
-  console.log("product", JSON.stringify(product));
 
   // ── Local UI state ───────────────────────────────────────────────────────
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -386,6 +387,12 @@ export default function ProductDetailsScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading || isRefetching}
+            onRefresh={refetch}
+          />
+        }
       >
         <View>
           <ProductImageCarousel

@@ -90,6 +90,8 @@ const WishlistScreen = () => {
             }}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 100 }}
+            refreshing={isLoading}
+            onRefresh={refetch}
           />
         </View>
       )}

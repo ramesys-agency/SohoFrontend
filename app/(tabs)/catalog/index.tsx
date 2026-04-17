@@ -5,7 +5,12 @@ import SubHeader from "@/app/components/navbar/SubHeader";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CategoryCircle from "../../components/catalog/CategoryCircle";
 import CategoryGridItem from "../../components/catalog/CategoryGridItem";
@@ -16,6 +21,7 @@ export default function CatalogScreen() {
   const [gridCollections, setGridCollections] = useState<any[]>([]);
   const [rowCollections, setRowCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
   const segments = [
@@ -24,65 +30,69 @@ export default function CatalogScreen() {
     { label: "Kids", value: "kids" },
   ];
 
+  const fetchCategories = async () => {
+    try {
+      const data = await categoryApi.getCategories({
+        isActive: true,
+        gender: genderCategory.toUpperCase(),
+      });
+
+      const formattedCategories: any[] = data.map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        image: category.imageUrl,
+      }));
+
+      setCategories(formattedCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const data = await collectionApi.getCollections({
+        isActive: true,
+        placementPage: genderCategory.toUpperCase(),
+        placementIsActive: true,
+      });
+
+      const formattedGridCollections: any[] = data.map(
+        (collection: any) =>
+          collection?.collectionPlacements?.[0]?.section === "GRID_SECTION" && {
+            id: collection.id,
+            name: collection.name,
+            image: collection.collectionPlacements?.[0]?.imageUrl,
+          },
+      );
+
+      const formattedRowCollections: any[] = data.map(
+        (collection: any) =>
+          collection?.collectionPlacements?.[0]?.section === "FEATURED_ROW" && {
+            id: collection.id,
+            name: collection.name,
+            image: collection.collectionPlacements?.[0]?.imageUrl,
+          },
+      );
+
+      setGridCollections(formattedGridCollections);
+      setRowCollections(formattedRowCollections);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchCategories(), fetchCollections()]);
+    setRefreshing(false);
+  }, [genderCategory]);
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await categoryApi.getCategories({
-          isActive: true,
-          gender: genderCategory.toUpperCase(),
-        });
-
-        const formattedCategories: any[] = data.map((category: any) => ({
-          id: category.id,
-          name: category.name,
-          image: category.imageUrl,
-        }));
-
-        setCategories(formattedCategories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchCollections = async () => {
-      try {
-        const data = await collectionApi.getCollections({
-          isActive: true,
-          placementPage: genderCategory.toUpperCase(),
-          placementIsActive: true,
-        });
-
-        const formattedGridCollections: any[] = data.map(
-          (collection: any) =>
-            collection?.collectionPlacements?.[0]?.section ===
-              "GRID_SECTION" && {
-              id: collection.id,
-              name: collection.name,
-              image: collection.collectionPlacements?.[0]?.imageUrl,
-            },
-        );
-
-        const formattedRowCollections: any[] = data.map(
-          (collection: any) =>
-            collection?.collectionPlacements?.[0]?.section ===
-              "FEATURED_ROW" && {
-              id: collection.id,
-              name: collection.name,
-              image: collection.collectionPlacements?.[0]?.imageUrl,
-            },
-        );
-
-        setGridCollections(formattedGridCollections);
-        setRowCollections(formattedRowCollections);
-      } catch (error) {
-        console.error("Error fetching collections:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCategories();
     fetchCollections();
   }, [genderCategory]);
@@ -113,6 +123,9 @@ export default function CatalogScreen() {
           className="flex-1 px-4 pt-2"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           {/* Horizontal Categories */}
           <ScrollView

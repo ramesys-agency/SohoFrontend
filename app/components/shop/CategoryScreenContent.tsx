@@ -8,6 +8,7 @@ import React from "react";
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   Text,
   TouchableOpacity,
   View,
@@ -34,7 +35,7 @@ export function CategoryScreenContent() {
     : "All";
 
   // Build query params — only one of collectionId | collectionSlug | categoryId
-  // is included at a time; optional fields like gender are omitted when absent.
+  // is included at a time.
   const queryParams = React.useMemo(() => {
     const params: Record<string, any> = { isPublished: true };
 
@@ -46,12 +47,8 @@ export function CategoryScreenContent() {
       params.categoryId = categoryId;
     }
 
-    if (genderName) {
-      params.gender = genderName.toUpperCase();
-    }
-
     return params;
-  }, [collectionId, collectionSlug, categoryId, genderName]);
+  }, [collectionId, collectionSlug, categoryId]);
 
   // Identifier-only params for the page-title API (no isPublished / gender)
   const titleParams = React.useMemo(() => {
@@ -66,7 +63,11 @@ export function CategoryScreenContent() {
     return params;
   }, [collectionId, collectionSlug, categoryId]);
 
-  const { data: pageTitleData } = useQuery({
+  const {
+    data: pageTitleData,
+    refetch: refetchTitle,
+    isRefetching: isRefetchingTitle,
+  } = useQuery({
     queryKey: ["pageTitle", titleParams],
     queryFn: () => categoryApi.getPageTitle(titleParams),
     enabled: !!(collectionId || collectionSlug || categoryId),
@@ -76,80 +77,103 @@ export function CategoryScreenContent() {
     data: productsData,
     isLoading,
     isError,
+    refetch: refetchProducts,
+    isRefetching: isRefetchingProducts,
   } = useQuery({
     queryKey: ["products", queryParams],
     queryFn: () => productApi.getProducts(queryParams),
   });
 
+  const isRefetching = isRefetchingTitle || isRefetchingProducts;
+
+  const onRefresh = React.useCallback(() => {
+    refetchTitle();
+    refetchProducts();
+  }, [refetchTitle, refetchProducts]);
+
   const products = productsData?.products ?? productsData ?? [];
-  console.log("products: ", products);
 
-  return (
-    <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <View>
-        <SubHeader
-          title={pageTitleData?.name ?? displayTitle ?? "Soho"}
-          showBackButton={true}
-        />
+  const renderHeader = () => (
+    <View>
+      <SubHeader
+        title={pageTitleData?.name ?? displayTitle ?? "Soho"}
+        showBackButton={true}
+      />
 
-        <View className="px-4 pb-4">
-          <TouchableOpacity
-            className="border border-gray-200 rounded-lg px-6 py-2 self-start"
-            activeOpacity={0.7}
+      <View className="px-4 pb-4">
+        <TouchableOpacity
+          className="border border-gray-200 rounded-lg px-6 py-2 self-start"
+          activeOpacity={0.7}
+        >
+          <Text
+            className="text-base text-black"
+            style={{ fontFamily: "Urbanist" }}
           >
-            <Text
-              className="text-base text-black"
-              style={{ fontFamily: "Urbanist" }}
-            >
-              {displayGender}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {displayGender}
+          </Text>
+        </TouchableOpacity>
       </View>
+    </View>
+  );
 
-      {isLoading && (
+  const renderEmptyComponent = () => {
+    if (isLoading) {
+      return (
         <View className="flex-1 items-center justify-center py-16">
           <ActivityIndicator size="large" color="#000" />
         </View>
-      )}
+      );
+    }
 
-      {isError && (
+    if (isError) {
+      return (
         <View className="flex-1 items-center justify-center py-16">
           <Text style={{ fontFamily: "Urbanist" }} className="text-red-500">
             Failed to load products. Please try again.
           </Text>
         </View>
-      )}
+      );
+    }
 
-      {products.length === 0 && (
+    if (products.length === 0) {
+      return (
         <View className="flex-1 items-center justify-center py-16">
           <Text style={{ fontFamily: "Urbanist" }} className="text-gray-500">
             No products found.
           </Text>
         </View>
-      )}
+      );
+    }
 
-      {!isLoading && !isError && (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ProductCard
-              id={item.id}
-              variantId={item.variantId}
-              isWishlisted={item.isWishlisted}
-              name={item.name}
-              image={item.primaryImage}
-              price={item.price}
-              rating={item.rating}
-            />
-          )}
-          numColumns={2}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+    return null;
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <ProductCard
+            id={item.id}
+            variantId={item.variantId}
+            isWishlisted={item.isWishlisted}
+            name={item.name}
+            image={item.primaryImage}
+            price={item.price}
+            rating={item.rating}
+          />
+        )}
+        numColumns={2}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyComponent}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
+        }
+      />
     </SafeAreaView>
   );
 }

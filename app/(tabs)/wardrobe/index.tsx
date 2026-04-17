@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -22,6 +23,7 @@ export default function WardrobeScreen() {
     data: cartData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["cart"],
     queryFn: cartApi.getCart,
@@ -125,6 +127,9 @@ export default function WardrobeScreen() {
             className="flex-1 px-4"
             contentContainerStyle={{ paddingBottom: 400 }}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={isLoading} onRefresh={refetch} />
+            }
           >
             {/* Additional padding for visual spacing */}
             <View className="h-4" />

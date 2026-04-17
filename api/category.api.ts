@@ -1,4 +1,4 @@
-import { API_ROUTES } from "../config/routes";
+import { API_ROUTES } from "@/config";
 import apiClient from "./axiosInstance";
 
 export const categoryApi = {

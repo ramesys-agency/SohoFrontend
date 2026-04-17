@@ -1,34 +1,49 @@
+import { orderApi } from "@/api/order.api";
+import SubHeader from "@/app/components/navbar/SubHeader";
+import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SubHeader from "../../../components/navbar/SubHeader";
+import dayjs from "dayjs";
+import { Feather } from "@expo/vector-icons";
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
 
-  // Mock data - normally fetch based on id
-  const order = {
-    id: id || "F9057845RA",
-    productName: "Cotton Salwar",
-    price: "৳2200",
-    brand: "Agha Noor",
-    deliveryDate: "25th December 2025",
-    image: "https://i.pravatar.cc/150?img=1", // Using placeholder as previously established
-    timeline: [
-      {
-        title: "Order date",
-        date: "22th Dec, 2025 | 11:38 AM",
-        completed: true,
-      },
-      {
-        title: "Confirmation Date",
-        date: "23th Dec, 2025 | 10:24 AM",
-        completed: true,
-      },
-      { title: "Shipping", date: "23th Dec, 2025 | 11:50 AM", completed: true },
-      { title: "Delivery", date: "Waiting for delivery", completed: false },
-    ],
-  };
+  const { data: fetchResponse, isLoading, isError } = useQuery({
+    queryKey: ["order", id],
+    queryFn: () => orderApi.getOrderById(id as string),
+    enabled: !!id,
+  });
+
+  const order = fetchResponse?.data;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#000" />
+      </SafeAreaView>
+    );
+  }
+
+  if (isError || !order) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center p-4">
+        <Text className="text-red-500 font-Urbanist-Medium">Failed to load order details.</Text>
+        <TouchableOpacity onPress={() => router.back()} className="mt-4">
+          <Text className="text-black font-Urbanist-Bold underline">Go Back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -39,57 +54,104 @@ export default function OrderDetailsScreen() {
         showBackButton={true}
       />
       <ScrollView
-        className="flex-1 px-8"
+        className="flex-1 px-6"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* Product Card */}
-        <View className="bg-gray-50 rounded-2xl p-4 mb-8">
-          <Image
-            source={{ uri: order.image }}
-            className="w-full h-80 rounded-xl mb-4 bg-gray-200"
-            resizeMode="cover"
-          />
+        {/* Product Cards */}
+        {order.items.map((item: any, index: number) => (
+          <View key={item.id} className="bg-gray-50 rounded-2xl p-4 mb-4 flex-row gap-4 border border-gray-100">
+            <Image
+              source={{ uri: item.variant?.images?.[0]?.url || "https://i.pravatar.cc/150?img=1" }}
+              className="w-24 h-32 rounded-xl bg-gray-200"
+              resizeMode="cover"
+            />
+            <View className="flex-1 justify-center py-2">
+              <Text className="text-lg font-Urbanist-Bold text-black mb-1" numberOfLines={2}>
+                {item.product?.name}
+              </Text>
+              <Text className="text-gray-500 font-Urbanist mb-1 text-sm">
+                Quantity: {item.quantity}
+              </Text>
+              <Text className="text-black font-Urbanist-Bold text-lg">
+                ৳{parseFloat(item.variant?.basePrice || "0").toLocaleString()}
+              </Text>
+            </View>
+          </View>
+        ))}
 
+        {/* Info Section */}
+        <View className="bg-gray-50 rounded-2xl p-6 mb-8 mt-2">
           <View className="gap-y-3">
             <DetailRow
-              label="Product Name:"
-              value={order.productName}
+              label="Order Number:"
+              value={order.orderCode || order.id.slice(0, 8).toUpperCase()}
               boldValue
             />
-            <DetailRow label="Price:" value={order.price} boldValue />
-            <DetailRow label="Brand:" value={order.brand} boldValue />
-            <DetailRow label="Order No." value={order.id as string} boldValue />
             <DetailRow
-              label="Delivery Date:"
-              value={order.deliveryDate}
+              label="Payment Method:"
+              value={order.payments?.[0]?.paymentMethod || "COD"}
+              boldValue
+            />
+            <DetailRow
+              label="Total Amount:"
+              value={`৳${parseFloat(order.totalAmount).toLocaleString()}`}
+              boldValue
+            />
+            <DetailRow
+              label="Order Date:"
+              value={dayjs(order.createdAt).format("DD MMM YYYY, hh:mm A")}
               boldValue
             />
           </View>
+
+          <View className="h-[1px] bg-gray-200 my-4" />
+
+          <Text className="text-xs text-gray-400 font-Urbanist-Bold mb-2 uppercase tracking-widest">
+            Shipping Address
+          </Text>
+          <Text className="text-black font-Urbanist-Bold text-base mb-1">
+            {order.address?.type || "Primary"}
+          </Text>
+          <Text className="text-gray-500 font-Urbanist text-sm">
+            {order.address?.street}, {order.address?.thana}, {order.address?.district}, {order.address?.division}
+          </Text>
         </View>
 
-        <Text className="text-xl font-Urbanist-Bold mb-6">Order Status</Text>
+        <Text className="text-xl font-Urbanist-Bold mb-6">Order Timeline</Text>
 
         {/* Timeline */}
         <View className="bg-gray-50 rounded-2xl p-6 mb-8">
           <View className="ml-2">
-            {order.timeline.map((step, index) => (
+            {(order.statusLogs || []).map((log: any, index: number) => (
               <TimelineStep
-                key={index}
-                step={step}
-                isLast={index === order.timeline.length - 1}
+                key={log.id}
+                title={log.status.replace(/_/g, " ")}
+                date={dayjs(log.createdAt).format("DD MMM, YYYY | hh:mm A")}
+                completed={true}
+                isLast={index === (order.statusLogs?.length || 0) - 1}
               />
             ))}
+            {/* If order is not delivered, show a pending step for illustration or future state */}
+            {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+               <TimelineStep
+                title="Future Update"
+                date="Awaiting next update..."
+                completed={false}
+                isLast={true}
+               />
+            )}
           </View>
         </View>
 
-        {/* Cancel Button */}
+        {/* Support Button */}
         <TouchableOpacity
-          className="bg-black py-4 rounded-full items-center mb-8"
-          onPress={() => router.back()}
+          className="bg-black py-4 rounded-full items-center mb-8 flex-row justify-center"
+          onPress={() => router.push("/profile/help-support")}
         >
-          <Text className="text-white font-Urbanist-Bold text-lg">
-            Cancel Order
+          <Feather name="headphones" size={20} color="white" />
+          <Text className="text-white font-Urbanist-Bold text-lg ml-3">
+            Contact Support
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -107,10 +169,10 @@ function DetailRow({
   boldValue?: boolean;
 }) {
   return (
-    <View className="flex-row justify-between items-center">
-      <Text className="text-black font-Urbanist text-base">{label}</Text>
+    <View className="flex-row justify-between items-start">
+      <Text className="text-gray-500 font-Urbanist text-sm">{label}</Text>
       <Text
-        className={`text-black font-Urbanist text-base w-1/2 text-right ${boldValue ? "font-Urbanist-Bold" : ""}`}
+        className={`text-black font-Urbanist text-sm max-w-[60%] text-right ${boldValue ? "font-Urbanist-Bold" : ""}`}
       >
         {value}
       </Text>
@@ -119,30 +181,34 @@ function DetailRow({
 }
 
 function TimelineStep({
-  step,
+  title,
+  date,
+  completed,
   isLast,
 }: {
-  step: { title: string; date: string; completed: boolean };
+  title: string;
+  date: string;
+  completed: boolean;
   isLast: boolean;
 }) {
   return (
     <View className="flex-row">
       <View className="items-center mr-4">
         <View
-          className={`w-4 h-4 rounded-full ${step.completed ? "bg-blue-500" : "bg-gray-300"}`}
+          className={`w-4 h-4 rounded-full ${completed ? "bg-black" : "bg-gray-300"}`}
         />
         {!isLast && (
           <View
-            className={`w-0.5 flex-1 my-1 ${step.completed ? "bg-gray-300" : "bg-gray-200"}`}
+            className={`w-0.5 flex-1 my-1 ${completed ? "bg-black" : "bg-gray-200"}`}
             style={{ minHeight: 30 }}
           />
         )}
       </View>
       <View className="pb-6">
-        <Text className="text-black font-Urbanist-Bold text-base leading-none mb-1">
-          {step.title}
+        <Text className={`font-Urbanist-Bold text-base leading-none mb-1 uppercase ${completed ? "text-black" : "text-gray-400"}`}>
+          {title}
         </Text>
-        <Text className="text-gray-500 text-xs font-Urbanist">{step.date}</Text>
+        <Text className="text-gray-400 text-xs font-Urbanist">{date}</Text>
       </View>
     </View>
   );

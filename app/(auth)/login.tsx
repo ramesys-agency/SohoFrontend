@@ -36,7 +36,7 @@ export default function LoginScreen() {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "test@example.com",
-      password: "password123",
+      password: "Pass@123",
     },
   });
 

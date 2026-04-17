@@ -7,6 +7,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -35,7 +36,12 @@ export default function EditProfileScreen() {
   );
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
 
-  const { data: profileData, isLoading } = useQuery({
+  const {
+    data: profileData,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["userProfile"],
     queryFn: userApi.getProfile,
   });
@@ -123,6 +129,12 @@ export default function EditProfileScreen() {
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading || isRefetching}
+              onRefresh={refetch}
+            />
+          }
         >
           {/* Profile Image */}
           <View className="items-center justify-center mt-6 mb-10">

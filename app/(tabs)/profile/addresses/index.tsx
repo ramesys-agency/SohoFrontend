@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -30,6 +31,8 @@ export default function AddressesScreen() {
     data: fetchResponse,
     isLoading,
     isError,
+    refetch,
+    isRefetching,
   } = useQuery({
     queryKey: ["addresses"],
     queryFn: addressApi.getAddresses,
@@ -65,6 +68,12 @@ export default function AddressesScreen() {
       <ScrollView
         className="flex-1 px-4 pt-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading || isRefetching}
+            onRefresh={refetch}
+          />
+        }
       >
         {isError ? (
           <View className="flex-1 items-center justify-center p-4">
