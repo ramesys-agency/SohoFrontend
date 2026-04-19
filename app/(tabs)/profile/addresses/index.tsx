@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   ScrollView,
   Text,
@@ -12,13 +13,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { addressApi } from "../../../../api/address.api";
 import { IconSymbol } from "../../../../components/ui/icon-symbol";
 import SubHeader from "../../../components/navbar/SubHeader";
+import { useToastStore } from "../../../../store/toastStore";
 
 interface Address {
   id: string;
   type: string;
   street: string;
-  city: string;
-  state: string;
+  division?: string;
+  district?: string;
+  thana?: string;
+  area?: string;
+  city?: string;
+  state?: string;
   postalCode: string;
   country?: string;
   isDefault: boolean;
@@ -40,10 +46,15 @@ export default function AddressesScreen() {
 
   const addresses: Address[] = fetchResponse?.data || [];
 
+  const { showToast } = useToastStore();
   const deleteMutation = useMutation({
     mutationFn: (id: string) => addressApi.deleteAddress(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      showToast({
+        message: "Address deleted successfully",
+        type: "success",
+      });
     },
   });
 
@@ -51,8 +62,27 @@ export default function AddressesScreen() {
     mutationFn: (id: string) => addressApi.makeDefault(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      showToast({
+        message: "Default address updated",
+        type: "success",
+      });
     },
   });
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      "Delete Address",
+      "Are you sure you want to delete this address?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive", 
+          onPress: () => deleteMutation.mutate(id) 
+        },
+      ]
+    );
+  };
 
   if (isLoading) {
     return (
@@ -126,7 +156,12 @@ export default function AddressesScreen() {
                   {address.street}
                 </Text>
                 <Text className="text-gray-500 font-Urbanist text-sm">
-                  {address.city}, {address.state} {address.postalCode}
+                  {[address.district, address.thana, address.area]
+                    .filter(Boolean)
+                    .join(", ")}
+                </Text>
+                <Text className="text-gray-500 font-Urbanist text-sm">
+                  {address.postalCode}
                 </Text>
                 {address.country && (
                   <Text className="text-gray-500 font-Urbanist text-sm">
@@ -143,8 +178,11 @@ export default function AddressesScreen() {
                         id: address.id,
                         type: address.type,
                         street: address.street,
-                        city: address.city,
-                        state: address.state,
+                        division: address.division || "",
+                        district: address.district || "",
+                        thana: address.thana || "",
+                        area: address.area || "",
+                        state: address.state || "",
                         postalCode: address.postalCode,
                         country: address.country || "",
                         isDefault: address.isDefault.toString(),
@@ -155,11 +193,10 @@ export default function AddressesScreen() {
                   <IconSymbol name="pencil" size={20} color="#000" />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => deleteMutation.mutate(address.id)}
+                  onPress={() => handleDelete(address.id)}
                   disabled={deleteMutation.isPending}
                   className={deleteMutation.isPending ? "opacity-50" : ""}
                 >
-                  {/* Note: using xmark instead of trash in case trash is not mapped in your app, but xmark is common for deletes or we can use generic trash */}
                   <IconSymbol name="trash" size={20} color="#dc2626" />
                 </TouchableOpacity>
               </View>

@@ -12,9 +12,12 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  TextInput,
 } from "react-native";
+import { couponApi } from "@/api/coupon.api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { useToastStore } from "@/store/toastStore";
 
 export default function PaymentScreen() {
   const { addressId } = useLocalSearchParams();
@@ -22,6 +25,13 @@ export default function PaymentScreen() {
   const [selectedAggregator, setSelectedAggregator] = useState<string | null>(
     null,
   );
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const { showToast } = useToastStore();
 
   // Fetch Cart for summary
   const { data: cartData, isLoading: cartLoading } = useQuery({
@@ -35,8 +45,18 @@ export default function PaymentScreen() {
     queryFn: logisticsApi.getAggregators,
   });
 
-  const aggregators = aggregatorsData?.data?.aggregators || [];
-  const items = cartData?.data || [];
+  const aggregators = React.useMemo(
+    () => aggregatorsData?.data?.aggregators || [],
+    [aggregatorsData],
+  );
+  const items = React.useMemo(() => cartData?.data || [], [cartData]);
+
+  // Auto-select first aggregator as default
+  React.useEffect(() => {
+    if (!selectedAggregator && aggregators.length > 0) {
+      setSelectedAggregator(aggregators[0]);
+    }
+  }, [aggregators, selectedAggregator]);
 
   const subtotal = items.reduce(
     (acc: number, item: any) =>
@@ -44,7 +64,29 @@ export default function PaymentScreen() {
     0,
   );
   const shippingCharge = 150; // Flat fee for now
-  const total = subtotal + shippingCharge;
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const total = subtotal + shippingCharge - discountAmount;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setIsValidatingCoupon(true);
+    try {
+      const response = await couponApi.validateCoupon(couponCode, items);
+      setAppliedCoupon({
+        code: response.code,
+        discountAmount: response.discountAmount,
+      });
+      showToast({ message: "Coupon applied successfully!", type: "success" });
+    } catch (error: any) {
+      console.error("Coupon validation failed:", error);
+      Alert.alert(
+        "Invalid Coupon",
+        error.response?.data?.message || "This coupon code is not valid.",
+      );
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
 
   const placeOrderMutation = useMutation({
     mutationFn: (data: any) => orderApi.createOrder(data),
@@ -74,6 +116,7 @@ export default function PaymentScreen() {
       addressId: addressId as string,
       aggregator: selectedAggregator,
       paymentMethod: "COD",
+      couponCode: appliedCoupon?.code,
     });
   };
 
@@ -93,13 +136,39 @@ export default function PaymentScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Order Summary Section */}
-          <View className="mb-6 bg-gray-50 p-5 rounded-2xl">
-            <Text className="text-lg font-Urbanist-Bold mb-4">
+          <View className="mb-6 bg-gray-50 p-6 rounded-3xl">
+            <Text className="text-xl font-Urbanist-Bold mb-4">
               Order Summary
             </Text>
+
+            {/* Item List */}
+            <View className="mb-4 border-b border-gray-100 pb-2">
+              {items.map((item: any, index: number) => (
+                <View
+                  key={item.id || index}
+                  className="flex-row justify-between mb-3"
+                >
+                  <View className="flex-1">
+                    <Text className="text-black font-Urbanist-Medium">
+                      {item.variant.product.name}
+                    </Text>
+                    <Text className="text-gray-500 text-xs font-Urbanist">
+                      {item.variant.name} × {item.quantity}
+                    </Text>
+                  </View>
+                  <Text className="text-black font-Urbanist-Bold">
+                    ৳
+                    {(
+                      parseFloat(item.variant.basePrice) * item.quantity
+                    ).toLocaleString()}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-500 font-Urbanist-Medium">
-                Subtotal ({items.length} items)
+                Subtotal
               </Text>
               <Text className="text-black font-Urbanist-Bold">
                 ৳{subtotal.toLocaleString()}
@@ -113,7 +182,27 @@ export default function PaymentScreen() {
                 ৳{shippingCharge}
               </Text>
             </View>
-            <View className="border-t border-gray-200 pt-3 flex-row justify-between">
+
+            {appliedCoupon && (
+              <View className="flex-row justify-between mb-4">
+                <View className="flex-row items-center">
+                  <Text className="text-green-600 font-Urbanist-Medium">
+                    Discount ({appliedCoupon.code})
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setAppliedCoupon(null)}
+                    className="ml-2"
+                  >
+                    <Feather name="x-circle" size={14} color="#16a34a" />
+                  </TouchableOpacity>
+                </View>
+                <Text className="text-green-600 font-Urbanist-Bold">
+                  -৳{appliedCoupon.discountAmount.toLocaleString()}
+                </Text>
+              </View>
+            )}
+
+            <View className="border-t border-gray-200 pt-4 flex-row justify-between">
               <Text className="text-lg font-Urbanist-Bold">Total Amount</Text>
               <Text className="text-lg font-Urbanist-Bold">
                 ৳{total.toLocaleString()}
@@ -121,30 +210,35 @@ export default function PaymentScreen() {
             </View>
           </View>
 
-          {/* Aggregator Selection Section */}
-          <Text className="text-lg font-Urbanist-Bold mb-4 px-1">
-            Choose Delivery Partner
-          </Text>
-          <View className="flex-row flex-wrap justify-between mb-6">
-            {aggregators.map((name: string) => (
+          {/* Coupon Input Section */}
+          <View className="mb-6 px-1">
+            <Text className="text-lg font-Urbanist-Bold mb-3">
+              Have a Coupon?
+            </Text>
+            <View className="flex-row items-center gap-2">
+              <View className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                <TextInput
+                  placeholder="Enter code"
+                  value={couponCode}
+                  onChangeText={setCouponCode}
+                  autoCapitalize="characters"
+                  className="font-Urbanist-Medium text-black"
+                />
+              </View>
               <TouchableOpacity
-                key={name}
-                onPress={() => setSelectedAggregator(name)}
-                className={`w-[48%] mb-4 p-4 rounded-xl border-2 items-center justify-center ${
-                  selectedAggregator === name
-                    ? "border-black bg-gray-50"
-                    : "border-gray-100"
+                onPress={handleApplyCoupon}
+                disabled={isValidatingCoupon || !couponCode.trim()}
+                className={`bg-black px-6 py-3.5 rounded-xl ${
+                  isValidatingCoupon || !couponCode.trim() ? "opacity-50" : ""
                 }`}
               >
-                <Text
-                  className={`font-Urbanist-Bold capitalize ${
-                    selectedAggregator === name ? "text-black" : "text-gray-400"
-                  }`}
-                >
-                  {name}
-                </Text>
+                {isValidatingCoupon ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-white font-Urbanist-Bold">Apply</Text>
+                )}
               </TouchableOpacity>
-            ))}
+            </View>
           </View>
 
           {/* Payment Method Section (Fixed to COD) */}
@@ -171,15 +265,13 @@ export default function PaymentScreen() {
       )}
 
       {/* Place Order Button Section */}
-      <View className="p-4 border-t border-gray-100 pb-10">
+      <View className="p-4 border-t border-gray-100 mb-32">
         <TouchableOpacity
-          className={`bg-black p-4 rounded-xl items-center justify-center flex-row ${
-            placeOrderMutation.isPending || !selectedAggregator
-              ? "opacity-70"
-              : ""
+          className={`bg-black p-4 rounded-2xl items-center justify-center flex-row shadow-xl ${
+            placeOrderMutation.isPending ? "opacity-70" : ""
           }`}
           onPress={handlePlaceOrder}
-          disabled={placeOrderMutation.isPending || !selectedAggregator}
+          disabled={placeOrderMutation.isPending}
         >
           {placeOrderMutation.isPending ? (
             <ActivityIndicator color="white" className="mr-2" />

@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -85,8 +86,13 @@ export default function AddressSelectionScreen() {
                   <Text className="text-gray-600 font-Urbanist-Medium mb-1">
                     {address.street}
                   </Text>
-                  <Text className="text-gray-500 font-Urbanist">
-                    {address.thana}, {address.district}, {address.division}
+                  <Text className="text-gray-500 font-Urbanist text-[13px]">
+                    {[address.district, address.thana, address.area]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </Text>
+                  <Text className="text-gray-400 font-Urbanist text-[12px] mt-1">
+                    {address.postalCode}
                   </Text>
                 </View>
                 {selectedAddressId === address.id && (
@@ -100,28 +106,30 @@ export default function AddressSelectionScreen() {
 
           <TouchableOpacity
             onPress={() => router.push("/profile/addresses/add-address")}
-            className="flex-row items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-300 mt-2"
+            className="flex-row items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-300 mt-2 mb-10"
           >
             <Feather name="plus" size={20} color="#6B7280" />
             <Text className="ml-2 text-gray-500 font-Urbanist-Bold">
               Add New Address
             </Text>
           </TouchableOpacity>
-
-          <View className="h-40" />
         </ScrollView>
       )}
 
-      <View className="p-4 border-t border-gray-100 pb-10">
+      {/* Fixed Footer for Button */}
+      <View
+        className="mb-32 p-5 border-t border-gray-100 bg-white"
+        style={{ paddingBottom: Platform.OS === "ios" ? 30 : 20 }}
+      >
         <TouchableOpacity
-          className={`bg-black p-4 rounded-xl items-center justify-center ${
+          className={`bg-black py-4 rounded-2xl items-center justify-center shadow-lg ${
             !selectedAddressId ? "opacity-50" : ""
           }`}
           onPress={handleContinue}
           disabled={!selectedAddressId}
         >
           <Text className="text-white font-Urbanist-Bold text-lg">
-            Continue to Payment
+            {selectedAddressId ? "Continue to Payment" : "Select an Address"}
           </Text>
         </TouchableOpacity>
       </View>
