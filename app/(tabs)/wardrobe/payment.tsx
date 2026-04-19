@@ -1,5 +1,4 @@
 import { cartApi } from "@/api/cart.api";
-import { logisticsApi } from "@/api/logistics.api";
 import { orderApi } from "@/api/order.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,9 +21,6 @@ import { useToastStore } from "@/store/toastStore";
 export default function PaymentScreen() {
   const { addressId } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const [selectedAggregator, setSelectedAggregator] = useState<string | null>(
-    null,
-  );
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -39,24 +35,7 @@ export default function PaymentScreen() {
     queryFn: cartApi.getCart,
   });
 
-  // Fetch Aggregators
-  const { data: aggregatorsData, isLoading: aggregatorsLoading } = useQuery({
-    queryKey: ["aggregators"],
-    queryFn: logisticsApi.getAggregators,
-  });
-
-  const aggregators = React.useMemo(
-    () => aggregatorsData?.data?.aggregators || [],
-    [aggregatorsData],
-  );
   const items = React.useMemo(() => cartData?.data || [], [cartData]);
-
-  // Auto-select first aggregator as default
-  React.useEffect(() => {
-    if (!selectedAggregator && aggregators.length > 0) {
-      setSelectedAggregator(aggregators[0]);
-    }
-  }, [aggregators, selectedAggregator]);
 
   const subtotal = items.reduce(
     (acc: number, item: any) =>
@@ -107,20 +86,14 @@ export default function PaymentScreen() {
   });
 
   const handlePlaceOrder = () => {
-    if (!selectedAggregator) {
-      Alert.alert("Required", "Please select a delivery partner.");
-      return;
-    }
-
     placeOrderMutation.mutate({
       addressId: addressId as string,
-      aggregator: selectedAggregator,
       paymentMethod: "COD",
       couponCode: appliedCoupon?.code,
     });
   };
 
-  const isLoading = cartLoading || aggregatorsLoading;
+  const isLoading = cartLoading;
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
