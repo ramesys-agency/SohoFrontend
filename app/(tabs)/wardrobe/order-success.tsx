@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { router, useLocalSearchParams } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -6,12 +7,19 @@ import SubHeader from "../../components/navbar/SubHeader";
 import { Feather } from "@expo/vector-icons";
 
 export default function OrderSuccessScreen() {
-  const { orderCode, orderId } = useLocalSearchParams();
+  const { orderCode } = useLocalSearchParams();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace("/(tabs)/wardrobe");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <SubHeader title="Congratulations!" showBackButton={false} />
-      
+
       <View className="flex-1 px-6 justify-center items-center">
         <View className="w-24 h-24 bg-green-50 rounded-full items-center justify-center mb-6">
           <IconSymbol name="checkmark.circle.fill" size={60} color="#10B981" />
@@ -32,9 +40,11 @@ export default function OrderSuccessScreen() {
             <Text className="text-2xl font-Urbanist-Bold tracking-tighter text-black select-text">
               {orderCode}
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               className="mt-4 flex-row items-center bg-white px-4 py-2 rounded-full border border-gray-200"
-              onPress={() => {/* Copy to clipboard logic could go here */}}
+              onPress={() => {
+                /* Copy to clipboard logic could go here */
+              }}
             >
               <Feather name="copy" size={14} color="black" />
               <Text className="ml-2 font-Urbanist-Bold text-xs">Copy Code</Text>
