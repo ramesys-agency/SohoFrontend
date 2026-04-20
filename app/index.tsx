@@ -16,13 +16,13 @@ const slides = [
     title: "Find Looks You love",
     description:
       "From timeless classics to trending pieces- Shop what fits the vibe.",
-    image: require("../assets/images/walkthrough1.png"),
+    image: require("../assets/images/walkthrough1.jpg"),
   },
   {
     id: 2,
     title: "First Purchase Special Offer",
     description: "Enjoy exclusive offer when you sign up today.",
-    image: require("../assets/images/walkthrough2.png"),
+    image: require("../assets/images/walkthrough2.jpg"),
   },
 ];
 
