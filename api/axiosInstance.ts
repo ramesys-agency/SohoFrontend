@@ -1,8 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { API_ROUTES } from "../config";
 import { API_URL } from "../config/env";
-import { useAuthStore } from "../store/authStore";
-import { tokenStorage } from "../store/secureStore"; // or use values from store directly if preferred
+import { tokenStorage } from "../store/secureStore";
 
 // Separate instance for refresh logic to avoid circular interceptors
 const refreshInstance = axios.create({
@@ -20,11 +19,19 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+// Helper to get store lazily to avoid circular dependency issues at evaluation time
+const getAuthStore = () => {
+  // We use require here because a top-level import creates a circular dependency
+  // with authApi -> apiClient -> authStore
+  return require("../store/authStore").useAuthStore;
+};
+
 // Request Interceptor: Attach Token
 apiClient.interceptors.request.use(
   async (config) => {
-    // Get token from store or secure storage (store is faster if synced)
-    const token = useAuthStore.getState().accessToken;
+    // Get token directly from secure storage to avoid depending on the Zustand store state
+    // which might not be initialized yet during the first call.
+    const token = await tokenStorage.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,12 +65,10 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
-    }; // Access internal config
+    };
 
-    // Check if error is 401 Unauthorized and not already retrying
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // If already refreshing, queue this request
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
@@ -79,12 +84,10 @@ apiClient.interceptors.response.use(
       }
 
       originalRequest._retry = true;
-      const refreshToken = await tokenStorage.getRefreshToken(); // fetch directly from storage for reliability
+      const refreshToken = await tokenStorage.getRefreshToken();
 
-      // If we do not have a refresh token, we cannot refresh. Log out (clears any stale auth state) and reject with the original error.
-      // E.g., This ensures during login if 401 occurs, the actual login error message correctly propagates to the user.
       if (!refreshToken) {
-        useAuthStore.getState().logout();
+        getAuthStore().getState().logout();
         return Promise.reject(error);
       }
 
@@ -98,15 +101,13 @@ apiClient.interceptors.response.use(
           },
         );
 
-        const { accessToken, refreshToken: newRefreshToken } = data.data; // adjust based on API response structure
+        const { accessToken, refreshToken: newRefreshToken } = data.data;
 
-        // Update tokens in store and storage
-        await useAuthStore.getState().setTokens(accessToken, newRefreshToken);
+        // Update tokens via store (lazy loaded)
+        await getAuthStore().getState().setTokens(accessToken, newRefreshToken);
 
-        // Process queue with new token
         processQueue(null, accessToken);
 
-        // Retry original request
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
@@ -114,8 +115,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Refresh failed - logout user
-        useAuthStore.getState().logout();
+        getAuthStore().getState().logout();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -127,3 +127,4 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+

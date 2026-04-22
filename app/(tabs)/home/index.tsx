@@ -124,7 +124,7 @@ export default function HomeScreen() {
             onSeeAllPress={() => router.push("/(tabs)/home/offers")}
           />
 
-          {homeBanner && (
+          {homeBanner && homeBanner.length > 0 && homeBanner[0]?.collectionPlacements?.[0] && (
             <HeroBanner
               image={{ uri: homeBanner[0].collectionPlacements[0].imageUrl }}
               onPress={() =>
@@ -157,19 +157,18 @@ export default function HomeScreen() {
             }
           />
           <View className="flex-row flex-wrap justify-between px-4">
-            {bestSellerProducts &&
-              bestSellerProducts.products.map((product: any) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  variantId={product.variantId}
-                  isWishlisted={product.isWishlisted}
-                  name={product.name}
-                  image={product.primaryImage}
-                  price={product.price}
-                  rating={product.rating}
-                />
-              ))}
+            {bestSellerProducts?.products?.map((product: any) => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                variantId={product.variantId}
+                isWishlisted={product.isWishlisted}
+                name={product.name}
+                image={product.primaryImage}
+                price={product.price}
+                rating={product.rating}
+              />
+            ))}
           </View>
         </View>
 

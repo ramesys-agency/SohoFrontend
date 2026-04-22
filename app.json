@@ -21,7 +21,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.arshad.code.SohoApplication"
+      "package": "com.arshad.code.SohoApplication",
+      "usesCleartextTraffic": true
     },
     "web": {
       "output": "static",

@@ -10,6 +10,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toast } from "../components/ui/Toast";
 import "../global.css";
 import { useAuthStore } from "../store/authStore";
+import { API_URL } from "../config/env";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,6 +36,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     hydrate();
+    console.log("API_URL:", API_URL);
   }, [hydrate]);
 
   const isNavigationReady = loaded || error;
