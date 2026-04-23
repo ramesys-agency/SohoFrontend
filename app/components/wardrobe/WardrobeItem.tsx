@@ -27,60 +27,65 @@ export default function WardrobeItem({
 }: WardrobeItemProps) {
   return (
     <View className="flex-row items-center bg-[#F3F3F3] p-3 rounded-lg mb-3">
-      {/* Product Image */}
-      <TouchableOpacity onPress={onPress}>
-        <Image
-          source={{ uri: item.image }}
-          className="w-20 h-24 rounded-md"
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+      {/* Clickable Area: Image + Text info */}
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        className="flex-row items-center flex-1"
+      >
+        {/* Product Image */}
+        <View className="w-20 h-24 rounded-md overflow-hidden bg-gray-200">
+          <Image
+            source={{ uri: item.image }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        </View>
 
-      {/* Details */}
-      <View className="flex-1 ml-3 h-24 justify-between py-1">
-        <View>
-          <View className="flex-row justify-between items-start">
+        {/* Details Text */}
+        <View className="flex-1 ml-3 h-24 justify-between py-1">
+          <View>
             <Text
-              className="text-base font-Urbanist-Bold text-gray-900 flex-1 mr-2"
+              className="text-base font-Urbanist-Bold text-gray-900 mr-2"
               numberOfLines={1}
             >
               {item.title}
             </Text>
-            <TouchableOpacity onPress={onRemove} className="p-1">
-              <IconSymbol name="trash" size={16} color="#666" />
-            </TouchableOpacity>
+            <Text className="text-gray-500 text-xs mt-1">
+              Size: {item.size} {item.color ? `• Color: ${item.color}` : ""}
+            </Text>
           </View>
-
-          <Text className="text-gray-500 text-xs mt-1">
-            Size: {item.size} {item.color ? `• Color: ${item.color}` : ""}
+          <Text className="text-base font-Urbanist-Bold text-black">
+            ৳{(item.price * item.quantity).toLocaleString()}
           </Text>
         </View>
+      </TouchableOpacity>
 
-        <View className="flex-row justify-between items-end">
-          <Text className="text-base font-Urbanist-Bold">
-            ৳{item.price * item.quantity}
+      {/* Right Column: Independent Controls */}
+      <View className="ml-2 h-24 justify-between items-end py-1">
+        <TouchableOpacity onPress={onRemove} className="p-1">
+          <IconSymbol name="trash" size={18} color="#666" />
+        </TouchableOpacity>
+
+        {/* Quantity Controls */}
+        <View className="flex-row items-center bg-white rounded-md border border-gray-200 overflow-hidden">
+          <TouchableOpacity
+            onPress={onDecrement}
+            className="p-1.5 px-2.5 border-r border-gray-200"
+          >
+            <IconSymbol name="minus" size={12} color="#000" />
+          </TouchableOpacity>
+
+          <Text className="px-3 text-sm font-Urbanist-Bold">
+            {item.quantity}
           </Text>
 
-          {/* Quantity Controls */}
-          <View className="flex-row items-center bg-white rounded-md border border-gray-200">
-            <TouchableOpacity
-              onPress={onDecrement}
-              className="p-1 px-2 border-r border-gray-200"
-            >
-              <IconSymbol name="minus" size={14} color="#000" />
-            </TouchableOpacity>
-
-            <Text className="px-3 text-sm font-Urbanist-Bold">
-              {item.quantity}
-            </Text>
-
-            <TouchableOpacity
-              onPress={onIncrement}
-              className="p-1 px-2 border-l border-gray-200"
-            >
-              <IconSymbol name="plus" size={14} color="#000" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={onIncrement}
+            className="p-1.5 px-2.5 border-l border-gray-200"
+          >
+            <IconSymbol name="plus" size={12} color="#000" />
+          </TouchableOpacity>
         </View>
       </View>
     </View>

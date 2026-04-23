@@ -153,9 +153,9 @@ export default function AppEntry() {
       <View className="flex-1 px-10 pt-10 items-center">
         {/* Pagination Dots */}
         <View className="flex-row gap-2 mb-10">
-          {slides.map((_, index) => (
+          {slides.map((slide, index) => (
             <View
-              key={index}
+              key={slide.id}
               className={`h-2 rounded-full ${
                 index === currentIndex ? "w-8 bg-black" : "w-8 bg-[#E5E5E5]"
               }`}

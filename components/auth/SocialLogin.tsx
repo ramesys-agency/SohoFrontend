@@ -13,9 +13,6 @@ export function SocialLogin() {
         <TouchableOpacity className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center">
           <IconSymbol name="google.logo" size={24} color="#000000" />
         </TouchableOpacity>
-        <TouchableOpacity className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center">
-          <IconSymbol name="facebook.logo" size={24} color="#000000" />
-        </TouchableOpacity>
       </View>
     </View>
   );

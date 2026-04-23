@@ -85,6 +85,7 @@ const WishlistScreen = () => {
                   size={variant?.size || "N/A"}
                   price={`৳${variant?.basePrice || "0"}`}
                   onDelete={() => handleDelete(item.id, item.variantId)}
+                  onPress={() => router.push(`/product/${product?.id}`)}
                 />
               );
             }}

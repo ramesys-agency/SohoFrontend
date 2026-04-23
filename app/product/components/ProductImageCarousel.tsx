@@ -47,10 +47,10 @@ export default function ProductImageCarousel({
 
       {/* Pagination Dots */}
       <View className="absolute bottom-16 left-4 flex-row gap-2">
-        {images.map((_, index) => (
+        {images.map((img, index) => (
           <View
-            key={index}
-            className={`h-2 w-2 rounded-full ${
+            key={img}
+            className={`h-2 w-2 rounded-full scale-100 ${
               activeImageIndex === index
                 ? "scale-[1.5] bg-white"
                 : "bg-white/50"

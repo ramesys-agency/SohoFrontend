@@ -105,7 +105,7 @@ export default function AddressSelectionScreen() {
           ))}
 
           <TouchableOpacity
-            onPress={() => router.push("/profile/addresses/add-address")}
+            onPress={() => router.push("/wardrobe/add-address")}
             className="flex-row items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-300 mt-2 mb-10"
           >
             <Feather name="plus" size={20} color="#6B7280" />

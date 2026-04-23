@@ -47,8 +47,11 @@ export function CategoryScreenContent() {
       params.categoryId = categoryId;
     }
 
+    if (genderName) {
+      params.gender = genderName.toUpperCase();
+    }
     return params;
-  }, [collectionId, collectionSlug, categoryId]);
+  }, [collectionId, collectionSlug, categoryId, genderName]);
 
   // Identifier-only params for the page-title API (no isPublished / gender)
   const titleParams = React.useMemo(() => {

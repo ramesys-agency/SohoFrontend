@@ -103,11 +103,11 @@ const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
 
       {/* Pagination Dots */}
       <View className="flex-row justify-center mt-4 gap-x-2">
-        {banners?.map((_, index) => (
+        {banners?.map((item, index) => (
           <View
-            key={index}
-            className={`h-2 rounded-full ${
-              activeIndex === index ? "w-8 bg-gray-400" : "w-2 bg-gray-300"
+            key={item.id}
+            className={`h-2 rounded-full w-2 ${
+              activeIndex === index ? "w-8 bg-gray-400" : "bg-gray-300"
             }`}
           />
         ))}

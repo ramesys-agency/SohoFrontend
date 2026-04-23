@@ -172,9 +172,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {FEATURED_COLLECTIONS.map((section, index) => (
+        {FEATURED_COLLECTIONS.map((section) => (
           <FeaturedSection
-            key={index}
+            key={section.title}
             title={section.title}
             description={section.description}
             images={section.images}
