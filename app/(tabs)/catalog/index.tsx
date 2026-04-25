@@ -12,8 +12,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CategoryCircle from "../../components/catalog/CategoryCircle";
-import CategoryGridItem from "../../components/catalog/CategoryGridItem";
+import CategoryCircle from "@/app/components/catalog/CategoryCircle";
+import CategoryGridItem from "@/app/components/catalog/CategoryGridItem";
 
 export default function CatalogScreen() {
   const [genderCategory, setGenderCategory] = useState("women");
@@ -37,17 +37,20 @@ export default function CatalogScreen() {
         gender: genderCategory.toUpperCase(),
       });
 
-      const formattedCategories: any[] = data.map((category: any) => ({
-        id: category.id,
-        name: category.name,
-        image: category.imageUrl,
-      }));
-
-      setCategories(formattedCategories);
+      if (Array.isArray(data)) {
+        const formattedCategories: any[] = data.map((category: any) => ({
+          id: category.id,
+          name: category.name,
+          image: category.imageUrl,
+        }));
+        setCategories(formattedCategories);
+      } else {
+        console.warn("Categories data is not an array:", data);
+        setCategories([]);
+      }
     } catch (error) {
       console.error("Error fetching categories:", error);
-    } finally {
-      setLoading(false);
+      setCategories([]);
     }
   };
 
@@ -59,30 +62,38 @@ export default function CatalogScreen() {
         placementIsActive: true,
       });
 
-      const formattedGridCollections: any[] = data.map(
-        (collection: any) =>
-          collection?.collectionPlacements?.[0]?.section === "GRID_SECTION" && {
-            id: collection.id,
-            name: collection.name,
-            image: collection.collectionPlacements?.[0]?.imageUrl,
-          },
-      );
+      if (Array.isArray(data)) {
+        const formattedGridCollections: any[] = data
+          .map(
+            (collection: any) =>
+              collection?.collectionPlacements?.[0]?.section ===
+                "GRID_SECTION" && {
+                id: collection.id,
+                name: collection.name,
+                image: collection.collectionPlacements?.[0]?.imageUrl,
+              },
+          )
+          .filter(Boolean);
 
-      const formattedRowCollections: any[] = data.map(
-        (collection: any) =>
-          collection?.collectionPlacements?.[0]?.section === "FEATURED_ROW" && {
-            id: collection.id,
-            name: collection.name,
-            image: collection.collectionPlacements?.[0]?.imageUrl,
-          },
-      );
+        const formattedRowCollections: any[] = data
+          .map(
+            (collection: any) =>
+              collection?.collectionPlacements?.[0]?.section ===
+                "FEATURED_ROW" && {
+                id: collection.id,
+                name: collection.name,
+                image: collection.collectionPlacements?.[0]?.imageUrl,
+              },
+          )
+          .filter(Boolean);
 
-      setGridCollections(formattedGridCollections);
-      setRowCollections(formattedRowCollections);
+        setGridCollections(formattedGridCollections);
+        setRowCollections(formattedRowCollections);
+      } else {
+        console.warn("Collections data is not an array:", data);
+      }
     } catch (error) {
       console.error("Error fetching collections:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -93,8 +104,12 @@ export default function CatalogScreen() {
   }, [genderCategory]);
 
   useEffect(() => {
-    fetchCategories();
-    fetchCollections();
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchCategories(), fetchCollections()]);
+      setLoading(false);
+    };
+    loadData();
   }, [genderCategory]);
 
   return (
