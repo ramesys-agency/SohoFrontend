@@ -1,8 +1,8 @@
 export const API_ROUTES = {
   AUTH: {
     LOGIN: "/api/v1/auth/login",
-    REGISTER: "/api/v1/auth/register",
-    REFRESH_TOKEN: "/api/v1/auth/refresh-token",
+    REGISTER: "/api/v1/auth/signup",
+    REFRESH_TOKEN: "/api/v1/auth/refresh",
     LOGOUT: "/api/v1/auth/logout",
     ME: "/api/v1/auth/me",
     UPDATE_PROFILE: "/api/v1/users/profile",
@@ -12,6 +12,7 @@ export const API_ROUTES = {
   // Add other routes here as needed
   USERS: {
     PROFILE: "/api/v1/users/profile",
+    AVATAR: "/api/v1/users/avatar",
   },
   ADDRESS: {
     BASE: "/api/v1/addresses",

@@ -42,7 +42,7 @@ const WishlistScreen = () => {
       <SubHeader title="Wishlist" />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#000" />
         </View>
       ) : items.length === 0 ? (
         <View className="flex-1 justify-center items-center p-4">

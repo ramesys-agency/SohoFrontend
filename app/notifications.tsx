@@ -83,8 +83,17 @@ export default function NotificationsScreen() {
             setActiveTab(event.nativeEvent.selectedSegmentIndex);
           }}
           backgroundColor="#F3F3F3"
-          fontStyle={{ fontFamily: "Urbanist-Medium", fontSize: 16 }}
-          activeFontStyle={{ fontFamily: "Urbanist-SemiBold", fontSize: 16 }}
+          tintColor="#000000"
+          fontStyle={{
+            fontFamily: "Urbanist-Medium",
+            fontSize: 16,
+            color: "#000000",
+          }}
+          activeFontStyle={{
+            fontFamily: "Urbanist-Medium",
+            fontSize: 16,
+            color: "#FFFFFF",
+          }}
         />
       </View>
 

@@ -1,9 +1,12 @@
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useAuthStore } from "@/store/authStore";
 import { Tabs } from "expo-router";
 import { Image, View } from "react-native";
 
 export default function TabsLayout() {
+  const { user } = useAuthStore();
+
   return (
     <Tabs
       screenOptions={{
@@ -20,16 +23,17 @@ export default function TabsLayout() {
           backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 25,
           borderTopRightRadius: 25,
-          height: 100,
-          paddingBottom: 20,
+          height: 90,
+          paddingBottom: 25,
           paddingTop: 10,
           position: "absolute",
           borderTopWidth: 0,
           elevation: 20,
           shadowColor: "#000000",
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          paddingHorizontal: 10,
         },
       }}
     >
@@ -40,7 +44,7 @@ export default function TabsLayout() {
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol
-              size={26}
+              size={24}
               name="house.fill"
               color={color}
               focused={focused}
@@ -56,7 +60,7 @@ export default function TabsLayout() {
           title: "Catalog",
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol
-              size={26}
+              size={24}
               name="square.grid.2x2.fill"
               color={color}
               focused={focused}
@@ -72,7 +76,7 @@ export default function TabsLayout() {
           title: "Wardrobe",
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol
-              size={26}
+              size={24}
               name="cart.fill"
               color={color}
               focused={focused}
@@ -88,7 +92,7 @@ export default function TabsLayout() {
           title: "Wishlist",
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol
-              size={26}
+              size={24}
               name="heart.fill"
               color={color}
               focused={focused}
@@ -101,22 +105,31 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "",
-          tabBarIcon: ({ focused }) => (
-            <View
-              className={`w-10 h-10 rounded-full overflow-hidden border ${
-                focused ? "border-black" : "border-transparent"
-              }`}
-            >
-              <Image
-                source={{
-                  uri: "https://i.pravatar.cc/150?u=soho-user",
-                }}
-                className="w-full h-full"
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => {
+            if (user?.avatar) {
+              return (
+                <View
+                  className={`w-7 h-7 rounded-full overflow-hidden border ${
+                    focused ? "border-black" : "border-transparent"
+                  }`}
+                >
+                  <Image
+                    source={{ uri: user.avatar }}
+                    className="w-full h-full"
+                  />
+                </View>
+              );
+            }
+            return (
+              <IconSymbol
+                size={24}
+                name="person.fill"
+                color={color}
+                focused={focused}
               />
-            </View>
-          ),
-          tabBarLabel: () => null,
+            );
+          },
         }}
       />
     </Tabs>

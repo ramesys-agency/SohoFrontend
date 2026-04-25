@@ -26,10 +26,17 @@ export default function RegisterStep1() {
       Alert.alert("Error", "Please accept the terms and conditions.");
       return;
     }
-    router.push({
-      pathname: "/(auth)/register/details",
-      params: { email },
-    });
+    Alert.alert("Success", "OTP sent to email successfully.", [
+      {
+        text: "OK",
+        onPress: () => {
+          router.push({
+            pathname: "/(auth)/register/verify",
+            params: { email },
+          });
+        },
+      },
+    ]);
   };
 
   return (
@@ -91,6 +98,7 @@ export default function RegisterStep1() {
         <AuthButton
           title="Create account"
           onPress={handleContinue}
+          disabled={!termsAccepted}
           className="mb-8"
         />
 

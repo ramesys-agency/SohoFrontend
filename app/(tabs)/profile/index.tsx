@@ -61,13 +61,16 @@ export default function ProfileScreen() {
             </View>
           ) : (
             <>
-              <Image
-                source={{
-                  uri:
-                    profileData?.avatar || "https://i.pravatar.cc/150?img=12",
-                }}
-                className="w-20 h-20 rounded-xl mr-4"
-              />
+              {profileData?.avatar ? (
+                <Image
+                  source={{ uri: profileData.avatar }}
+                  className="w-20 h-20 rounded-xl mr-4"
+                />
+              ) : (
+                <View className="w-20 h-20 rounded-xl mr-4 bg-gray-200 items-center justify-center">
+                  <IconSymbol name="person.fill" size={40} color="#9CA3AF" />
+                </View>
+              )}
               <View className="flex-1">
                 <Text className="text-lg font-Urbanist-Bold text-black">
                   {profileData?.fullName || "User"}

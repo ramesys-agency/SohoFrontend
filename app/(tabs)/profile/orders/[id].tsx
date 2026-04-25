@@ -60,14 +60,31 @@ export default function OrderDetailsScreen() {
       >
         {/* Product Cards */}
         {order.items.map((item: any, index: number) => (
-          <View key={item.id} className="bg-gray-50 rounded-2xl p-4 mb-4 flex-row gap-4 border border-gray-100">
+          <TouchableOpacity
+            key={item.id}
+            activeOpacity={0.7}
+            onPress={() =>
+              router.push({
+                pathname: `/product/${item.productId}`,
+                params: { variantId: item.variantId },
+              })
+            }
+            className="bg-gray-50 rounded-2xl p-4 mb-4 flex-row gap-4 border border-gray-100"
+          >
             <Image
-              source={{ uri: item.variant?.images?.[0]?.url || "https://i.pravatar.cc/150?img=1" }}
+              source={{
+                uri:
+                  item.variant?.images?.[0]?.imageUrl ||
+                  "https://i.pravatar.cc/150?img=1",
+              }}
               className="w-24 h-32 rounded-xl bg-gray-200"
               resizeMode="cover"
             />
             <View className="flex-1 justify-center py-2">
-              <Text className="text-lg font-Urbanist-Bold text-black mb-1" numberOfLines={2}>
+              <Text
+                className="text-lg font-Urbanist-Bold text-black mb-1"
+                numberOfLines={2}
+              >
                 {item.product?.name}
               </Text>
               <Text className="text-gray-500 font-Urbanist mb-1 text-sm">
@@ -77,7 +94,7 @@ export default function OrderDetailsScreen() {
                 ৳{parseFloat(item.variant?.basePrice || "0").toLocaleString()}
               </Text>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
 
         {/* Info Section */}

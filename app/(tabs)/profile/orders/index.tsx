@@ -82,7 +82,7 @@ export default function OrdersListScreen() {
                 ? `${firstItem?.product?.name} + ${itemCount - 1} more`
                 : firstItem?.product?.name;
             const productImage =
-              firstItem?.variant?.images?.[0]?.url ||
+              firstItem?.variant?.images?.[0]?.imageUrl ||
               "https://i.pravatar.cc/150?img=1";
 
             return (

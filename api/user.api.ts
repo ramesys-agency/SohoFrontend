@@ -10,4 +10,12 @@ export const userApi = {
     const response = await apiClient.put(API_ROUTES.USERS.PROFILE, data);
     return response.data.data || response.data;
   },
+  updateAvatar: async (formData: FormData) => {
+    const response = await apiClient.patch(API_ROUTES.USERS.AVATAR, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data.data || response.data;
+  },
 };

@@ -89,7 +89,10 @@ const RATING_BREAKDOWN: RatingBreakdown = {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProductDetailsScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, variantId } = useLocalSearchParams<{
+    id: string;
+    variantId?: string;
+  }>();
   const router = useRouter();
 
   // ── React Query ──────────────────────────────────────────────────────────
@@ -143,17 +146,31 @@ export default function ProductDetailsScreen() {
 
   // Initialise selections when product data arrives
   useEffect(() => {
-    if (product) {
-      if (colorOptions.length && !selectedColor) {
-        // Default to the variant marked isDefault, or fall back to the first color
-        const defaultVariant = product.variants?.find((v: any) => v.isDefault);
-        setSelectedColor(defaultVariant?.colorName ?? colorOptions[0].name);
-      }
-      if (availableSizes.length && !selectedSize) {
+    if (product && product.variants?.length) {
+      if (!selectedColor) {
+        let targetVariant = null;
+        if (variantId) {
+          targetVariant = product.variants.find((v: any) => v.id === variantId);
+        }
+
+        if (!targetVariant) {
+          targetVariant = product.variants.find((v: any) => v.isDefault);
+        }
+
+        const colorToSet = targetVariant?.colorName ?? colorOptions[0]?.name;
+        const sizeToSet = targetVariant?.size ?? "";
+
+        if (colorToSet) {
+          setSelectedColor(colorToSet);
+        }
+        if (sizeToSet) {
+          setSelectedSize(String(sizeToSet));
+        }
+      } else if (availableSizes.length && !selectedSize) {
         setSelectedSize(availableSizes[0]);
       }
     }
-  }, [product, colorOptions, availableSizes, selectedColor, selectedSize]);
+  }, [product, colorOptions, availableSizes, selectedColor, selectedSize, variantId]);
 
   // ── Animation ────────────────────────────────────────────────────────────
   const scrollY = useSharedValue(0);

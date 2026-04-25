@@ -7,7 +7,7 @@ interface User {
   email: string;
   name: string;
   role?: string;
-  // add other user fields
+  avatar?: string;
 }
 
 interface AuthState {
@@ -60,8 +60,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  updateUser: (user) => {
-    set({ user });
+  updateUser: (userData: Partial<User>) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...userData } : (userData as User),
+    }));
   },
 
   setTokens: async (accessToken, refreshToken) => {

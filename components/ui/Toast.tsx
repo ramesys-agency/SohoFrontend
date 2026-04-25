@@ -21,9 +21,8 @@ export const Toast = () => {
   useEffect(() => {
     if (isVisible) {
       // Show toast
-      translateY.value = withSpring(insets.top > 0 ? insets.top + 10 : 40, {
-        stiffness: 200,
-        damping: 20,
+      translateY.value = withTiming(insets.top > 0 ? insets.top + 10 : 40, {
+        duration: 500,
       });
       opacity.value = withTiming(1, { duration: 300 });
 

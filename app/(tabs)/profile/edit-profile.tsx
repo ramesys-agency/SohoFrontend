@@ -16,13 +16,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
+import * as ImagePicker from "expo-image-picker";
 import { userApi } from "../../../api/user.api";
+import { useAuthStore } from "../../../store/authStore";
+import { useToastStore } from "../../../store/toastStore";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
 import SubHeader from "../../components/navbar/SubHeader";
 
 const profileSchema = z.object({
   fullName: z.string().min(1, "Name is required"),
-  phoneNumber: z.string().optional(),
+  phone: z.string().optional(),
   gender: z.string().optional(),
   age: z.string().optional(),
 });
@@ -31,10 +34,14 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileScreen() {
   const queryClient = useQueryClient();
+  const { updateUser } = useAuthStore();
+  const { showToast } = useToastStore();
   const [savingField, setSavingField] = useState<keyof ProfileFormData | null>(
     null,
   );
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     data: profileData,
@@ -56,7 +63,7 @@ export default function EditProfileScreen() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       fullName: "",
-      phoneNumber: "",
+      phone: "",
       gender: "",
       age: "",
     },
@@ -66,7 +73,7 @@ export default function EditProfileScreen() {
     if (profileData) {
       reset({
         fullName: profileData.fullName || "",
-        phoneNumber: profileData.phoneNumber || profileData.phone || "",
+        phone: profileData.phone || "",
         gender: profileData.gender || "",
         age: profileData.age ? String(profileData.age) : "",
       });
@@ -75,14 +82,29 @@ export default function EditProfileScreen() {
 
   const mutation = useMutation({
     mutationFn: (data: Partial<ProfileFormData>) => userApi.updateProfile(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      // Update global auth state
+      if (data) {
+        updateUser({
+          name: data.fullName,
+          avatar: data.avatar,
+        });
+        showToast({
+          message: "Profile updated successfully",
+          type: "success",
+        });
+      }
       // Reset the form with current values so dirty status clears
       reset(getValues());
       setSavingField(null);
     },
     onError: (error) => {
       console.error("Failed to update profile:", error);
+      showToast({
+        message: "Failed to update profile",
+        type: "error",
+      });
       setSavingField(null);
     },
   });
@@ -103,6 +125,60 @@ export default function EditProfileScreen() {
   };
 
   const isSaving = (field: keyof ProfileFormData) => savingField === field;
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const handleUploadAvatar = async () => {
+    if (!selectedImage) return;
+
+    try {
+      setIsUploading(true);
+      const filename = selectedImage.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename || "");
+      const type = match ? `image/${match[1]}` : `image`;
+
+      const formData = new FormData();
+      formData.append("avatar", {
+        uri: selectedImage,
+        name: filename,
+        type,
+      } as any);
+
+      const result = await userApi.updateAvatar(formData);
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+
+      // Update global auth state
+      if (result?.avatar) {
+        updateUser({ avatar: result.avatar });
+      }
+
+      showToast({
+        message: "Avatar updated successfully",
+        type: "success",
+      });
+
+      setSelectedImage(null);
+    } catch (error) {
+      console.error("Upload failed", error);
+      showToast({
+        message: "Failed to update avatar",
+        type: "error",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -139,17 +215,39 @@ export default function EditProfileScreen() {
           {/* Profile Image */}
           <View className="items-center justify-center mt-6 mb-10">
             <View className="relative">
-              <Image
-                source={{
-                  uri:
-                    profileData?.avatar || "https://i.pravatar.cc/150?img=12",
-                }}
-                className="w-28 h-28 rounded-xl"
-              />
-              <TouchableOpacity className="absolute inset-0 bg-black/30 rounded-xl items-center justify-center">
+              {selectedImage || profileData?.avatar ? (
+                <Image
+                  source={{ uri: selectedImage || profileData.avatar }}
+                  className="w-28 h-28 rounded-xl"
+                />
+              ) : (
+                <View className="w-28 h-28 rounded-xl bg-gray-200 items-center justify-center">
+                  <IconSymbol name="person.fill" size={50} color="#9CA3AF" />
+                </View>
+              )}
+              <TouchableOpacity
+                onPress={pickImage}
+                className="absolute inset-0 bg-black/30 rounded-xl items-center justify-center"
+              >
                 <IconSymbol name="pencil" size={24} color="#FFF" />
               </TouchableOpacity>
             </View>
+
+            {selectedImage && (
+              <TouchableOpacity
+                onPress={handleUploadAvatar}
+                disabled={isUploading}
+                className="mt-4 bg-black px-6 py-2 rounded-full h-10 items-center justify-center min-w-[120px]"
+              >
+                {isUploading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text className="text-white font-Urbanist-Bold">
+                    Save Avatar
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Form Items */}
@@ -207,7 +305,7 @@ export default function EditProfileScreen() {
               </Text>
               <Controller
                 control={control}
-                name="phoneNumber"
+                name="phone"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View
                     className={`bg-[#F3F3F3] border border-transparent rounded-lg flex-row items-center px-4 h-14`}
@@ -222,13 +320,13 @@ export default function EditProfileScreen() {
                       onChangeText={onChange}
                       value={value}
                     />
-                    {dirtyFields.phoneNumber && (
+                    {dirtyFields.phone && (
                       <TouchableOpacity
-                        onPress={() => handleInlineSave("phoneNumber")}
-                        disabled={isSaving("phoneNumber")}
+                        onPress={() => handleInlineSave("phone")}
+                        disabled={isSaving("phone")}
                         className="py-1 px-2"
                       >
-                        {isSaving("phoneNumber") ? (
+                        {isSaving("phone") ? (
                           <ActivityIndicator size="small" color="#000" />
                         ) : (
                           <Text className="text-black font-Urbanist-Bold">

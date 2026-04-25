@@ -34,21 +34,17 @@ export default function ForgotPasswordEmail() {
         ? resetLink.split("?token=")[1]
         : "";
 
-      Alert.alert(
-        "Check your email",
-        result?.message ?? "A password reset link has been sent to your email.",
-        [
-          {
-            text: "Continue",
-            onPress: () => {
-              router.push({
-                pathname: "/(auth)/forgot-password/reset",
-                params: { token },
-              });
-            },
+      Alert.alert("Success", "OTP sent to email successfully.", [
+        {
+          text: "OK",
+          onPress: () => {
+            router.push({
+              pathname: "/(auth)/forgot-password/verify",
+              params: { email },
+            });
           },
-        ],
-      );
+        },
+      ]);
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||

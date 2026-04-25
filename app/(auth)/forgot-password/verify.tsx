@@ -1,6 +1,7 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+    Alert,
     ScrollView,
     Text,
     TextInput,
@@ -13,6 +14,7 @@ import { IconSymbol } from "../../../components/ui/icon-symbol";
 
 export default function ForgotPasswordVerify() {
   const router = useRouter();
+  const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(266); // 4:26 in seconds
   const inputRef = useRef<TextInput>(null);
@@ -31,6 +33,10 @@ export default function ForgotPasswordVerify() {
   };
 
   const handleVerify = () => {
+    if (otp.length < 6) {
+      Alert.alert("Error", "Please enter the 6-digit OTP.");
+      return;
+    }
     router.push("/(auth)/forgot-password/reset");
   };
 
@@ -56,8 +62,11 @@ export default function ForgotPasswordVerify() {
           </Text>
           <Text className="text-[#999999] text-sm font-Urbanist text-center">
             Enter the{" "}
-            <Text className="text-black font-Urbanist-Bold">5 digits OTP</Text>{" "}
+            <Text className="text-black font-Urbanist-Bold">6 digits OTP</Text>{" "}
             code sent to your email
+          </Text>
+          <Text className="text-black font-Urbanist-Bold text-sm text-center mt-1">
+            {email || "m**********@gmail.com"}
           </Text>
         </View>
 
@@ -66,7 +75,7 @@ export default function ForgotPasswordVerify() {
             ref={inputRef}
             value={otp}
             onChangeText={(text) => {
-              if (text.length <= 5) setOtp(text);
+              if (text.length <= 6) setOtp(text);
             }}
             keyboardType="number-pad"
             style={{ position: "absolute", opacity: 0, height: 0, width: 0 }}
@@ -77,18 +86,18 @@ export default function ForgotPasswordVerify() {
             onPress={() => inputRef.current?.focus()}
             className="flex-row justify-between px-2"
           >
-            {[0, 1, 2, 3, 4].map((index) => {
+            {[0, 1, 2, 3, 4, 5].map((index) => {
               const digit = otp[index];
               const isFocused =
-                otp.length === index || (otp.length === 5 && index === 4);
+                otp.length === index || (otp.length === 6 && index === 5);
               return (
                 <View
                   key={index}
-                  className={`w-14 h-16 bg-[#F2F2F2] rounded-xl items-center justify-center border-2 ${
+                  className={`w-12 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center border-2 ${
                     isFocused ? "border-[#0055D4]" : "border-transparent"
                   }`}
                 >
-                  <Text className="text-2xl font-Urbanist-Bold">
+                  <Text className="text-xl font-Urbanist-Bold">
                     {digit || ""}
                   </Text>
                 </View>

@@ -117,8 +117,15 @@ export default function CatalogScreen() {
       <View>
         <SubHeader title="Catalog" />
         <SegmentedControl
-          style={{ marginHorizontal: 16, marginBottom: 10 }}
+          style={{ marginHorizontal: 16, marginBottom: 10, height: 40 }}
           backgroundColor="#F3F3F3"
+          tintColor="#000000"
+          activeFontStyle={{
+            color: "#FFFFFF",
+            fontWeight: "600",
+            fontFamily: "Urbanist-Medium",
+          }}
+          fontStyle={{ color: "#000000", fontFamily: "Urbanist-Medium" }}
           values={segments.map((s) => s.label)}
           selectedIndex={segments.findIndex((s) => s.value === genderCategory)}
           onChange={(event) => {

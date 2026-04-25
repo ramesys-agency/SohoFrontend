@@ -5,6 +5,7 @@ interface AuthButtonProps {
   title: string;
   onPress: () => void;
   loading?: boolean;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -12,14 +13,17 @@ export function AuthButton({
   title,
   onPress,
   loading,
+  disabled,
   className = "",
 }: AuthButtonProps) {
+  const isDisabled = loading || disabled;
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={loading}
+      disabled={isDisabled}
       className={`bg-black rounded-xl py-4 items-center justify-center ${className} ${
-        loading ? "opacity-70" : ""
+        isDisabled ? "opacity-50" : ""
       }`}
     >
       {loading ? (
