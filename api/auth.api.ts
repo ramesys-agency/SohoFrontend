@@ -7,6 +7,16 @@ export const authApi = {
     return response.data.data || response.data;
   },
 
+  googleLogin: async (idToken: string) => {
+    const response = await apiClient.post("/v1/auth/google", { idToken });
+    return response.data.data || response.data;
+  },
+
+  appleLogin: async (data: { identityToken: string; firstName?: string; lastName?: string }) => {
+    const response = await apiClient.post("/v1/auth/apple", data);
+    return response.data.data || response.data;
+  },
+
   register: async (data: {
     email: string;
     password: string;

@@ -1,12 +1,11 @@
 import { cartApi } from "@/api/cart.api";
 import { productApi } from "@/api/product.api";
 import { wishlistApi } from "@/api/wishlist.api";
-import ReviewList, {
-  RatingBreakdown,
-  Review,
-} from "@/app/components/product/ReviewList";
+import ReviewList, { Review } from "@/app/components/product/ReviewList";
 import { useToastStore } from "@/store/toastStore";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useAuthStore } from "@/store/authStore";
+import { reviewApi } from "@/api/review.api";
+import { Ionicons, MaterialIcons, AntDesign } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -17,6 +16,7 @@ import {
   NativeSyntheticEvent,
   RefreshControl,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -46,45 +46,7 @@ const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop",
 ];
 
-const REVIEW_DATA: Review[] = [
-  {
-    id: "r1",
-    user: {
-      name: "Veronika",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    rating: 5,
-    date: "just now",
-    comment:
-      "This is a beautiful Spring floral dress for your Spring look. Its elegance makes you ready for any occasion with subtle neckline.",
-    sizeBought: "M",
-    images: [
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=200&auto=format&fit=crop",
-    ],
-    likes: 124,
-  },
-  {
-    id: "r2",
-    user: { name: "James Doe" },
-    rating: 4,
-    date: "2 days ago",
-    comment: "Great quality but a bit tight around the shoulders.",
-    sizeBought: "L",
-    likes: 12,
-  },
-  {
-    id: "r3",
-    user: { name: "Anonymous" },
-    rating: 5,
-    date: "1 week ago",
-  },
-];
-
-const RATING_BREAKDOWN: RatingBreakdown = {
-  average: 4.5,
-  totalCount: 104,
-  counts: { 1: 4, 2: 6, 3: 10, 4: 30, 5: 54 },
-};
+// ─── Dynamic Data (derived from API response) ────────────────────────────────
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -117,6 +79,12 @@ export default function ProductDetailsScreen() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [activeTab, setActiveTab] = useState("Details");
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // ── Review state ─────────────────────────────────────────────────────────
+  const { user, isAuthenticated } = useAuthStore();
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
 
   // ── Derived variant helpers ──────────────────────────────────────────────
   // Unique color options from variants
@@ -170,7 +138,14 @@ export default function ProductDetailsScreen() {
         setSelectedSize(availableSizes[0]);
       }
     }
-  }, [product, colorOptions, availableSizes, selectedColor, selectedSize, variantId]);
+  }, [
+    product,
+    colorOptions,
+    availableSizes,
+    selectedColor,
+    selectedSize,
+    variantId,
+  ]);
 
   // ── Animation ────────────────────────────────────────────────────────────
   const scrollY = useSharedValue(0);
@@ -209,6 +184,99 @@ export default function ProductDetailsScreen() {
   }));
 
   // ── Derived data from API response ───────────────────────────────────────
+
+  // Reviews: map real API reviews and calculate rating breakdown
+  const { reviews, ratingBreakdown } = useMemo(() => {
+    const rawReviews = product?.reviews || [];
+
+    if (rawReviews.length === 0) {
+      return {
+        reviews: [],
+        ratingBreakdown: {
+          average: 0,
+          totalCount: 0,
+          counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        },
+      };
+    }
+
+    const mappedReviews: Review[] = rawReviews.map((r: any) => ({
+      id: r.id,
+      user: {
+        name: r.user?.fullName || "Anonymous",
+        avatar: r.user?.avatar,
+      },
+      rating: r.rating || 0,
+      date: r.createdAt
+        ? new Date(r.createdAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        : "N/A",
+      comment: r.comment || undefined,
+      images: r.images || [],
+      likes: 0,
+    }));
+
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let sum = 0;
+
+    rawReviews.forEach((r: any) => {
+      const rating = Math.min(Math.max(Math.round(r.rating || 0), 1), 5);
+      counts[rating as keyof typeof counts] += 1;
+      sum += r.rating || 0;
+    });
+
+    const average = sum / rawReviews.length;
+
+    return {
+      reviews: mappedReviews,
+      ratingBreakdown: {
+        average: Number(average.toFixed(1)),
+        totalCount: rawReviews.length,
+        counts,
+      },
+    };
+  }, [product?.reviews]);
+
+  const hasReviewed = useMemo(() => {
+    if (!isAuthenticated || !user || !product?.reviews) return false;
+    return product.reviews.some((r: any) => r.userId === user.id);
+  }, [isAuthenticated, user, product?.reviews]);
+
+  const addReviewMutation = useMutation({
+    mutationFn: () =>
+      reviewApi.addReview(id!, {
+        rating: reviewRating,
+        comment: reviewComment,
+      }),
+    onSuccess: () => {
+      showToast({ message: "Review posted successfully!", type: "success" });
+      setIsWritingReview(false);
+      setReviewRating(0);
+      setReviewComment("");
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+    },
+    onError: (error: any) => {
+      showToast({
+        message:
+          error?.response?.data?.message ||
+          error.message ||
+          "Failed to post review.",
+        type: "error",
+      });
+    },
+  });
+
+  const handleSubmitReview = () => {
+    if (reviewRating === 0) {
+      showToast({ message: "Please select a rating", type: "error" });
+      return;
+    }
+    addReviewMutation.mutate();
+  };
+
   // Images: show images for the currently-selected color, ordered by displayOrder.
   const images: string[] = useMemo(() => {
     if (!product?.variants?.length) return FALLBACK_IMAGES;
@@ -337,10 +405,75 @@ export default function ProductDetailsScreen() {
         return <ShippingTabContent />;
       case "Reviews":
         return (
-          <ReviewList
-            reviews={REVIEW_DATA}
-            ratingBreakdown={RATING_BREAKDOWN}
-          />
+          <View>
+            <ReviewList reviews={reviews} ratingBreakdown={ratingBreakdown} />
+            {isAuthenticated && !hasReviewed && !isWritingReview && (
+              <TouchableOpacity
+                className="bg-black py-3 rounded-full mt-6 flex-row items-center justify-center mb-4"
+                onPress={() => setIsWritingReview(true)}
+              >
+                <MaterialIcons name="edit" size={20} color="white" />
+                <Text className="text-white font-Urbanist-Bold text-base ml-2">
+                  Write a Review
+                </Text>
+              </TouchableOpacity>
+            )}
+            {isAuthenticated && !hasReviewed && isWritingReview && (
+              <View className="mt-6 mb-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <Text className="text-lg font-Urbanist-Bold text-black mb-3">
+                  Write Your Review
+                </Text>
+                <View className="flex-row items-center mb-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() => setReviewRating(star)}
+                    >
+                      <AntDesign
+                        name="star"
+                        size={32}
+                        color={star <= reviewRating ? "#FFD700" : "#E5E7EB"}
+                        className="mr-2"
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TextInput
+                  className="bg-white px-4 py-3 rounded-xl border border-gray-200 text-black font-Urbanist min-h-[100px] mb-4"
+                  placeholder="Share your experience with this product..."
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  textAlignVertical="top"
+                  value={reviewComment}
+                  onChangeText={setReviewComment}
+                />
+                <View className="flex-row justify-end space-x-3">
+                  <TouchableOpacity
+                    className="py-3 px-6 rounded-full"
+                    onPress={() => setIsWritingReview(false)}
+                    disabled={addReviewMutation.isPending}
+                  >
+                    <Text className="text-gray-500 font-Urbanist-Bold text-base">
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-black py-3 px-6 rounded-full"
+                    onPress={handleSubmitReview}
+                    disabled={addReviewMutation.isPending}
+                  >
+                    {addReviewMutation.isPending ? (
+                      <ActivityIndicator color="white" size="small" />
+                    ) : (
+                      <Text className="text-white font-Urbanist-Bold text-base">
+                        Submit Review
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
         );
       default:
         return null;

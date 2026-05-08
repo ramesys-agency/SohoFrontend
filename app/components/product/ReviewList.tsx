@@ -39,6 +39,32 @@ export default function ReviewList({
 }: ReviewListProps) {
   const totalReviews = ratingBreakdown.totalCount;
 
+  if (totalReviews === 0 || reviews.length === 0) {
+    return (
+      <View className="mt-8 items-center justify-center p-6 bg-gray-50 rounded-2xl border border-gray-100">
+        <MaterialIcons
+          name="rate-review"
+          size={48}
+          color="#D1D5DB"
+          className="mb-4"
+        />
+        <Text
+          className="text-lg text-black mb-2 mt-4"
+          style={{ fontFamily: "UrbanistBold" }}
+        >
+          No Reviews Yet
+        </Text>
+        <Text
+          className="text-sm text-gray-500 text-center max-w-[250px]"
+          style={{ fontFamily: "Urbanist" }}
+        >
+          This product hasn&apos;t received any customer reviews. Once customers
+          purchase and review this item, their feedback will appear here.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View className="mt-4">
       {/* 1. Rating Summary Section */}
@@ -185,12 +211,6 @@ export default function ReviewList({
               <Feather name="heart" size={16} color="black" />
               <Text className="ml-2 text-xs text-gray-500 font-Urbanist-Bold">
                 {review.likes || 0} Likes
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center p-1">
-              <MaterialIcons name="reply" size={16} color="black" />
-              <Text className="ml-2 text-xs text-gray-500 font-Urbanist-Bold">
-                Reply
               </Text>
             </TouchableOpacity>
           </View>
