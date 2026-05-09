@@ -144,7 +144,7 @@ export default function PaymentScreen() {
                 Subtotal
               </Text>
               <Text className="text-black font-Urbanist-Bold">
-                ৳{subtotal.toLocaleString()}
+                ৳{(subtotal || 0).toLocaleString()}
               </Text>
             </View>
             <View className="flex-row justify-between mb-4">
@@ -170,7 +170,7 @@ export default function PaymentScreen() {
                   </TouchableOpacity>
                 </View>
                 <Text className="text-green-600 font-Urbanist-Bold">
-                  -৳{appliedCoupon.discountAmount.toLocaleString()}
+                  -৳{(appliedCoupon.discountAmount || 0).toLocaleString()}
                 </Text>
               </View>
             )}
@@ -178,7 +178,7 @@ export default function PaymentScreen() {
             <View className="border-t border-gray-200 pt-4 flex-row justify-between">
               <Text className="text-lg font-Urbanist-Bold">Total Amount</Text>
               <Text className="text-lg font-Urbanist-Bold">
-                ৳{total.toLocaleString()}
+                ৳{(total || 0).toLocaleString()}
               </Text>
             </View>
           </View>
@@ -259,7 +259,7 @@ export default function PaymentScreen() {
           <Text className="text-white font-Urbanist-Bold text-lg ml-2">
             {placeOrderMutation.isPending
               ? "Processing..."
-              : `Place Order • ৳${total.toLocaleString()}`}
+              : `Place Order • ৳${(total || 0).toLocaleString()}`}
           </Text>
         </TouchableOpacity>
       </View>

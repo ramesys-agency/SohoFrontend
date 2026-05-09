@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import * as AppleAuthentication from "expo-apple-authentication";
+// import { GoogleSignin } from "@react-native-google-signin/google-signin";
+// import * as AppleAuthentication from "expo-apple-authentication";
 import { useAuthStore } from "../../store/authStore";
 import { useToastStore } from "../../store/toastStore";
 import { authApi } from "../../api/auth.api";
@@ -13,14 +13,15 @@ export function SocialLogin() {
 
   useEffect(() => {
     // Initialize GoogleSignin
-    GoogleSignin.configure({
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
-      scopes: ["email", "profile"],
-    });
+    // GoogleSignin.configure({
+    //   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
+    //   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+    //   scopes: ["email", "profile"],
+    // });
   }, []);
 
   const handleAppleSignIn = async () => {
+    /*
     try {
       const isAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAvailable) {
@@ -63,9 +64,11 @@ export function SocialLogin() {
         type: "error" 
       });
     }
+    */
   };
 
   const handleGoogleSignIn = async () => {
+    /*
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
@@ -88,6 +91,7 @@ export function SocialLogin() {
         type: "error" 
       });
     }
+    */
   };
 
   return (

@@ -51,7 +51,7 @@ export default function ProductBottomBar({
             className="text-red-500 font-semibold text-md"
             style={{ fontFamily: "UrbanistBold" }}
           >
-            {isRemoving ? "Removing..." : "Remove from Wardrobe"}
+            {isRemoving ? "Removing..." : "Remove"}
           </Text>
         </TouchableOpacity>
       ) : (
@@ -68,7 +68,7 @@ export default function ProductBottomBar({
             className="text-white font-semibold text-md"
             style={{ fontFamily: "UrbanistBold" }}
           >
-            {isAdding ? "Adding..." : "Add to Wardrobe"}
+            {isAdding ? "Adding..." : "Add"}
           </Text>
         </TouchableOpacity>
       )}
