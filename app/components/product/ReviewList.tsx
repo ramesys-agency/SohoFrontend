@@ -205,15 +205,7 @@ export default function ReviewList({
             </ScrollView>
           )}
 
-          {/* Action Buttons */}
-          <View className="flex-row items-center space-x-5 mt-1">
-            <TouchableOpacity className="flex-row items-center p-1">
-              <Feather name="heart" size={16} color="black" />
-              <Text className="ml-2 text-xs text-gray-500 font-Urbanist-Bold">
-                {review.likes || 0} Likes
-              </Text>
-            </TouchableOpacity>
-          </View>
+
         </View>
       ))}
     </View>

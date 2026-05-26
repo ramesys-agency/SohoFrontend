@@ -1,10 +1,12 @@
+import { cartApi } from "@/api/cart.api";
 import { wishlistApi } from "@/api/wishlist.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
 import WishlistItem from "@/app/components/wishlist/WishlistItem";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useQuery } from "@tanstack/react-query";
+import { useToastStore } from "@/store/toastStore";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,6 +18,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const WishlistScreen = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const showToast = useToastStore((s: any) => s.showToast);
+  const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
 
   const {
     data: wishlistData,
@@ -26,7 +31,24 @@ const WishlistScreen = () => {
     queryFn: wishlistApi.fetchWishlist,
   });
 
-  const handleDelete = async (id: string, variantId: string) => {
+  const addToCartMutation = useMutation({
+    mutationFn: (variantId: string) => cartApi.addToCart(variantId),
+    onSuccess: () => {
+      showToast({ message: "Added to wardrobe", type: "success" });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onError: (error: any) => {
+      showToast({
+        message: error?.response?.data?.error || "Failed to add to wardrobe.",
+        type: "error",
+      });
+    },
+    onSettled: () => {
+      setAddingToCartId(null);
+    },
+  });
+
+  const handleDelete = async (variantId: string) => {
     try {
       await wishlistApi.toggleWishlist(variantId);
       refetch();
@@ -34,6 +56,22 @@ const WishlistScreen = () => {
       console.error("Error removing from wishlist", error);
     }
   };
+
+  const handleAddToCart = (variantId: string) => {
+    if (addToCartMutation.isPending) return;
+    setAddingToCartId(variantId);
+    addToCartMutation.mutate(variantId);
+  };
+
+  const { data: cartData } = useQuery({
+    queryKey: ["cart"],
+    queryFn: cartApi.getCart,
+  });
+
+  const inCartIds = useMemo<Set<string>>(() => {
+    const cartItems: any[] = cartData?.data || [];
+    return new Set(cartItems.map((i: any) => i.variantId));
+  }, [cartData]);
 
   const items = wishlistData?.data || [];
 
@@ -84,7 +122,10 @@ const WishlistScreen = () => {
                   name={product?.name || "Unknown Product"}
                   size={variant?.size || "N/A"}
                   price={`৳${variant?.basePrice || "0"}`}
-                  onDelete={() => handleDelete(item.id, item.variantId)}
+                  onDelete={() => handleDelete(item.variantId)}
+                  onAddToCart={() => handleAddToCart(item.variantId)}
+                  isAddingToCart={addingToCartId === item.variantId}
+                  isInCart={inCartIds.has(item.variantId)}
                   onPress={() => router.push(`/product/${product?.id}`)}
                 />
               );

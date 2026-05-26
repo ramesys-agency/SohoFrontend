@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import {
+    ActivityIndicator,
     Image,
     ImageSourcePropType,
     Text,
@@ -14,6 +15,9 @@ interface WishlistItemProps {
   size: string;
   price: string;
   onDelete: () => void;
+  onAddToCart: () => void;
+  isAddingToCart?: boolean;
+  isInCart?: boolean;
   onPress?: () => void;
 }
 
@@ -23,6 +27,9 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
   size,
   price,
   onDelete,
+  onAddToCart,
+  isAddingToCart = false,
+  isInCart = false,
   onPress,
 }) => {
   return (
@@ -50,13 +57,33 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
         </View>
       </TouchableOpacity>
 
-      {/* Delete Button */}
-      <TouchableOpacity
-        onPress={onDelete}
-        className="w-10 h-10 items-center justify-center bg-white rounded-xl border border-gray-200 mr-3 shadow-sm"
-      >
-        <Feather name="trash-2" size={16} color="#DB0034" />
-      </TouchableOpacity>
+      {/* Action Buttons */}
+      <View className="flex-row items-center gap-2 mr-3">
+        {/* Add to Cart Button */}
+        <TouchableOpacity
+          onPress={onAddToCart}
+          disabled={isAddingToCart || isInCart}
+          className={`w-10 h-10 items-center justify-center rounded-xl shadow-sm ${
+            isInCart ? "bg-green-500" : "bg-black"
+          }`}
+        >
+          {isAddingToCart ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : isInCart ? (
+            <Feather name="check" size={16} color="#fff" />
+          ) : (
+            <Feather name="shopping-cart" size={16} color="#fff" />
+          )}
+        </TouchableOpacity>
+
+        {/* Delete Button */}
+        <TouchableOpacity
+          onPress={onDelete}
+          className="w-10 h-10 items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm"
+        >
+          <Feather name="trash-2" size={16} color="#DB0034" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

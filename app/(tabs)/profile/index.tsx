@@ -107,11 +107,16 @@ export default function ProfileScreen() {
             onPress={() => router.push("/profile/addresses")}
           />
           {/* <MenuItem icon="creditcard" label="Payment" onPress={() => {}} /> */}
-          <MenuItem icon="map" label="Region" onPress={() => {}} />
+          <MenuItem icon="map" label="Region" onPress={() => router.push("/profile/region")} />
           <MenuItem
             icon="bell"
             label="Notification"
             onPress={() => router.push("/notifications")}
+          />
+          <MenuItem
+            icon="phone"
+            label="Contact Us"
+            onPress={() => router.push("/profile/help-support")}
           />
         </View>
 

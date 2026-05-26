@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRootNavigationState, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Toast } from "../components/ui/Toast";
@@ -33,6 +34,7 @@ export default function RootLayout() {
   const { hydrate, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
     hydrate();
@@ -50,6 +52,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!isAppReady) return;
+    if (!navigationState?.key) return; // navigator not mounted yet
 
     // Cast segments to string[] to avoid strict type mismatch with 'index' or checking length
     const currentSegments = segments as string[];
@@ -70,13 +73,14 @@ export default function RootLayout() {
         router.replace("/(auth)/login");
       }
     }
-  }, [isAuthenticated, segments, isAppReady, router]);
+  }, [isAuthenticated, segments, isAppReady, router, navigationState?.key]);
 
   if (!isAppReady) {
     return null;
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <Stack
@@ -90,10 +94,12 @@ export default function RootLayout() {
           <Stack.Screen name="notifications" />
           <Stack.Screen name="search" />
           <Stack.Screen name="product/[id]" />
+          <Stack.Screen name="checkout" />
         </Stack>
         <StatusBar style="dark" />
         <Toast />
       </SafeAreaProvider>
     </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -1,5 +1,6 @@
 import { cartApi } from "@/api/cart.api";
 import { orderApi } from "@/api/order.api";
+import { userApi } from "@/api/user.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -10,16 +11,39 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Alert,
   TextInput,
+  Alert,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { couponApi } from "@/api/coupon.api";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const WARDROBE_EXTRA_BOTTOM = 96;
 import { Feather } from "@expo/vector-icons";
 import { useToastStore } from "@/store/toastStore";
+import { CheckoutStepper } from "./address";
 
 export default function PaymentScreen() {
-  const { addressId } = useLocalSearchParams();
+  const {
+    addressId,
+    paymentMethod,
+    buyNowVariantId,
+    buyNowProductName,
+    buyNowVariantName,
+    buyNowPrice,
+    _ctx,
+  } = useLocalSearchParams<{
+    addressId: string;
+    paymentMethod: string;
+    buyNowVariantId?: string;
+    buyNowProductName?: string;
+    buyNowVariantName?: string;
+    buyNowPrice?: string;
+    _ctx?: string;
+  }>();
+  const isBuyNow = !!buyNowVariantId;
   const queryClient = useQueryClient();
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
@@ -27,15 +51,52 @@ export default function PaymentScreen() {
     discountAmount: number;
   } | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [orderError, setOrderError] = useState<{
+    type: "network" | "server";
+    message: string;
+  } | null>(null);
   const { showToast } = useToastStore();
 
-  // Fetch Cart for summary
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
+
+  // Fetch user profile to check for phone number
+  const { data: profileData } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: userApi.getProfile,
+  });
+
+  // Fetch Cart for summary (skipped in buy-now mode)
   const { data: cartData, isLoading: cartLoading } = useQuery({
     queryKey: ["cart"],
     queryFn: cartApi.getCart,
+    enabled: !isBuyNow,
   });
 
-  const items = React.useMemo(() => cartData?.data || [], [cartData]);
+  const items = React.useMemo(() => {
+    if (isBuyNow) {
+      return [
+        {
+          id: buyNowVariantId,
+          quantity: 1,
+          variant: {
+            basePrice: buyNowPrice || "0",
+            product: { name: buyNowProductName || "" },
+            name: buyNowVariantName || "",
+          },
+        },
+      ];
+    }
+    return cartData?.data || [];
+  }, [
+    isBuyNow,
+    cartData,
+    buyNowVariantId,
+    buyNowProductName,
+    buyNowVariantName,
+    buyNowPrice,
+  ]);
 
   const subtotal = items.reduce(
     (acc: number, item: any) =>
@@ -70,9 +131,13 @@ export default function PaymentScreen() {
   const placeOrderMutation = useMutation({
     mutationFn: (data: any) => orderApi.createOrder(data),
     onSuccess: (response: any) => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      setOrderError(null);
+      if (!isBuyNow) {
+        queryClient.invalidateQueries({ queryKey: ["cart"] });
+      }
+      const basePath = _ctx === "checkout" ? "/checkout" : "/wardrobe";
       router.push({
-        pathname: "/wardrobe/order-success",
+        pathname: `${basePath}/order-success` as any,
         params: {
           orderCode: response.data?.orderCode,
           orderId: response.data?.id,
@@ -80,24 +145,119 @@ export default function PaymentScreen() {
       });
     },
     onError: (error: any) => {
-      console.error("Order placement failed:", error);
-      Alert.alert("Error", "Failed to place order. Please try again.");
+      const isNetworkError =
+        error?.code === "ERR_NETWORK" ||
+        error?.message === "Network Error" ||
+        !error?.response;
+      setOrderError({
+        type: isNetworkError ? "network" : "server",
+        message: isNetworkError
+          ? "Unable to reach the server. Please check your internet connection and try again."
+          : error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            "Something went wrong while placing your order.",
+      });
     },
   });
 
+  const handleSavePhoneAndOrder = async () => {
+    const cleanPhone = phoneNumber.trim();
+    if (!cleanPhone) {
+      Alert.alert("Error", "Please enter your phone number.");
+      return;
+    }
+    if (!/^\d+$/.test(cleanPhone)) {
+      Alert.alert("Error", "Please enter digits only.");
+      return;
+    }
+    if (cleanPhone.length < 11) {
+      Alert.alert("Error", "Phone number must be at least 11 digits.");
+      return;
+    }
+
+    setIsSavingPhone(true);
+    try {
+      await userApi.updateProfile({ phone: cleanPhone });
+      await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      setShowPhoneModal(false);
+      
+      // Now place the order directly
+      placeOrderMutation.mutate({
+        addressId: addressId as string,
+        paymentMethod: paymentMethod || "COD",
+        couponCode: appliedCoupon?.code,
+        ...(isBuyNow && { buyNow: { variantId: buyNowVariantId, quantity: 1 } }),
+      });
+    } catch (error: any) {
+      console.error("Failed to update phone number:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to update phone number. Please try again."
+      );
+    } finally {
+      setIsSavingPhone(false);
+    }
+  };
+
   const handlePlaceOrder = () => {
+    setOrderError(null);
+    if (!profileData?.phone) {
+      setShowPhoneModal(true);
+      return;
+    }
     placeOrderMutation.mutate({
       addressId: addressId as string,
-      paymentMethod: "COD",
+      paymentMethod: paymentMethod || "COD",
       couponCode: appliedCoupon?.code,
+      ...(isBuyNow && { buyNow: { variantId: buyNowVariantId, quantity: 1 } }),
     });
   };
 
-  const isLoading = cartLoading;
+  const getPaymentMethodDetails = () => {
+    const method = (paymentMethod as string) || "COD";
+    switch (method) {
+      case "COD":
+        return {
+          title: "Cash on Delivery",
+          subtitle: "Pay when you receive your order",
+          icon: "truck" as const,
+        };
+      case "CARD":
+        return {
+          title: "Debit/credit Card",
+          subtitle: "Pay securely via your card",
+          icon: "credit-card" as const,
+        };
+      case "WALLET":
+        return {
+          title: "Wallet",
+          subtitle: "Pay via your digital wallet",
+          icon: "pocket" as const,
+        };
+      case "BANK":
+        return {
+          title: "Net Banking",
+          subtitle: "Pay directly from your bank account",
+          icon: "home" as const,
+        };
+      default:
+        return {
+          title: "Cash on Delivery",
+          subtitle: "Pay when you receive your order",
+          icon: "truck" as const,
+        };
+    }
+  };
+
+  const methodDetails = getPaymentMethodDetails();
+  const isLoading = !isBuyNow && cartLoading;
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <SubHeader title="Payment & Delivery" showBackButton={true} />
+      <SubHeader title="Payment & Details" showBackButton={true} />
+
+      {/* Stepper with step 3 active */}
+      <CheckoutStepper currentStep={3} />
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
@@ -110,33 +270,45 @@ export default function PaymentScreen() {
         >
           {/* Order Summary Section */}
           <View className="mb-6 bg-gray-50 p-6 rounded-3xl">
-            <Text className="text-xl font-Urbanist-Bold mb-4">
-              Order Summary
-            </Text>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-Urbanist-Bold">Order Summary</Text>
+              <Text className="text-sm font-Urbanist-Medium text-gray-500">
+                {items.length} {items.length === 1 ? "item" : "items"}
+              </Text>
+            </View>
 
             {/* Item List */}
             <View className="mb-4 border-b border-gray-100 pb-2">
-              {items.map((item: any, index: number) => (
-                <View
-                  key={item.id || index}
-                  className="flex-row justify-between mb-3"
-                >
-                  <View className="flex-1">
-                    <Text className="text-black font-Urbanist-Medium">
-                      {item.variant.product.name}
-                    </Text>
-                    <Text className="text-gray-500 text-xs font-Urbanist">
-                      {item.variant.name} × {item.quantity}
+              {items.map((item: any, index: number) => {
+                const parts = [
+                  item.variant.colorName,
+                  item.variant.size,
+                ].filter(Boolean);
+                const variantLabel =
+                  parts.length > 0 ? parts.join(" · ") : item.variant.name;
+
+                return (
+                  <View
+                    key={item.id || index}
+                    className="flex-row justify-between mb-3"
+                  >
+                    <View className="flex-1 mr-3">
+                      <Text className="text-black font-Urbanist-Medium">
+                        {item.variant.product.name}
+                      </Text>
+                      <Text className="text-gray-500 text-xs font-Urbanist mt-0.5">
+                        {variantLabel} · Qty {item.quantity}
+                      </Text>
+                    </View>
+                    <Text className="text-black font-Urbanist-Bold">
+                      ৳
+                      {(
+                        parseFloat(item.variant.basePrice) * item.quantity
+                      ).toLocaleString()}
                     </Text>
                   </View>
-                  <Text className="text-black font-Urbanist-Bold">
-                    ৳
-                    {(
-                      parseFloat(item.variant.basePrice) * item.quantity
-                    ).toLocaleString()}
-                  </Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
 
             <View className="flex-row justify-between mb-2">
@@ -192,6 +364,7 @@ export default function PaymentScreen() {
               <View className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                 <TextInput
                   placeholder="Enter code"
+                  placeholderTextColor="#9CA3AF"
                   value={couponCode}
                   onChangeText={setCouponCode}
                   autoCapitalize="characters"
@@ -214,35 +387,128 @@ export default function PaymentScreen() {
             </View>
           </View>
 
-          {/* Payment Method Section (Fixed to COD) */}
+          {/* Payment Method Section (Dynamic based on parameter) */}
           <Text className="text-lg font-Urbanist-Bold mb-4 px-1">
             Payment Method
           </Text>
           <View className="p-5 rounded-2xl border-2 border-black bg-gray-50 flex-row items-center justify-between mb-10">
             <View className="flex-row items-center">
               <View className="w-10 h-10 bg-black/5 rounded-full items-center justify-center mr-4">
-                <Feather name="truck" size={20} color="black" />
+                <Feather name={methodDetails.icon} size={20} color="black" />
               </View>
               <View>
-                <Text className="font-Urbanist-Bold">Cash on Delivery</Text>
+                <Text className="font-Urbanist-Bold">
+                  {methodDetails.title}
+                </Text>
                 <Text className="text-xs text-gray-500 font-Urbanist">
-                  Pay when you receive your order
+                  {methodDetails.subtitle}
                 </Text>
               </View>
             </View>
             <Feather name="check-circle" size={24} color="black" />
           </View>
 
-          <View className="h-40" />
+          <View style={{ height: _ctx === "checkout" ? 160 : 220 }} />
         </ScrollView>
       )}
 
+      {/* Order error banner */}
+      {orderError && (
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginBottom: 8,
+            backgroundColor: "#FEF2F2",
+            borderWidth: 1,
+            borderColor: "#FECACA",
+            borderRadius: 12,
+            padding: 14,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-start",
+              marginBottom: 10,
+            }}
+          >
+            <Feather
+              name="wifi-off"
+              size={16}
+              color="#DC2626"
+              style={{ marginTop: 1, marginRight: 8 }}
+            />
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 13,
+                fontFamily: "Urbanist-Medium",
+                color: "#991B1B",
+                lineHeight: 19,
+              }}
+            >
+              {orderError.message}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              onPress={handlePlaceOrder}
+              style={{
+                flex: 1,
+                backgroundColor: "#DC2626",
+                paddingVertical: 9,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 13,
+                  fontFamily: "Urbanist-Bold",
+                }}
+              >
+                Try Again
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/profile/help-support")}
+              style={{
+                flex: 1,
+                backgroundColor: "white",
+                paddingVertical: 9,
+                borderRadius: 8,
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: "#FECACA",
+              }}
+            >
+              <Text
+                style={{
+                  color: "#DC2626",
+                  fontSize: 13,
+                  fontFamily: "Urbanist-Bold",
+                }}
+              >
+                Contact Support
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {/* Place Order Button Section */}
-      <View className="p-4 border-t border-gray-100 mb-32">
+      <View
+        className="p-4 border-t border-gray-100 bg-white"
+        style={{
+          paddingBottom: _ctx === "checkout" ? 32 : WARDROBE_EXTRA_BOTTOM,
+        }}
+      >
         <TouchableOpacity
-          className={`bg-black p-4 rounded-2xl items-center justify-center flex-row shadow-xl ${
+          className={`bg-black rounded-2xl items-center justify-center flex-row shadow-xl ${
             placeOrderMutation.isPending ? "opacity-70" : ""
           }`}
+          style={{ paddingVertical: 18, paddingHorizontal: 16 }}
           onPress={handlePlaceOrder}
           disabled={placeOrderMutation.isPending}
         >
@@ -259,10 +525,77 @@ export default function PaymentScreen() {
           <Text className="text-white font-Urbanist-Bold text-lg ml-2">
             {placeOrderMutation.isPending
               ? "Processing..."
-              : `Place Order • ৳${(total || 0).toLocaleString()}`}
+              : paymentMethod === "COD"
+                ? `Place Order • ৳${(total || 0).toLocaleString()}`
+                : `Pay and Place Order • ৳${(total || 0).toLocaleString()}`}
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Phone Number Input Modal */}
+      <Modal visible={showPhoneModal} animationType="slide" transparent={true}>
+        <View className="flex-1 justify-end bg-black/50">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="w-full"
+          >
+            <View className="bg-white rounded-t-[30px] p-6 pb-12 w-full">
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-xl font-Urbanist-Bold text-black">
+                  Enter Phone Number
+                </Text>
+                <TouchableOpacity onPress={() => setShowPhoneModal(false)} hitSlop={10}>
+                  <Feather name="x" size={24} color="black" />
+                </TouchableOpacity>
+              </View>
+              
+              <Text className="text-[14px] font-Urbanist text-gray-500 mb-6 leading-5">
+                A phone number is required to place your order so we can contact you for delivery.
+              </Text>
+
+              <View className="mb-6">
+                <Text className="text-gray-700 font-Urbanist-Medium text-[15px] mb-2">
+                  Phone Number
+                </Text>
+                <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5">
+                  <Feather name="phone" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+                  <TextInput
+                    placeholder="e.g. 017XXXXXXXX"
+                    placeholderTextColor="#9CA3AF"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                    autoFocus={true}
+                    className="flex-1 font-Urbanist-Medium text-black text-[15px]"
+                  />
+                </View>
+              </View>
+
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => setShowPhoneModal(false)}
+                  className="flex-1 border border-gray-200 py-4 rounded-xl items-center justify-center"
+                >
+                  <Text className="font-Urbanist-Bold text-gray-700">Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  onPress={handleSavePhoneAndOrder}
+                  disabled={isSavingPhone}
+                  className={`flex-1 bg-black py-4 rounded-xl items-center justify-center flex-row ${
+                    isSavingPhone ? "opacity-70" : ""
+                  }`}
+                >
+                  {isSavingPhone && <ActivityIndicator color="white" className="mr-2" />}
+                  <Text className="text-white font-Urbanist-Bold">
+                    {isSavingPhone ? "Saving..." : "Confirm & Place"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -30,6 +30,9 @@ export const API_ROUTES = {
   PRODUCT: {
     GET_PRODUCTS: "/api/v1/products",
   },
+  HOME_PROMO: {
+    GET: "/api/v1/home-promo",
+  },
   CATEGORY: {
     GET_CATEGORIES: "/api/v1/categories",
     GET_PAGE_TITLE: "/api/v1/categories/page-title",

@@ -1,11 +1,12 @@
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Text, View, TouchableOpacity } from "react-native";
 
 interface FeaturedSectionProps {
   title: string;
   description: string;
   images: any[];
   variant?: "large" | "collage" | "side" | "horizontal";
+  onPress?: () => void;
 }
 
 const FeaturedSection: React.FC<FeaturedSectionProps> = ({
@@ -13,6 +14,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
   description,
   images,
   variant = "large",
+  onPress,
 }) => {
   const renderImages = () => {
     switch (variant) {
@@ -158,7 +160,11 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
     }
   };
 
-  return <View className="px-4">{renderImages()}</View>;
+  return (
+    <TouchableOpacity activeOpacity={onPress ? 0.9 : 1} onPress={onPress}>
+      {renderImages()}
+    </TouchableOpacity>
+  );
 };
 
 export default FeaturedSection;

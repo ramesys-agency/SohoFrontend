@@ -7,6 +7,8 @@ export interface ColorOption {
   name: string;
   /** CSS hex color value for the swatch (e.g. "#FF0000") */
   value: string;
+  /** Whether the color has any stock available */
+  inStock?: boolean;
 }
 
 interface ColorSelectorProps {
@@ -32,11 +34,12 @@ export default function ColorSelector({
         {colors.map((color) => (
           <TouchableOpacity
             key={color.name}
+            disabled={false}
             onPress={() => onSelectColor(color.name)}
-            className={`w-8 h-8 rounded-full items-center justify-center border border-black ${
-              selectedColor === color.name ? "border-2 " : "border-1"
+            className={`w-8 h-8 rounded-full items-center justify-center border relative overflow-hidden ${
+              selectedColor === color.name ? "border-2 border-black" : "border-gray-300"
             }`}
-            style={{ backgroundColor: color.value }}
+            style={{ backgroundColor: color.value, opacity: color.inStock === false ? 0.4 : 1 }}
           >
             {selectedColor === color.name && (
               <Feather
@@ -47,6 +50,17 @@ export default function ColorSelector({
                     ? "black"
                     : "white"
                 }
+              />
+            )}
+            {color.inStock === false && (
+              <View
+                style={{
+                  position: "absolute",
+                  width: "140%",
+                  height: 1.5,
+                  backgroundColor: "#EF4444",
+                  transform: [{ rotate: "45deg" }],
+                }}
               />
             )}
           </TouchableOpacity>

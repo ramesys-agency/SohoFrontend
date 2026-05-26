@@ -19,6 +19,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Share,
 } from "react-native";
 import Animated, {
   interpolate,
@@ -95,21 +96,49 @@ export default function ProductDetailsScreen() {
     for (const v of product.variants) {
       if (v.colorName && !seen.has(v.colorName)) {
         seen.add(v.colorName);
-        options.push({ name: v.colorName, value: v.colorValue ?? v.colorName });
+        // Check if there is any size of this color in stock
+        const hasStock = product.variants
+          .filter((varItem: any) => varItem.colorName === v.colorName)
+          .some((varItem: any) => (varItem.stockQty ?? 0) > 0);
+        options.push({
+          name: v.colorName,
+          value: v.colorValue ?? v.colorName,
+          inStock: hasStock,
+        });
       }
     }
     return options;
   }, [product]);
 
-  // Unique sizes for the currently-selected color
-  const availableSizes = useMemo<string[]>(() => {
+  // Unique sizes with stock status for the currently-selected color
+  const availableSizes = useMemo<{ size: string; inStock: boolean }[]>(() => {
     if (!product?.variants?.length) return [];
     const colorFilter = selectedColor || colorOptions[0]?.name;
-    const sizes = product.variants
-      .filter((v: any) => v.colorName === colorFilter)
-      .map((v: any) => String(v.size))
-      .filter((s: string) => s.length > 0);
-    return [...new Set<string>(sizes)];
+    const matchingVariants = product.variants.filter((v: any) => v.colorName === colorFilter);
+    
+    const sizeMap = new Map<string, boolean>();
+    for (const v of matchingVariants) {
+      if (v.size) {
+        const currentStock = v.stockQty ?? 0;
+        const exists = sizeMap.get(String(v.size));
+        sizeMap.set(String(v.size), exists || currentStock > 0);
+      }
+    }
+    
+    const uniqueSizes = Array.from(sizeMap.entries()).map(([size, inStock]) => ({ size, inStock }));
+    
+    // Sort logic (XS, S, M, L, XL, XXL, XXXL, etc.)
+    const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL"];
+    return uniqueSizes.sort((a, b) => {
+      const indexA = SIZE_ORDER.indexOf(a.size.toUpperCase());
+      const indexB = SIZE_ORDER.indexOf(b.size.toUpperCase());
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.size.localeCompare(b.size, undefined, { numeric: true, sensitivity: 'base' });
+    });
   }, [product, selectedColor, colorOptions]);
 
   // Initialise selections when product data arrives
@@ -135,7 +164,8 @@ export default function ProductDetailsScreen() {
           setSelectedSize(String(sizeToSet));
         }
       } else if (availableSizes.length && !selectedSize) {
-        setSelectedSize(availableSizes[0]);
+        const firstInStock = availableSizes.find(s => s.inStock);
+        setSelectedSize(firstInStock ? firstInStock.size : availableSizes[0].size);
       }
     }
   }, [
@@ -296,7 +326,7 @@ export default function ProductDetailsScreen() {
   const selectedVariant = useMemo(() => {
     if (!product?.variants?.length) return null;
     const colorFilter = selectedColor || colorOptions[0]?.name;
-    const sizeFilter = selectedSize || availableSizes[0];
+    const sizeFilter = selectedSize || availableSizes[0]?.size;
     return (
       product.variants.find(
         (v: any) => v.colorName === colorFilter && v.size === sizeFilter,
@@ -305,6 +335,18 @@ export default function ProductDetailsScreen() {
       product.variants[0]
     );
   }, [product, selectedColor, selectedSize, colorOptions, availableSizes]);
+
+  // Check if all available sizes for the selected color are disabled (out of stock)
+  const isButtonsDisabled = useMemo(() => {
+    if (availableSizes && availableSizes.length > 0) {
+      return availableSizes.every((s) => !s.inStock);
+    }
+    // Fallback if no sizes are defined but variants exist
+    if (selectedVariant) {
+      return (selectedVariant.stockQty ?? 0) <= 0;
+    }
+    return false;
+  }, [availableSizes, selectedVariant]);
 
   // Sync local isFavorite state with the currently selected variant
   useEffect(() => {
@@ -356,6 +398,22 @@ export default function ProductDetailsScreen() {
     if (!addToCartMutation.isPending) {
       addToCartMutation.mutate();
     }
+  };
+
+  const handleShopNow = () => {
+    if (!selectedVariant) return;
+    router.push({
+      pathname: "/checkout/address",
+      params: {
+        _ctx: "checkout",
+        buyNowVariantId: selectedVariant.id,
+        buyNowProductName: product?.name || "",
+        buyNowVariantName: [selectedVariant.colorName, selectedVariant.size]
+          .filter(Boolean)
+          .join(" / "),
+        buyNowPrice: selectedVariant.basePrice || "0",
+      },
+    });
   };
 
   const handleRemoveFromCart = () => {
@@ -480,6 +538,26 @@ export default function ProductDetailsScreen() {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const result = await Share.share({
+        message: `Check out ${product?.name} on Soho!`,
+        title: product?.name || "Product",
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error: any) {
+      console.error("Error sharing product:", error.message);
+    }
+  };
+
   // ── Loading state ────────────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -569,6 +647,7 @@ export default function ProductDetailsScreen() {
             <TouchableOpacity
               className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
               activeOpacity={0.8}
+              onPress={handleShare}
             >
               <MaterialIcons name="share" size={20} color="black" />
             </TouchableOpacity>
@@ -632,9 +711,7 @@ export default function ProductDetailsScreen() {
 
       {/* Sticky Bottom Action Bar */}
       <ProductBottomBar
-        onShopNow={() => {
-          /* Handle Shop Now */
-        }}
+        onShopNow={handleShopNow}
         onAddToCart={handleAddToCart}
         onRemoveFromCart={handleRemoveFromCart}
         isAddedToCart={
@@ -643,6 +720,8 @@ export default function ProductDetailsScreen() {
         }
         isAdding={addToCartMutation.isPending}
         isRemoving={removeFromCartMutation.isPending}
+        isShoppingNow={false}
+        isDisabled={isButtonsDisabled}
       />
     </View>
   );
