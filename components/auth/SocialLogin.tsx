@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol";
-// import { GoogleSignin } from "@react-native-google-signin/google-signin";
-// import * as AppleAuthentication from "expo-apple-authentication";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useAuthStore } from "../../store/authStore";
 import { useToastStore } from "../../store/toastStore";
 import { authApi } from "../../api/auth.api";
@@ -13,15 +13,14 @@ export function SocialLogin() {
 
   useEffect(() => {
     // Initialize GoogleSignin
-    // GoogleSignin.configure({
-    //   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-    //   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
-    //   scopes: ["email", "profile"],
-    // });
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+      scopes: ["email", "profile"],
+    });
   }, []);
 
   const handleAppleSignIn = async () => {
-    /*
     try {
       const isAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAvailable) {
@@ -64,16 +63,19 @@ export function SocialLogin() {
         type: "error" 
       });
     }
-    */
   };
 
   const handleGoogleSignIn = async () => {
-    /*
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      const idToken = response.data?.idToken;
+      
+      if (response.type !== "success") {
+        // User cancelled the sign-in flow
+        return;
+      }
 
+      const idToken = response.data.idToken;
       if (!idToken) {
         throw new Error("No ID token received from Google");
       }
@@ -91,19 +93,20 @@ export function SocialLogin() {
         type: "error" 
       });
     }
-    */
   };
 
   return (
     <View className="items-center mt-8">
       <Text className="text-[#999999] text-sm font-Urbanist mb-6">Or</Text>
       <View className="flex-row justify-center gap-x-4">
-        <TouchableOpacity 
-          className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
-          onPress={handleAppleSignIn}
-        >
-          <IconSymbol name="apple.logo" size={24} color="#000000" />
-        </TouchableOpacity>
+        {Platform.OS === "ios" && (
+          <TouchableOpacity 
+            className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
+            onPress={handleAppleSignIn}
+          >
+            <IconSymbol name="apple.logo" size={24} color="#000000" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
           onPress={handleGoogleSignIn}
