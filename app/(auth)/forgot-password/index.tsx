@@ -47,6 +47,7 @@ export default function ForgotPasswordEmail() {
       ]);
     } catch (error: any) {
       const message =
+        error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Something went wrong. Please try again.";
       Alert.alert("Error", message);

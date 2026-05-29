@@ -50,6 +50,7 @@ export default function ForgotPasswordReset() {
       );
     } catch (error: any) {
       const message =
+        error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Failed to reset password. The link may have expired.";
       Alert.alert("Error", message);

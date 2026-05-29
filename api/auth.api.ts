@@ -27,6 +27,16 @@ export const authApi = {
     return response.data.data || response.data;
   },
 
+  sendOtp: async (data: { email: string }) => {
+    const response = await apiClient.post(API_ROUTES.AUTH.SEND_OTP, data);
+    return response.data.data || response.data;
+  },
+
+  verifyOtp: async (data: { email: string; otp: string }) => {
+    const response = await apiClient.post(API_ROUTES.AUTH.VERIFY_OTP, data);
+    return response.data.data || response.data;
+  },
+
   forgotPassword: async (data: { email: string }) => {
     const response = await apiClient.post(
       API_ROUTES.AUTH.FORGOT_PASSWORD,

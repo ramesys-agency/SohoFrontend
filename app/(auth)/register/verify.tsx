@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
 
@@ -17,6 +18,8 @@ export default function VerifyOTP() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(266); // 4:26 in seconds
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -32,16 +35,46 @@ export default function VerifyOTP() {
     return `${mins}:${secs.toString().padStart(2, "0")}s`;
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (otp.length < 6) {
       Alert.alert("Error", "Please enter the 6-digit OTP.");
       return;
     }
-    // Navigate to registration details
-    router.push({
-      pathname: "/(auth)/register/details",
-      params: { email },
-    });
+
+    try {
+      setIsLoading(true);
+      await authApi.verifyOtp({ email: email ?? "", otp });
+      router.push({
+        pathname: "/(auth)/register/details",
+        params: { email },
+      });
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Invalid OTP. Please try again.";
+      Alert.alert("Error", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (timer > 0) return;
+    try {
+      setIsResending(true);
+      await authApi.sendOtp({ email: email ?? "" });
+      setOtp("");
+      setTimer(266);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Failed to resend OTP. Please try again.";
+      Alert.alert("Error", message);
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -122,17 +155,23 @@ export default function VerifyOTP() {
             <Text className="text-[#999999] text-sm font-Urbanist">
               Didn&apos;t get code?{" "}
             </Text>
-            <TouchableOpacity>
-              <Text className="text-black text-sm font-Urbanist-Bold">
-                Resend code
+            <TouchableOpacity
+              onPress={handleResend}
+              disabled={timer > 0 || isResending}
+            >
+              <Text
+                className={`text-sm font-Urbanist-Bold ${timer > 0 || isResending ? "text-[#999999]" : "text-black"}`}
+              >
+                {isResending ? "Sending..." : "Resend code"}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <AuthButton
-          title="Continue"
+          title={isLoading ? "Verifying..." : "Continue"}
           onPress={handleContinue}
+          disabled={isLoading}
           className="mt-auto mb-10"
         />
       </ScrollView>

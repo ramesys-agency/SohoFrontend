@@ -121,7 +121,7 @@ export default function PaymentScreen() {
       console.error("Coupon validation failed:", error);
       Alert.alert(
         "Invalid Coupon",
-        error.response?.data?.message || "This coupon code is not valid.",
+        error.response?.data?.error || error.response?.data?.message || "This coupon code is not valid.",
       );
     } finally {
       setIsValidatingCoupon(false);
@@ -192,7 +192,7 @@ export default function PaymentScreen() {
       console.error("Failed to update phone number:", error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Failed to update phone number. Please try again."
+        error.response?.data?.error || error.response?.data?.message || "Failed to update phone number. Please try again."
       );
     } finally {
       setIsSavingPhone(false);

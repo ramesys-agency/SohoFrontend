@@ -8,6 +8,8 @@ export const API_ROUTES = {
     UPDATE_PROFILE: "/api/v1/users/profile",
     FORGOT_PASSWORD: "/api/v1/auth/forgot-password",
     RESET_PASSWORD: "/api/v1/auth/reset-password",
+    SEND_OTP: "/api/v1/auth/send-otp",
+    VERIFY_OTP: "/api/v1/auth/verify-otp",
   },
   // Add other routes here as needed
   USERS: {

@@ -59,6 +59,7 @@ export default function RegisterStep2() {
       router.replace("/(tabs)");
     } catch (error: any) {
       const message =
+        error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Registration failed. Please try again.";
       Alert.alert("Error", message);

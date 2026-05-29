@@ -2,6 +2,7 @@ import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
 import { SocialLogin } from "../../../components/auth/SocialLogin";
@@ -11,8 +12,9 @@ export default function RegisterStep1() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!email.trim()) {
       Alert.alert("Error", "Please enter your email address.");
       return;
@@ -26,17 +28,23 @@ export default function RegisterStep1() {
       Alert.alert("Error", "Please accept the terms and conditions.");
       return;
     }
-    Alert.alert("Success", "OTP sent to email successfully.", [
-      {
-        text: "OK",
-        onPress: () => {
-          router.push({
-            pathname: "/(auth)/register/verify",
-            params: { email },
-          });
-        },
-      },
-    ]);
+
+    try {
+      setIsLoading(true);
+      await authApi.sendOtp({ email: email.trim().toLowerCase() });
+      router.push({
+        pathname: "/(auth)/register/verify",
+        params: { email: email.trim().toLowerCase() },
+      });
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Failed to send OTP. Please try again.";
+      Alert.alert("Error", message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,9 +104,9 @@ export default function RegisterStep1() {
         </View>
 
         <AuthButton
-          title="Create account"
+          title={isLoading ? "Sending OTP..." : "Create account"}
           onPress={handleContinue}
-          disabled={!termsAccepted}
+          disabled={!termsAccepted || isLoading}
           className="mb-8"
         />
 
