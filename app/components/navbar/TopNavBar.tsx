@@ -1,4 +1,7 @@
+import { notificationApi } from "@/api/notification.api";
+import { useAuthStore } from "@/store/authStore";
 import { Feather } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -16,6 +19,15 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
 }) => {
   const router = useRouter();
   const isSubPage = showBackButton || title;
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["notifications-unread-count"],
+    queryFn: notificationApi.getUnreadCount,
+    enabled: isAuthenticated,
+    refetchInterval: 60000,
+  });
+  const hasUnread = unreadCount > 0;
 
   if (isSubPage) {
     return (
@@ -54,7 +66,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
               onPress={() => router.push("/notifications")}
             >
               <Feather name="bell" size={24} color="black" />
-              <View className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white" />
+              {hasUnread && (
+                <View className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white" />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -79,7 +93,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             onPress={() => router.push("/notifications")}
           >
             <Feather name="bell" size={26} color="black" />
-            <View className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+            {hasUnread && (
+              <View className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+            )}
           </TouchableOpacity>
         </View>
       </View>

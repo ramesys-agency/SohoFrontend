@@ -53,4 +53,10 @@ export const API_ROUTES = {
   COUPONS: {
     VALIDATE: "/api/v1/coupons/validate",
   },
+  NOTIFICATIONS: {
+    BASE: "/api/v1/notifications",
+    UNREAD_COUNT: "/api/v1/notifications/unread-count",
+    READ_ALL: "/api/v1/notifications/read-all",
+    MARK_READ: (id: string) => `/api/v1/notifications/${id}/read`,
+  },
 } as const;

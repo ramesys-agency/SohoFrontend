@@ -138,14 +138,14 @@ export default function AddAddressScreen() {
   // Queries for hierarchical data
   const { data: divisions, isLoading: loadingDivisions } = useQuery({
     queryKey: ["divisions"],
-    queryFn: () => logisticsApi.getDivisions().then((res) => res.data),
+    queryFn: () => logisticsApi.getDivisions(),
   });
 
   const { data: districts, isLoading: loadingDistricts } = useQuery({
     queryKey: ["districts", selectedDivision],
     queryFn: () => {
       const div = divisions?.find((d: any) => d.name === selectedDivision);
-      return logisticsApi.getDistricts(div?.id).then((res) => res.data);
+      return logisticsApi.getDistricts(div?.id);
     },
     enabled: !!selectedDivision && !!divisions,
   });
@@ -154,7 +154,7 @@ export default function AddAddressScreen() {
     queryKey: ["thanas", selectedDistrict],
     queryFn: () => {
       const dist = districts?.find((d: any) => d.name === selectedDistrict);
-      return logisticsApi.getThanas(dist?.id).then((res) => res.data);
+      return logisticsApi.getThanas(dist?.id);
     },
     enabled: !!selectedDistrict && !!districts,
   });
@@ -163,7 +163,7 @@ export default function AddAddressScreen() {
     queryKey: ["areas", selectedThana],
     queryFn: () => {
       const thana = thanas?.find((t: any) => t.name === selectedThana);
-      return logisticsApi.getAreas(thana?.id).then((res) => res.data);
+      return logisticsApi.getAreas(thana?.id);
     },
     enabled: !!selectedThana && !!thanas,
   });

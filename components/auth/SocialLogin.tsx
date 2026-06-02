@@ -12,11 +12,13 @@ export function SocialLogin() {
   const showToast = useToastStore((state) => state.showToast);
 
   useEffect(() => {
+    console.log("WEB CLIENT ID:", process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
     // Initialize GoogleSignin
     GoogleSignin.configure({
       webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
       iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
       scopes: ["email", "profile"],
+      offlineAccess: true,
     });
   }, []);
 
@@ -24,7 +26,10 @@ export function SocialLogin() {
     try {
       const isAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAvailable) {
-        showToast({ message: "Apple Sign-In is not available on this device", type: "error" });
+        showToast({
+          message: "Apple Sign-In is not available on this device",
+          type: "error",
+        });
         return;
       }
 
@@ -58,9 +63,9 @@ export function SocialLogin() {
         return;
       }
       console.error("Apple Sign-In Error:", error);
-      showToast({ 
-        message: error.message || "Apple sign in failed.", 
-        type: "error" 
+      showToast({
+        message: error.message || "Apple sign in failed.",
+        type: "error",
       });
     }
   };
@@ -69,7 +74,7 @@ export function SocialLogin() {
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      
+
       if (response.type !== "success") {
         // User cancelled the sign-in flow
         return;
@@ -82,15 +87,15 @@ export function SocialLogin() {
 
       // Send the idToken to our backend
       const result = await authApi.googleLogin(idToken);
-      
+
       const { user, accessToken, refreshToken } = result;
       await login(user, accessToken, refreshToken);
       showToast({ message: "Google login successful!", type: "success" });
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
-      showToast({ 
-        message: error.message || "Google sign in failed.", 
-        type: "error" 
+      showToast({
+        message: error.message || "Google sign in failed.",
+        type: "error",
       });
     }
   };
@@ -100,14 +105,14 @@ export function SocialLogin() {
       <Text className="text-[#999999] text-sm font-Urbanist mb-6">Or</Text>
       <View className="flex-row justify-center gap-x-4">
         {Platform.OS === "ios" && (
-          <TouchableOpacity 
+          <TouchableOpacity
             className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
             onPress={handleAppleSignIn}
           >
             <IconSymbol name="apple.logo" size={24} color="#000000" />
           </TouchableOpacity>
         )}
-        <TouchableOpacity 
+        <TouchableOpacity
           className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
           onPress={handleGoogleSignIn}
         >

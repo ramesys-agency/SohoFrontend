@@ -44,11 +44,11 @@ export const Toast = () => {
     opacity: opacity.value,
   }));
 
-  const bgColors: Record<ToastType, string> = {
-    success: "bg-green-500",
-    error: "bg-red-500",
-    info: "bg-blue-500",
-    warning: "bg-orange-500",
+  const iconColors: Record<ToastType, string> = {
+    success: "#FFFFFF",
+    error: "#FCA5A5",
+    info: "#93C5FD",
+    warning: "#FCD34D",
   };
 
   const icons: Record<ToastType, keyof typeof Ionicons.glyphMap> = {
@@ -66,15 +66,13 @@ export const Toast = () => {
         { position: "absolute", top: 0, left: 16, right: 16, zIndex: 9999 },
       ]}
     >
-      <View
-        className={`flex-row items-center p-4 rounded-xl shadow-lg border border-white/20 ${bgColors[type]}`}
-      >
-        <Ionicons name={icons[type]} size={24} color="white" />
+      <View className="flex-row items-center p-4 rounded-xl bg-[#1A1A1A] shadow-lg">
+        <Ionicons name={icons[type]} size={24} color={iconColors[type]} />
         <Text className="flex-1 ml-3 text-white font-Urbanist-SemiBold text-base">
           {message}
         </Text>
         <TouchableOpacity onPress={hideToast} className="p-1">
-          <Ionicons name="close" size={20} color="white" />
+          <Ionicons name="close" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
     </Animated.View>

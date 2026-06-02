@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   ScrollView,
   Text,
   TextInput,
@@ -12,15 +11,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
+import { useToastStore } from "../../../store/toastStore";
 
 export default function VerifyOTP() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(266); // 4:26 in seconds
+  const [timer, setTimer] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const showToast = useToastStore((state) => state.showToast);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,7 +38,7 @@ export default function VerifyOTP() {
 
   const handleContinue = async () => {
     if (otp.length < 6) {
-      Alert.alert("Error", "Please enter the 6-digit OTP.");
+      showToast({ message: "Please enter the 6-digit OTP.", type: "error" });
       return;
     }
 
@@ -53,7 +54,7 @@ export default function VerifyOTP() {
         error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Invalid OTP. Please try again.";
-      Alert.alert("Error", message);
+      showToast({ message, type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -65,13 +66,14 @@ export default function VerifyOTP() {
       setIsResending(true);
       await authApi.sendOtp({ email: email ?? "" });
       setOtp("");
-      setTimer(266);
+      setTimer(60);
+      showToast({ message: "OTP resent successfully!", type: "success" });
     } catch (error: any) {
       const message =
         error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Failed to resend OTP. Please try again.";
-      Alert.alert("Error", message);
+      showToast({ message, type: "error" });
     } finally {
       setIsResending(false);
     }

@@ -1,37 +1,40 @@
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
 import { SocialLogin } from "../../../components/auth/SocialLogin";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
+import { useToastStore } from "../../../store/toastStore";
 
 export default function RegisterStep1() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleContinue = async () => {
     if (!email.trim()) {
-      Alert.alert("Error", "Please enter your email address.");
+      showToast({ message: "Please enter your email address.", type: "error" });
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address.");
+      showToast({ message: "Please enter a valid email address.", type: "error" });
       return;
     }
     if (!termsAccepted) {
-      Alert.alert("Error", "Please accept the terms and conditions.");
+      showToast({ message: "Please accept the terms and conditions.", type: "error" });
       return;
     }
 
     try {
       setIsLoading(true);
       await authApi.sendOtp({ email: email.trim().toLowerCase() });
+      showToast({ message: "OTP sent successfully!", type: "success" });
       router.push({
         pathname: "/(auth)/register/verify",
         params: { email: email.trim().toLowerCase() },
@@ -41,7 +44,7 @@ export default function RegisterStep1() {
         error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Failed to send OTP. Please try again.";
-      Alert.alert("Error", message);
+      showToast({ message, type: "error" });
     } finally {
       setIsLoading(false);
     }

@@ -21,8 +21,9 @@ const OffersScreen = () => {
         placementIsActive: true,
       });
 
-      const formattedOffers: OfferItem[] = data.map((collection: any) => ({
+      const formattedOffers: (OfferItem & { placementId?: string })[] = data.map((collection: any) => ({
         id: collection.id,
+        placementId: collection.collectionPlacements?.[0]?.id,
         title: collection.name,
         subtitle: "For Selected Items",
         discount: "",
@@ -78,6 +79,7 @@ const OffersScreen = () => {
                     category: (item.title || "").toLowerCase(),
                     gender: "",
                     collectionId: item.id,
+                    placementId: (item as any).placementId,
                   },
                 })
               }

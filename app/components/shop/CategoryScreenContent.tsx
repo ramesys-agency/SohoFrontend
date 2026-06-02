@@ -16,13 +16,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export function CategoryScreenContent() {
-  const { category, gender, collectionId, collectionSlug, categoryId } =
+  const { category, gender, collectionId, collectionSlug, categoryId, placementId } =
     useLocalSearchParams<{
       category?: string;
       gender?: string;
       collectionId?: string;
       collectionSlug?: string;
       categoryId?: string;
+      placementId?: string;
     }>();
   const categoryName = typeof category === "string" ? category : "Clothing";
   const genderName = typeof gender === "string" ? gender : undefined;
@@ -34,12 +35,14 @@ export function CategoryScreenContent() {
     ? genderName.charAt(0).toUpperCase() + genderName.slice(1)
     : "All";
 
-  // Build query params — only one of collectionId | collectionSlug | categoryId
-  // is included at a time.
+  // Build query params.
+  // placementId takes priority — returns only products assigned to that placement.
   const queryParams = React.useMemo(() => {
     const params: Record<string, any> = { isPublished: true };
 
-    if (collectionId) {
+    if (placementId) {
+      params.placementId = placementId;
+    } else if (collectionId) {
       params.collectionId = collectionId;
     } else if (collectionSlug) {
       params.collectionSlug = collectionSlug;
@@ -51,7 +54,7 @@ export function CategoryScreenContent() {
       params.gender = genderName.toUpperCase();
     }
     return params;
-  }, [collectionId, collectionSlug, categoryId, genderName]);
+  }, [placementId, collectionId, collectionSlug, categoryId, genderName]);
 
   // Identifier-only params for the page-title API (no isPublished / gender)
   const titleParams = React.useMemo(() => {
@@ -64,7 +67,7 @@ export function CategoryScreenContent() {
       params.categoryId = categoryId;
     }
     return params;
-  }, [collectionId, collectionSlug, categoryId]);
+  }, [placementId, collectionId, collectionSlug, categoryId]);
 
   const {
     data: pageTitleData,

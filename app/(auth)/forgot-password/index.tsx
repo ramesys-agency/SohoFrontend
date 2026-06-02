@@ -1,56 +1,44 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authApi } from "../../../api/auth.api";
 import { AuthButton } from "../../../components/auth/AuthButton";
 import { AuthInput } from "../../../components/auth/AuthInput";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
+import { useToastStore } from "../../../store/toastStore";
 
 export default function ForgotPasswordEmail() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleSendCode = async () => {
     if (!email.trim()) {
-      Alert.alert("Error", "Please enter your email address.");
+      showToast({ message: "Please enter your email address.", type: "error" });
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address.");
+      showToast({ message: "Please enter a valid email address.", type: "error" });
       return;
     }
 
     try {
       setIsLoading(true);
-      const result = await authApi.forgotPassword({ email });
-
-      // Backend returns a resetLink containing the token
-      // e.g. http://frontend/reset-password?token=<jwt>
-      const resetLink: string = result?.resetLink ?? "";
-      const token = resetLink.includes("?token=")
-        ? resetLink.split("?token=")[1]
-        : "";
-
-      Alert.alert("Success", "OTP sent to email successfully.", [
-        {
-          text: "OK",
-          onPress: () => {
-            router.push({
-              pathname: "/(auth)/forgot-password/verify",
-              params: { email },
-            });
-          },
-        },
-      ]);
+      await authApi.forgotPassword({ email });
+      showToast({ message: "OTP sent to email successfully.", type: "success" });
+      router.push({
+        pathname: "/(auth)/forgot-password/verify",
+        params: { email },
+      });
     } catch (error: any) {
       const message =
         error?.response?.data?.error ||
         error?.response?.data?.message ||
         "Something went wrong. Please try again.";
-      Alert.alert("Error", message);
+      showToast({ message, type: "error" });
     } finally {
       setIsLoading(false);
     }

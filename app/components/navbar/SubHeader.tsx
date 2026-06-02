@@ -1,5 +1,8 @@
+import { notificationApi } from "@/api/notification.api";
+import { useAuthStore } from "@/store/authStore";
 import { Feather } from "@expo/vector-icons";
 import { NavigationContext } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useContext } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -21,6 +24,14 @@ const SubHeader: React.FC<SubHeaderProps> = ({
 }) => {
   const navigation = useContext(NavigationContext);
   const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["notifications-unread-count"],
+    queryFn: notificationApi.getUnreadCount,
+    enabled: isAuthenticated && !hideNotification,
+    refetchInterval: 60000,
+  });
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -67,6 +78,16 @@ const SubHeader: React.FC<SubHeaderProps> = ({
               onPress={() => router.push("/notifications")}
             >
               <Feather name="bell" size={26} color="black" />
+              {unreadCount > 0 && (
+                <View className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 items-center justify-center">
+                  <Text
+                    className="text-white text-[10px]"
+                    style={{ fontFamily: "Urbanist-Bold" }}
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
         </View>

@@ -69,6 +69,7 @@ export default function CatalogScreen() {
               collection?.collectionPlacements?.[0]?.section ===
                 "GRID_SECTION" && {
                 id: collection.id,
+                placementId: collection.collectionPlacements?.[0]?.id,
                 name: collection.name,
                 image: collection.collectionPlacements?.[0]?.imageUrl,
               },
@@ -81,6 +82,7 @@ export default function CatalogScreen() {
               collection?.collectionPlacements?.[0]?.section ===
                 "FEATURED_ROW" && {
                 id: collection.id,
+                placementId: collection.collectionPlacements?.[0]?.id,
                 name: collection.name,
                 image: collection.collectionPlacements?.[0]?.imageUrl,
               },
@@ -183,8 +185,9 @@ export default function CatalogScreen() {
                   pathname: "/(tabs)/catalog/shop/[category]",
                   params: {
                     category: (item.name || item.title || "").toLowerCase(),
-                    gender: genderCategory, // Also pass the currently selected gender
+                    gender: genderCategory,
                     collectionId: item.id,
+                    placementId: item.placementId,
                   },
                 });
               }}
@@ -207,6 +210,7 @@ export default function CatalogScreen() {
                           category: collection.name.toLowerCase(),
                           gender: genderCategory,
                           collectionId: collection.id,
+                          placementId: collection.placementId,
                         },
                       });
                     }}

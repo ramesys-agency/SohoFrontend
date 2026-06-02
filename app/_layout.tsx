@@ -41,8 +41,7 @@ export default function RootLayout() {
     console.log("API_URL:", API_URL);
   }, [hydrate]);
 
-  const isNavigationReady = loaded || error;
-  const isAppReady = isNavigationReady && !isAuthLoading;
+  const isAppReady = (loaded || !!error) && !isAuthLoading;
 
   useEffect(() => {
     if (isAppReady) {
@@ -54,7 +53,6 @@ export default function RootLayout() {
     if (!isAppReady) return;
     if (!navigationState?.key) return; // navigator not mounted yet
 
-    // Cast segments to string[] to avoid strict type mismatch with 'index' or checking length
     const currentSegments = segments as string[];
     const inAuthGroup = currentSegments[0] === "(auth)";
     const inTabsGroup = currentSegments[0] === "(tabs)";
@@ -63,21 +61,15 @@ export default function RootLayout() {
       (currentSegments.length === 1 && currentSegments[0] === "index");
 
     if (isAuthenticated) {
-      // If user is authenticated and trying to access auth screens or onboarding, redirect to home
       if (inAuthGroup || isIndex) {
         router.replace("/(tabs)/home");
       }
     } else {
-      // If user is not authenticated and trying to access protected tabs, redirect to login
       if (inTabsGroup) {
         router.replace("/(auth)/login");
       }
     }
   }, [isAuthenticated, segments, isAppReady, router, navigationState?.key]);
-
-  if (!isAppReady) {
-    return null;
-  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

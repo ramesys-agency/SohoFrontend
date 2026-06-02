@@ -577,14 +577,38 @@ export default function ProductDetailsScreen() {
   // ── Error state ──────────────────────────────────────────────────────────
   if (isError) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-8">
+      <View className="flex-1 bg-white">
         <Stack.Screen options={{ headerShown: false }} />
-        <Text
-          className="text-red-500 text-base text-center"
-          style={{ fontFamily: "Urbanist" }}
-        >
-          Failed to load product details. Please try again.
-        </Text>
+        <SafeAreaView edges={["top"]}>
+          <View className="px-4 py-2">
+            <TouchableOpacity
+              className="w-10 h-10 bg-[#F2F2F2] rounded-full items-center justify-center"
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={22} color="black" />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="w-16 h-16 bg-[#F2F2F2] rounded-full items-center justify-center mb-5">
+            <Ionicons name="alert-circle-outline" size={34} color="#000" />
+          </View>
+          <Text className="text-xl font-Classyvogue text-black mb-2 text-center">
+            Something went wrong
+          </Text>
+          <Text className="text-sm font-Urbanist text-[#999999] text-center mb-8">
+            We couldn't load this product. Check your connection and try again.
+          </Text>
+          <TouchableOpacity
+            className="bg-black px-8 py-3.5 rounded-xl"
+            onPress={() => refetch()}
+          >
+            <Text className="text-white font-Urbanist-Bold text-sm">
+              Try again
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
