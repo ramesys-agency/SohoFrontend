@@ -1,17 +1,32 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import * as Notifications from "expo-notifications";
 import { Stack, useRootNavigationState, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Toast } from "../components/ui/Toast";
 import "../global.css";
+import { notificationApi } from "../api/notification.api";
 import { useAuthStore } from "../store/authStore";
 import { API_URL } from "../config/env";
+import { registerForPushNotifications } from "../utils/registerForPushNotifications";
+
+// Show notifications as banners while the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,11 +50,61 @@ export default function RootLayout() {
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
     hydrate();
     console.log("API_URL:", API_URL);
   }, [hydrate]);
+
+  // Register push token when user logs in, remove listeners on logout
+  useEffect(() => {
+    if (!isAuthenticated) {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+      return;
+    }
+
+    registerForPushNotifications().then((token) => {
+      if (!token) return;
+      const platform = Platform.OS === "ios" ? "ios" : "android";
+      notificationApi.registerPushToken(token, platform).catch(() => {});
+    });
+
+    // Listen for notifications received while app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(() => {});
+
+    // Handle tap on a notification — navigate to the relevant screen
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as Record<string, unknown>;
+      const screen = data?.screen as string | undefined;
+      if (screen === "orders") {
+        router.push("/(tabs)/orders" as never);
+      } else if (screen === "notifications") {
+        router.push("/notifications" as never);
+      } else if (screen === "collection") {
+        const slug = data?.slug as string | undefined;
+        const id = data?.id as string | undefined;
+        if (slug) {
+          router.push(
+            (`/(tabs)/catalog/shop/${slug}` +
+              (id ? `?collectionId=${id}&collectionSlug=${slug}` : "")) as never
+          );
+        }
+      } else if (screen === "product") {
+        const id = data?.id as string | undefined;
+        if (id) {
+          router.push(`/product/${id}` as never);
+        }
+      }
+    });
+
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
+  }, [isAuthenticated, router]);
 
   const isAppReady = (loaded || !!error) && !isAuthLoading;
 

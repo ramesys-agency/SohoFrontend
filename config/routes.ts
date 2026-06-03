@@ -10,6 +10,8 @@ export const API_ROUTES = {
     RESET_PASSWORD: "/api/v1/auth/reset-password",
     SEND_OTP: "/api/v1/auth/send-otp",
     VERIFY_OTP: "/api/v1/auth/verify-otp",
+    GOOGLE: "/api/v1/auth/google",
+    APPLE: "/api/v1/auth/apple",
   },
   // Add other routes here as needed
   USERS: {
@@ -58,5 +60,6 @@ export const API_ROUTES = {
     UNREAD_COUNT: "/api/v1/notifications/unread-count",
     READ_ALL: "/api/v1/notifications/read-all",
     MARK_READ: (id: string) => `/api/v1/notifications/${id}/read`,
+    PUSH_TOKEN: "/api/v1/notifications/push-token",
   },
 } as const;

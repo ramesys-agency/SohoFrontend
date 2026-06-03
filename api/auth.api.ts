@@ -8,12 +8,12 @@ export const authApi = {
   },
 
   googleLogin: async (idToken: string) => {
-    const response = await apiClient.post("/v1/auth/google", { idToken });
+    const response = await apiClient.post(API_ROUTES.AUTH.GOOGLE, { idToken });
     return response.data.data || response.data;
   },
 
   appleLogin: async (data: { identityToken: string; firstName?: string; lastName?: string }) => {
-    const response = await apiClient.post("/v1/auth/apple", data);
+    const response = await apiClient.post(API_ROUTES.AUTH.APPLE, data);
     return response.data.data || response.data;
   },
 

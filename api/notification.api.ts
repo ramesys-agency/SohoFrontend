@@ -39,4 +39,17 @@ export const notificationApi = {
     const response = await apiClient.patch(API_ROUTES.NOTIFICATIONS.READ_ALL);
     return response.data;
   },
+  registerPushToken: async (token: string, platform: "ios" | "android") => {
+    const response = await apiClient.post(API_ROUTES.NOTIFICATIONS.PUSH_TOKEN, {
+      token,
+      platform,
+    });
+    return response.data;
+  },
+  removePushToken: async (token: string) => {
+    const response = await apiClient.delete(API_ROUTES.NOTIFICATIONS.PUSH_TOKEN, {
+      data: { token },
+    });
+    return response.data;
+  },
 };

@@ -105,7 +105,7 @@ export default function PaymentScreen() {
   );
   const shippingCharge = 150; // Flat fee for now
   const discountAmount = appliedCoupon?.discountAmount || 0;
-  const total = subtotal + shippingCharge - discountAmount;
+  const total = Math.max(0, subtotal + shippingCharge - discountAmount);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -119,10 +119,10 @@ export default function PaymentScreen() {
       showToast({ message: "Coupon applied successfully!", type: "success" });
     } catch (error: any) {
       console.error("Coupon validation failed:", error);
-      Alert.alert(
-        "Invalid Coupon",
-        error.response?.data?.error || error.response?.data?.message || "This coupon code is not valid.",
-      );
+      showToast({
+        message: error.response?.data?.error || error.response?.data?.message || "Invalid coupon code.",
+        type: "error",
+      });
     } finally {
       setIsValidatingCoupon(false);
     }
@@ -162,16 +162,8 @@ export default function PaymentScreen() {
 
   const handleSavePhoneAndOrder = async () => {
     const cleanPhone = phoneNumber.trim();
-    if (!cleanPhone) {
-      Alert.alert("Error", "Please enter your phone number.");
-      return;
-    }
-    if (!/^\d+$/.test(cleanPhone)) {
-      Alert.alert("Error", "Please enter digits only.");
-      return;
-    }
-    if (cleanPhone.length < 11) {
-      Alert.alert("Error", "Phone number must be at least 11 digits.");
+    if (!/^\d{10,13}$/.test(cleanPhone)) {
+      Alert.alert("Invalid Number", "Phone number must be between 10 and 13 digits.");
       return;
     }
 
@@ -559,13 +551,16 @@ export default function PaymentScreen() {
                 </Text>
                 <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5">
                   <Feather name="phone" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+                  <Text className="font-Urbanist-Medium text-gray-400 text-[15px] mr-1">+880</Text>
+                  <View className="w-px h-5 bg-gray-200 mr-3" />
                   <TextInput
-                    placeholder="e.g. 017XXXXXXXX"
+                    placeholder="01711234567"
                     placeholderTextColor="#9CA3AF"
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
+                    onChangeText={(text) => setPhoneNumber(text.replace(/\D/g, "").slice(0, 13))}
+                    keyboardType="number-pad"
                     autoFocus={true}
+                    maxLength={13}
                     className="flex-1 font-Urbanist-Medium text-black text-[15px]"
                   />
                 </View>

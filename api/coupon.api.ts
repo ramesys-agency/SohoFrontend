@@ -7,6 +7,6 @@ export const couponApi = {
       code,
       cartItems,
     });
-    return response.data;
+    return response.data.data || response.data;
   },
 };

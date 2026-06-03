@@ -73,6 +73,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   hydrate: async () => {
+    // If login() already ran and set the user, don't overwrite it.
+    // This prevents a race where hydrate() resumes after login() stores tokens
+    // and then fetches a stale profile that clobbers the freshly-set user.
+    if (get().isAuthenticated) {
+      set({ isLoading: false });
+      return;
+    }
     try {
       set({ isLoading: true });
       const accessToken = await tokenStorage.getAccessToken();

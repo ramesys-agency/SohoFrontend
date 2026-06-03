@@ -64,13 +64,13 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
           onPress={onAddToCart}
           disabled={isAddingToCart || isInCart}
           className={`w-10 h-10 items-center justify-center rounded-xl shadow-sm ${
-            isInCart ? "bg-green-500" : "bg-black"
+            isInCart ? "bg-white border border-gray-200" : "bg-black"
           }`}
         >
           {isAddingToCart ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : isInCart ? (
-            <Feather name="check" size={16} color="#fff" />
+            <Feather name="archive" size={16} color="#000" />
           ) : (
             <Feather name="shopping-cart" size={16} color="#fff" />
           )}

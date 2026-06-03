@@ -11,6 +11,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.arshad.code.SohoApplication",
+      googleServicesFile: "./GoogleService-Info.plist",
     },
     android: {
       adaptiveIcon: {
@@ -21,6 +22,7 @@ export default {
       predictiveBackGestureEnabled: false,
       package: "com.arshad.code.SohoApplication",
       usesCleartextTraffic: true,
+      googleServicesFile: "./google-services.json",
     },
     web: {
       output: "static",
@@ -28,6 +30,14 @@ export default {
     },
     plugins: [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/soho.png",
+          color: "#FFFFFF",
+          defaultChannel: "default",
+        },
+      ],
       [
         "expo-image-picker",
         {

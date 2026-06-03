@@ -97,7 +97,12 @@ export default function NotificationsScreen() {
     // Deep-link to the order if this notification references one.
     const orderId = (item.data as any)?.orderId;
     if (item.type === "order" && orderId) {
-      router.push(`/profile/orders/${orderId}`);
+      // Navigate to the orders list first so it sits in the profile stack,
+      // then push the detail on top — back button returns to the list, not home.
+      router.navigate("/(tabs)/profile/orders" as any);
+      requestAnimationFrame(() => {
+        router.push(`/(tabs)/profile/orders/${orderId}` as any);
+      });
     }
   };
 
