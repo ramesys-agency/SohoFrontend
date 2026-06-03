@@ -12,11 +12,13 @@ export function SocialLogin() {
   const showToast = useToastStore((state) => state.showToast);
 
   useEffect(() => {
-    console.log("WEB CLIENT ID:", process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
-    // Initialize GoogleSignin
     GoogleSignin.configure({
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+      webClientId:
+        process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+        "715630615184-p2nfvaq34e0uc96ih44rvpim3j5vaopg.apps.googleusercontent.com",
+      iosClientId:
+        process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ||
+        "715630615184-tqriebjkqt7tkqqan4cs4rv2punvd1g6.apps.googleusercontent.com",
       scopes: ["email", "profile"],
       offlineAccess: true,
     });
