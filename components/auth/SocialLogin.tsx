@@ -75,6 +75,8 @@ export function SocialLogin() {
   const handleGoogleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
+      // Sign out first to ensure a fresh idToken with correct audience
+      await GoogleSignin.signOut().catch(() => {});
       const response = await GoogleSignin.signIn();
 
       if (response.type !== "success") {
@@ -96,7 +98,7 @@ export function SocialLogin() {
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       showToast({
-        message: error.message || "Google sign in failed.",
+        message: error.response?.data?.error || error.message || "Google sign in failed.",
         type: "error",
       });
     }
