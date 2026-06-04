@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Platform, Text, TouchableOpacity, View, ActivityIndicator, Modal } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -10,6 +10,7 @@ import { authApi } from "../../api/auth.api";
 export function SocialLogin() {
   const { login } = useAuthStore();
   const showToast = useToastStore((state) => state.showToast);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -26,6 +27,7 @@ export function SocialLogin() {
 
   const handleAppleSignIn = async () => {
     try {
+      setIsLoading(true);
       const isAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAvailable) {
         showToast({
@@ -69,11 +71,14 @@ export function SocialLogin() {
         message: error.message || "Apple sign in failed.",
         type: "error",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
     try {
+      setIsLoading(true);
       await GoogleSignin.hasPlayServices();
       // Sign out first to ensure a fresh idToken with correct audience
       await GoogleSignin.signOut().catch(() => {});
@@ -101,17 +106,30 @@ export function SocialLogin() {
         message: error.response?.data?.error || error.message || "Google sign in failed.",
         type: "error",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <View className="items-center mt-8">
+      {/* Loading Overlay */}
+      <Modal visible={isLoading} transparent={true} animationType="fade">
+        <View className="flex-1 bg-black/50 justify-center items-center">
+          <View className="bg-white p-6 rounded-2xl items-center">
+            <ActivityIndicator size="large" color="#000000" />
+            <Text className="mt-4 font-Urbanist text-black">Signing in...</Text>
+          </View>
+        </View>
+      </Modal>
+
       <Text className="text-[#999999] text-sm font-Urbanist mb-6">Or</Text>
       <View className="flex-row justify-center gap-x-4">
         {Platform.OS === "ios" && (
           <TouchableOpacity
             className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
             onPress={handleAppleSignIn}
+            disabled={isLoading}
           >
             <IconSymbol name="apple.logo" size={24} color="#000000" />
           </TouchableOpacity>
@@ -119,6 +137,7 @@ export function SocialLogin() {
         <TouchableOpacity
           className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
           onPress={handleGoogleSignIn}
+          disabled={isLoading}
         >
           <IconSymbol name="google.logo" size={24} color="#000000" />
         </TouchableOpacity>

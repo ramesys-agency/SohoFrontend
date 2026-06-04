@@ -2,20 +2,9 @@
   "build": {
     "preview": {
       "android": {
-        "buildType": "apk",
-        "googleServicesFile": "./google-services.json"
-      },
-      "ios": {
-        "googleServicesFile": "./GoogleService-Info.plist"
+        "buildType": "apk"
       }
     },
-    "production": {
-      "android": {
-        "googleServicesFile": "./google-services.json"
-      },
-      "ios": {
-        "googleServicesFile": "./GoogleService-Info.plist"
-      }
-    }
+    "production": {}
   }
 }

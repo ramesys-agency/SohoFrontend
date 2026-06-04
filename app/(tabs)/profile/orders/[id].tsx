@@ -18,7 +18,11 @@ import { Feather } from "@expo/vector-icons";
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
 
-  const { data: fetchResponse, isLoading, isError } = useQuery({
+  const {
+    data: fetchResponse,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["order", id],
     queryFn: () => orderApi.getOrderById(id as string),
     enabled: !!id,
@@ -37,9 +41,13 @@ export default function OrderDetailsScreen() {
   if (isError || !order) {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center p-4">
-        <Text className="text-red-500 font-Urbanist-Medium">Failed to load order details.</Text>
+        <Text className="text-red-500 font-Urbanist-Medium">
+          Failed to load order details.
+        </Text>
         <TouchableOpacity onPress={() => router.back()} className="mt-4">
-          <Text className="text-black font-Urbanist-Bold underline">Go Back</Text>
+          <Text className="text-black font-Urbanist-Bold underline">
+            Go Back
+          </Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -131,7 +139,8 @@ export default function OrderDetailsScreen() {
             {order.address?.type || "Primary"}
           </Text>
           <Text className="text-gray-500 font-Urbanist text-sm">
-            {order.address?.street}, {order.address?.thana}, {order.address?.district}, {order.address?.division}
+            {order.address?.street}, {order.address?.thana},{" "}
+            {order.address?.district}, {order.address?.division}
           </Text>
         </View>
 
@@ -151,12 +160,12 @@ export default function OrderDetailsScreen() {
             ))}
             {/* If order is not delivered, show a pending step for illustration or future state */}
             {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
-               <TimelineStep
+              <TimelineStep
                 title="Future Update"
                 date="Awaiting next update..."
                 completed={false}
                 isLast={true}
-               />
+              />
             )}
           </View>
         </View>
@@ -222,7 +231,9 @@ function TimelineStep({
         )}
       </View>
       <View className="pb-6">
-        <Text className={`font-Urbanist-Bold text-base leading-none mb-1 uppercase ${completed ? "text-black" : "text-gray-400"}`}>
+        <Text
+          className={`font-Urbanist-Bold text-base leading-none mb-1 uppercase ${completed ? "text-black" : "text-gray-400"}`}
+        >
           {title}
         </Text>
         <Text className="text-gray-400 text-xs font-Urbanist">{date}</Text>

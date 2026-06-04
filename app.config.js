@@ -10,7 +10,7 @@ export default {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.arshad.code.SohoApplication",
+      bundleIdentifier: "com.sohobd.app",
       googleServicesFile: "./GoogleService-Info.plist",
     },
     android: {
@@ -20,7 +20,7 @@ export default {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package: "com.arshad.code.SohoApplication",
+      package: "com.sohobd.app",
       usesCleartextTraffic: true,
       googleServicesFile: "./google-services.json",
     },

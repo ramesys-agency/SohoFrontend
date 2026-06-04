@@ -9,10 +9,25 @@ export interface HeroSlide {
   collectionSlug: string;
 }
 
+export interface HomePromoItem {
+  id: string;
+  title: string;
+  description: string;
+  contentType: "PRODUCT" | "COLLECTION";
+  productId: string | null;
+  product: any | null;
+  collectionId: string | null;
+  collection: any | null;
+  imageUrl: string | null;
+  isActive: boolean;
+}
+
 export const homePromoApi = {
-  getSection: async () => {
-    const response = await apiClient.get(API_ROUTES.HOME_PROMO.GET);
-    return response.data;
+  getPromos: async (): Promise<HomePromoItem[]> => {
+    const response = await apiClient.get(API_ROUTES.HOME_PROMO.GET, {
+      params: { isActive: true },
+    });
+    return response.data?.data ?? [];
   },
 
   getHeroSlides: async (): Promise<HeroSlide[]> => {
