@@ -1,11 +1,14 @@
 import { orderApi } from "@/api/order.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
+import { returnRequestMessage, whatsappUrl } from "@/config/support";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
+  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -14,6 +17,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import dayjs from "dayjs";
 import { Feather } from "@expo/vector-icons";
+
+/** A rejected return frees the unit up again, so it doesn't count as returned. */
+const liveReturnedUnits = (returns: any[] | undefined): number =>
+  (returns || [])
+    .filter((r: any) => r.status !== "rejected")
+    .reduce((sum: number, r: any) => sum + (r.quantity ?? 1), 0);
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -29,6 +38,54 @@ export default function OrderDetailsScreen() {
   });
 
   const order = fetchResponse?.data;
+
+  const orderReference =
+    order?.orderCode || (order?.id ? order.id.slice(0, 8).toUpperCase() : "");
+
+  // Every return raised against this order, flattened with its item for context.
+  const returns: any[] = (order?.items || []).flatMap((item: any) =>
+    (item.returns || []).map((r: any) => ({ ...r, item })),
+  );
+
+  // A return is worth offering only while some unit is still eligible.
+  const hasReturnableUnits = (order?.items || []).some(
+    (item: any) => item.quantity - liveReturnedUnits(item.returns) > 0,
+  );
+
+  const canRequestReturn =
+    order?.status?.toLowerCase() === "delivered" && hasReturnableUnits;
+
+  /** Opens WhatsApp pre-filled so support can record the return. */
+  const handleRequestReturn = async () => {
+    const url = whatsappUrl(
+      returnRequestMessage(
+        orderReference,
+        (order?.items || []).map((item: any) => item.product?.name).filter(Boolean),
+      ),
+    );
+
+    if (!url) {
+      Alert.alert(
+        "Not available",
+        "WhatsApp support isn't set up yet. Please use Contact Support below.",
+      );
+      return;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+        Alert.alert(
+          "WhatsApp not installed",
+          "Install WhatsApp, or use Contact Support below to reach us another way.",
+        );
+        return;
+      }
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Something went wrong", "Please try again in a moment.");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -152,14 +209,25 @@ export default function OrderDetailsScreen() {
             {(order.statusLogs || []).map((log: any, index: number) => (
               <TimelineStep
                 key={log.id}
-                title={log.status.replace(/_/g, " ")}
+                // Prefer the courier's own wording ("Rider Accepted") over our
+                // collapsed status enum when the entry came from RoadRush.
+                title={(log.logisticsStatusName || log.status).replace(/_/g, " ")}
                 date={dayjs(log.createdAt).format("DD MMM, YYYY | hh:mm A")}
+                // The admin's note explains manual changes ("Return approved —
+                // wrong size"). Skipped when it just repeats the courier status.
+                note={
+                  log.note && log.note !== log.logisticsStatusName
+                    ? log.note
+                    : undefined
+                }
                 completed={true}
                 isLast={index === (order.statusLogs?.length || 0) - 1}
               />
             ))}
-            {/* If order is not delivered, show a pending step for illustration or future state */}
-            {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+            {/* If the order hasn't reached a terminal state, show a placeholder step */}
+            {!["delivered", "cancelled", "returned"].includes(
+              (order.status || "").toLowerCase(),
+            ) && (
               <TimelineStep
                 title="Future Update"
                 date="Awaiting next update..."
@@ -169,6 +237,36 @@ export default function OrderDetailsScreen() {
             )}
           </View>
         </View>
+
+        {/* Returns — only present once support has recorded one */}
+        {returns.length > 0 && (
+          <>
+            <Text className="text-xl font-Urbanist-Bold mb-2">Returns</Text>
+            <Text className="text-gray-500 font-Urbanist text-sm mb-5">
+              Recorded by our team after you got in touch.
+            </Text>
+            <View className="mb-8">
+              {returns.map((entry: any) => (
+                <ReturnCard key={entry.id} entry={entry} />
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Return request — WhatsApp is the intake channel; an admin records the
+            return on their side and it then appears in the section above. */}
+        {canRequestReturn && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            className="bg-[#25D366] py-4 rounded-full items-center mb-4 flex-row justify-center"
+            onPress={handleRequestReturn}
+          >
+            <Feather name="message-circle" size={20} color="white" />
+            <Text className="text-white font-Urbanist-Bold text-lg ml-3">
+              Request a Return
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Support Button */}
         <TouchableOpacity
@@ -209,11 +307,13 @@ function DetailRow({
 function TimelineStep({
   title,
   date,
+  note,
   completed,
   isLast,
 }: {
   title: string;
   date: string;
+  note?: string;
   completed: boolean;
   isLast: boolean;
 }) {
@@ -236,8 +336,75 @@ function TimelineStep({
         >
           {title}
         </Text>
+        {note && (
+          <Text className="text-gray-500 text-xs font-Urbanist mb-1 max-w-[95%]">
+            {note}
+          </Text>
+        )}
         <Text className="text-gray-400 text-xs font-Urbanist">{date}</Text>
       </View>
+    </View>
+  );
+}
+
+const RETURN_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  requested: {
+    bg: "bg-yellow-100",
+    text: "text-yellow-700",
+    label: "Under review",
+  },
+  approved: { bg: "bg-blue-100", text: "text-blue-700", label: "Approved" },
+  rejected: { bg: "bg-red-100", text: "text-red-700", label: "Not approved" },
+  refunded: {
+    bg: "bg-purple-100",
+    text: "text-purple-700",
+    label: "Refunded",
+  },
+};
+
+function ReturnCard({ entry }: { entry: any }) {
+  const style =
+    RETURN_STATUS_STYLES[entry.status] ?? RETURN_STATUS_STYLES.requested;
+
+  return (
+    <View className="bg-gray-50 rounded-2xl p-5 mb-3 border border-gray-100">
+      <View className="flex-row items-start justify-between gap-3 mb-2">
+        <Text
+          className="text-black font-Urbanist-Bold text-base flex-1"
+          numberOfLines={2}
+        >
+          {entry.item?.product?.name}
+        </Text>
+        <View className={`${style.bg} px-3 py-1 rounded-full`}>
+          <Text
+            className={`${style.text} text-[10px] font-Urbanist-Bold uppercase`}
+          >
+            {style.label}
+          </Text>
+        </View>
+      </View>
+
+      <Text className="text-gray-500 font-Urbanist text-xs mb-2">
+        Qty {entry.quantity ?? 1} of {entry.item?.quantity} ·{" "}
+        {dayjs(entry.createdAt).format("DD MMM, YYYY")}
+      </Text>
+
+      <Text className="text-gray-700 font-Urbanist text-sm">
+        <Text className="font-Urbanist-Bold">Reason: </Text>
+        {entry.reason}
+      </Text>
+
+      {entry.note && (
+        <Text className="text-gray-500 font-Urbanist text-xs mt-1.5 italic">
+          {entry.note}
+        </Text>
+      )}
+
+      {entry.refundAmount && (
+        <Text className="text-purple-700 font-Urbanist-Bold text-sm mt-2">
+          Refunded ৳{parseFloat(entry.refundAmount).toLocaleString()}
+        </Text>
+      )}
     </View>
   );
 }

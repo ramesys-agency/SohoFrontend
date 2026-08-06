@@ -85,6 +85,14 @@ export default function OrdersListScreen() {
               firstItem?.variant?.images?.[0]?.imageUrl ||
               "https://i.pravatar.cc/150?img=1";
 
+            // Surface an in-flight return even when the order itself still reads
+            // "delivered" — a partial return never changes the order status.
+            const openReturns = (order.items || []).flatMap((item: any) =>
+              (item.returns || []).filter(
+                (r: any) => r.status === "requested" || r.status === "approved",
+              ),
+            );
+
             return (
               <TouchableOpacity
                 key={order.id}
@@ -113,6 +121,19 @@ export default function OrdersListScreen() {
                       Order No:{" "}
                       {order.orderCode || order.id.slice(0, 8).toUpperCase()}
                     </Text>
+                    {openReturns.length > 0 && (
+                      <View className="flex-row items-center mt-1.5">
+                        <View className="bg-orange-100 px-2 py-0.5 rounded-full">
+                          <Text className="text-orange-700 text-[10px] font-Urbanist-Bold uppercase">
+                            {openReturns.some(
+                              (r: any) => r.status === "approved",
+                            )
+                              ? "Return approved"
+                              : "Return under review"}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
                   </View>
 
                   <View className="flex-row justify-between items-end mt-2">
@@ -146,6 +167,9 @@ function OrderStatusBadge({ status }: { status: string }) {
   } else if (["cancelled", "failed"].includes(statusLower)) {
     bg = "bg-red-100";
     text = "text-red-700";
+  } else if (statusLower === "returned") {
+    bg = "bg-orange-100";
+    text = "text-orange-700";
   } else if (statusLower === "pending") {
     bg = "bg-yellow-100";
     text = "text-yellow-700";
