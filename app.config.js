@@ -1,17 +1,24 @@
 export default {
   expo: {
-    name: "SohoApplication",
+    name: "Soho",
     slug: "SohoApplication",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/soho.png",
+    // App Store requires 1024x1024, square, opaque, no alpha channel.
+    icon: "./assets/images/Soho1024x1024.png",
     scheme: "sohoapplication",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     ios: {
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: "com.sohobd.app",
       googleServicesFile: "./GoogleService-Info.plist",
+      // buildNumber is managed remotely by EAS (eas.json -> cli.appVersionSource)
+      config: {
+        // App only uses standard HTTPS/TLS — exempt from export compliance.
+        // Without this, App Store Connect asks for a manual declaration on every upload.
+        usesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
@@ -33,6 +40,9 @@ export default {
       [
         "expo-notifications",
         {
+          // Android draws this as a silhouette, so it needs the transparent
+          // wordmark, not the opaque square app icon (that renders as a
+          // solid white block in the status bar). iOS ignores it entirely.
           icon: "./assets/images/soho.png",
           color: "#FFFFFF",
           defaultChannel: "default",
@@ -42,7 +52,11 @@ export default {
         "expo-image-picker",
         {
           photosPermission:
-            "Allow Soho to access your photos to update your profile picture.",
+            "Soho uses your photo library so you can choose a picture for your profile.",
+          // The app never opens the camera or records audio — keep these
+          // permissions out of the binary so App Review doesn't ask why.
+          cameraPermission: false,
+          microphonePermission: false,
         },
       ],
       [
@@ -52,9 +66,8 @@ export default {
           imageWidth: 200,
           resizeMode: "contain",
           backgroundColor: "#ffffff",
-          dark: {
-            backgroundColor: "#000000",
-          },
+          // No dark variant: the app is locked to userInterfaceStyle "light",
+          // and prebuild warns that the two settings conflict.
         },
       ],
       [

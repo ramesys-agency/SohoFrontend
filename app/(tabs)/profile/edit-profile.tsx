@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 import { userApi } from "../../../api/user.api";
 import { useAuthStore } from "../../../store/authStore";
 import { useToastStore } from "../../../store/toastStore";
@@ -34,7 +36,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileScreen() {
   const queryClient = useQueryClient();
-  const { updateUser } = useAuthStore();
+  const { updateUser, logout } = useAuthStore();
   const { showToast } = useToastStore();
   const [savingField, setSavingField] = useState<keyof ProfileFormData | null>(
     null,
@@ -42,6 +44,7 @@ export default function EditProfileScreen() {
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const {
     data: profileData,
@@ -178,6 +181,53 @@ export default function EditProfileScreen() {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const deleteAccount = async () => {
+    try {
+      setIsDeletingAccount(true);
+      await userApi.deleteAccount();
+
+      // Order matters: drop the tokens and leave the screen first, then empty
+      // the cache. Clearing while this screen is still mounted would refire the
+      // profile query against an account that no longer exists.
+      await logout();
+      router.replace("/(auth)/login");
+      queryClient.clear();
+
+      showToast({
+        message: "Your account has been deleted",
+        type: "success",
+      });
+    } catch (error: any) {
+      console.error("Failed to delete account:", error);
+      showToast({
+        message:
+          error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          "Could not delete your account. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    if (isDeletingAccount) return;
+
+    Alert.alert(
+      "Delete account?",
+      "This permanently deletes your profile, cart, wishlist, saved addresses and reviews. Orders you have already placed are kept as sales records and any parcel on its way will still be delivered. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: deleteAccount,
+        },
+      ],
+    );
   };
 
   if (isLoading) {
@@ -501,11 +551,19 @@ export default function EditProfileScreen() {
           </View>
 
           {/* Delete Account */}
-          <TouchableOpacity className="mt-12 items-center mb-6">
+          <TouchableOpacity
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+            className={`mt-12 items-center mb-6 ${isDeletingAccount ? "opacity-50" : ""}`}
+          >
             <View className="flex-row items-center gap-2">
-              <IconSymbol name="trash" size={20} color="#dc2626" />
+              {isDeletingAccount ? (
+                <ActivityIndicator size="small" color="#dc2626" />
+              ) : (
+                <IconSymbol name="trash" size={20} color="#dc2626" />
+              )}
               <Text className="text-red-600 font-Urbanist-Bold text-base">
-                Delete account
+                {isDeletingAccount ? "Deleting account…" : "Delete account"}
               </Text>
             </View>
           </TouchableOpacity>

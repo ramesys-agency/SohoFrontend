@@ -22,14 +22,19 @@ export default function CheckoutScreen() {
       buyNowPrice?: string;
       _ctx?: string;
     }>();
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-
+  // Card, wallet and net banking are not live yet. Unreleased methods are kept
+  // out of the list entirely rather than shown disabled — App Review rejects
+  // builds that display features which don't work (Guideline 2.1).
   const paymentMethods = [
     { id: "CARD", label: "Debit/credit Card", enabled: false },
     { id: "WALLET", label: "Wallet", enabled: false },
     { id: "BANK", label: "Net Banking", enabled: false },
     { id: "COD", label: "Cash on delivery", enabled: true },
-  ];
+  ].filter((method) => method.enabled);
+
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(
+    paymentMethods.length === 1 ? paymentMethods[0].id : null
+  );
 
   const handleContinue = () => {
     if (!selectedMethod) return;

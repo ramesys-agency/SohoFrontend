@@ -17,6 +17,7 @@ export const API_ROUTES = {
   USERS: {
     PROFILE: "/api/v1/users/profile",
     AVATAR: "/api/v1/users/avatar",
+    ACCOUNT: "/api/v1/users/account",
   },
   ADDRESS: {
     BASE: "/api/v1/addresses",

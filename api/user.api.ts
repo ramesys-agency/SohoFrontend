@@ -10,6 +10,10 @@ export const userApi = {
     const response = await apiClient.put(API_ROUTES.USERS.PROFILE, data);
     return response.data.data || response.data;
   },
+  deleteAccount: async () => {
+    const response = await apiClient.delete(API_ROUTES.USERS.ACCOUNT);
+    return response.data.data || response.data;
+  },
   updateAvatar: async (formData: FormData) => {
     const response = await apiClient.patch(API_ROUTES.USERS.AVATAR, formData, {
       headers: {
