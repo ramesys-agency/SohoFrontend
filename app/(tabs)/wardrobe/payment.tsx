@@ -2,6 +2,7 @@ import { cartApi } from "@/api/cart.api";
 import { orderApi } from "@/api/order.api";
 import { userApi } from "@/api/user.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
+import { openLegalDocument } from "@/config/legal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
@@ -496,6 +497,35 @@ export default function PaymentScreen() {
           paddingBottom: _ctx === "checkout" ? 32 : WARDROBE_EXTRA_BOTTOM,
         }}
       >
+        {/* The policies a customer commits to at the moment of purchase. */}
+        <Text className="text-gray-400 text-[11px] leading-[16px] font-Urbanist text-center mb-3 px-2">
+          By placing this order you agree to our{" "}
+          <Text
+            onPress={() => openLegalDocument("terms")}
+            suppressHighlighting
+            className="text-gray-600 font-Urbanist-Bold underline"
+          >
+            Terms of Service
+          </Text>
+          ,{" "}
+          <Text
+            onPress={() => openLegalDocument("returns")}
+            suppressHighlighting
+            className="text-gray-600 font-Urbanist-Bold underline"
+          >
+            Return Policy
+          </Text>{" "}
+          and{" "}
+          <Text
+            onPress={() => openLegalDocument("shipping")}
+            suppressHighlighting
+            className="text-gray-600 font-Urbanist-Bold underline"
+          >
+            Shipping Policy
+          </Text>
+          .
+        </Text>
+
         <TouchableOpacity
           className={`bg-black rounded-2xl items-center justify-center flex-row shadow-xl ${
             placeOrderMutation.isPending ? "opacity-70" : ""

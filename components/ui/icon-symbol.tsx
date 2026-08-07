@@ -27,6 +27,7 @@ const MAPPING = {
   plus: "add",
   pencil: "create",
   "list.bullet": "list",
+  "doc.text": "document-text",
   "arrow.counterclockwise": "refresh",
   creditcard: "card",
   map: "location",

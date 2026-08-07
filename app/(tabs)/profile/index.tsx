@@ -118,6 +118,11 @@ export default function ProfileScreen() {
             label="Contact Us"
             onPress={() => router.push("/profile/help-support")}
           />
+          <MenuItem
+            icon="doc.text"
+            label="Legal & Policies"
+            onPress={() => router.push("/profile/legal")}
+          />
         </View>
 
         {/* Dark Theme */}

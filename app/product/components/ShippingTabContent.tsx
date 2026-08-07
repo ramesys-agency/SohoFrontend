@@ -1,8 +1,26 @@
 import { Feather, MaterialIcons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
+/** Days from today that we quote as the delivery estimate. */
+const DELIVERY_ESTIMATE_DAYS = 7;
+
 export default function ShippingTabContent() {
+  /**
+   * Placeholder until the real estimate comes from the backend — a standard
+   * seven-day window from whenever the customer is looking at the product,
+   * rather than a date hardcoded at build time.
+   */
+  const estimatedDelivery = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + DELIVERY_ESTIMATE_DAYS);
+    return date.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+  }, []);
+
   return (
     <View className="mt-4">
       {/* Delivery address card */}
@@ -40,7 +58,7 @@ export default function ShippingTabContent() {
           className="ml-3 text-base text-black"
           style={{ fontFamily: "Urbanist" }}
         >
-          Get it by Mon, 30 Nov
+          Get it by {estimatedDelivery}
         </Text>
       </View>
       <View className="flex-row items-center mb-3">

@@ -1,4 +1,5 @@
 import SubHeader from "@/app/components/navbar/SubHeader";
+import { openLegalDocument } from "@/config/legal";
 import { SUPPORT, emailUrl, phoneUrl, whatsappUrl } from "@/config/support";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -128,16 +129,38 @@ export default function HelpSupportScreen() {
             Message us on WhatsApp with your order number and we&apos;ll sort it
             out. Approved returns show up on your order straight away.
           </Text>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push("/profile/orders")}
-            className="bg-blue-600 self-start px-6 py-2 rounded-full"
-          >
-            <Text className="text-white font-Urbanist-Bold text-sm">
-              View My Orders
-            </Text>
-          </TouchableOpacity>
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push("/profile/orders")}
+              className="bg-blue-600 px-6 py-2 rounded-full"
+            >
+              <Text className="text-white font-Urbanist-Bold text-sm">
+                View My Orders
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => openLegalDocument("returns")}
+              className="ml-4"
+            >
+              <Text className="text-blue-700 font-Urbanist-Bold text-sm underline">
+                Return policy
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => router.push("/profile/legal")}
+          className="flex-row items-center justify-center mt-6"
+        >
+          <Feather name="file-text" size={16} color="#6B7280" />
+          <Text className="text-gray-500 font-Urbanist text-sm ml-2 underline">
+            All policies &amp; legal documents
+          </Text>
+        </TouchableOpacity>
 
         <View className="h-20" />
       </ScrollView>

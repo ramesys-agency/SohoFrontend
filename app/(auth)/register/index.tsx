@@ -1,3 +1,4 @@
+import { openLegalDocument } from "@/config/legal";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -27,7 +28,10 @@ export default function RegisterStep1() {
       return;
     }
     if (!termsAccepted) {
-      showToast({ message: "Please accept the terms and conditions.", type: "error" });
+      showToast({
+        message: "Please accept the Terms of Service and Privacy Policy.",
+        type: "error",
+      });
       return;
     }
 
@@ -84,12 +88,17 @@ export default function RegisterStep1() {
             autoCapitalize="none"
           />
 
-          <TouchableOpacity
-            onPress={() => setTermsAccepted(!termsAccepted)}
-            className="flex-row items-center mt-2"
-          >
-            <View
-              className={`w-4 h-4 border rounded sm justify-center items-center mr-2 ${termsAccepted ? "bg-black border-black" : "border-[#CCCCCC]"}`}
+          {/*
+            The checkbox and the two policy links are separate touch targets —
+            nesting the links inside the row's TouchableOpacity would toggle the
+            checkbox as well as open the document. App Review checks that a
+            required consent actually leads to the documents it names.
+          */}
+          <View className="flex-row items-start mt-3">
+            <TouchableOpacity
+              onPress={() => setTermsAccepted(!termsAccepted)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              className={`w-4 h-4 mt-0.5 border rounded sm justify-center items-center mr-2 ${termsAccepted ? "bg-black border-black" : "border-[#CCCCCC]"}`}
             >
               {termsAccepted && (
                 <IconSymbol
@@ -98,12 +107,27 @@ export default function RegisterStep1() {
                   color="white"
                 />
               )}
-            </View>
-            <Text className="text-[#999999] text-[10px] font-Urbanist flex-1">
-              By checking the box, you are agreeing to the{"\n"}Terms and
-              conditions
+            </TouchableOpacity>
+            <Text className="text-[#999999] text-[12px] leading-[18px] font-Urbanist flex-1">
+              By checking the box, you are agreeing to the{" "}
+              <Text
+                onPress={() => openLegalDocument("terms")}
+                suppressHighlighting
+                className="text-black font-Urbanist-Bold underline"
+              >
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                onPress={() => openLegalDocument("privacy")}
+                suppressHighlighting
+                className="text-black font-Urbanist-Bold underline"
+              >
+                Privacy Policy
+              </Text>
+              .
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         <AuthButton
