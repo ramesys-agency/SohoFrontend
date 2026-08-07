@@ -51,6 +51,13 @@ const FALLBACK_IMAGES = [
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+/**
+ * Units a shopper can actually buy: `availableQty` already has other customers'
+ * live checkout holds subtracted. Falls back to raw stock for responses from a
+ * backend that predates reservations.
+ */
+const unitsLeft = (variant: any): number => variant?.availableQty ?? variant?.stockQty ?? 0;
+
 export default function ProductDetailsScreen() {
   const { id, variantId } = useLocalSearchParams<{
     id: string;
@@ -99,7 +106,7 @@ export default function ProductDetailsScreen() {
         // Check if there is any size of this color in stock
         const hasStock = product.variants
           .filter((varItem: any) => varItem.colorName === v.colorName)
-          .some((varItem: any) => (varItem.stockQty ?? 0) > 0);
+          .some((varItem: any) => unitsLeft(varItem) > 0);
         options.push({
           name: v.colorName,
           value: v.colorValue ?? v.colorName,
@@ -119,7 +126,7 @@ export default function ProductDetailsScreen() {
     const sizeMap = new Map<string, boolean>();
     for (const v of matchingVariants) {
       if (v.size) {
-        const currentStock = v.stockQty ?? 0;
+        const currentStock = unitsLeft(v);
         const exists = sizeMap.get(String(v.size));
         sizeMap.set(String(v.size), exists || currentStock > 0);
       }
@@ -343,7 +350,7 @@ export default function ProductDetailsScreen() {
     }
     // Fallback if no sizes are defined but variants exist
     if (selectedVariant) {
-      return (selectedVariant.stockQty ?? 0) <= 0;
+      return unitsLeft(selectedVariant) <= 0;
     }
     return false;
   }, [availableSizes, selectedVariant]);

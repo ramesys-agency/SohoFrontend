@@ -53,6 +53,12 @@ export const API_ROUTES = {
     BASE: "/api/v1/orders",
     DETAILS: (id: string) => `/api/v1/orders/${id}`,
   },
+  CHECKOUT: {
+    RESERVE: "/api/v1/checkout/reserve",
+    STATUS: (checkoutId: string) => `/api/v1/checkout/${checkoutId}`,
+    RENEW: (checkoutId: string) => `/api/v1/checkout/${checkoutId}/renew`,
+    RELEASE: (checkoutId: string) => `/api/v1/checkout/${checkoutId}`,
+  },
   COUPONS: {
     VALIDATE: "/api/v1/coupons/validate",
   },

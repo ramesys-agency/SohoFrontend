@@ -1,6 +1,8 @@
 import SubHeader from "@/app/components/navbar/SubHeader";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import ReservationBanner from "@/app/components/checkout/ReservationBanner";
+import { useCheckoutReservation } from "@/hooks/useCheckoutReservation";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -36,14 +38,46 @@ export default function CheckoutScreen() {
     paymentMethods.length === 1 ? paymentMethods[0].id : null
   );
 
+  // Hold the customer's items for five minutes from the moment they reach
+  // checkout, so nobody else can buy the units they are about to pay for.
+  const reservation = useCheckoutReservation({
+    buyNow: buyNowVariantId ? { variantId: buyNowVariantId, quantity: 1 } : undefined,
+  });
+
+  // Moving forward to payment must keep the hold; only leaving checkout gives
+  // the units back.
+  const movingForwardRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (!movingForwardRef.current) {
+          void reservation.release();
+        }
+      };
+    }, [reservation])
+  );
+
+  const backToCart = () => {
+    movingForwardRef.current = false;
+    router.replace(_ctx === "checkout" ? ("/checkout" as any) : ("/(tabs)/wardrobe" as any));
+  };
+
+  const canContinue =
+    !!selectedMethod &&
+    !reservation.loading &&
+    !reservation.expired &&
+    reservation.shortages.length === 0;
+
   const handleContinue = () => {
-    if (!selectedMethod) return;
+    if (!canContinue) return;
+    movingForwardRef.current = true;
     const basePath = _ctx === "checkout" ? "/checkout" : "/wardrobe";
     router.push({
       pathname: `${basePath}/payment` as any,
       params: {
         addressId: addressId as string,
-        paymentMethod: selectedMethod,
+        paymentMethod: selectedMethod as string,
+        ...(reservation.checkoutId && { checkoutId: reservation.checkoutId }),
         ...(buyNowVariantId && {
           buyNowVariantId,
           buyNowProductName,
@@ -62,6 +96,16 @@ export default function CheckoutScreen() {
 
       {/* Stepper showing step 2 active */}
       <CheckoutStepper currentStep={2} />
+
+      <ReservationBanner
+        loading={reservation.loading}
+        enabled={reservation.enabled}
+        secondsLeft={reservation.secondsLeft}
+        expired={reservation.expired}
+        shortages={reservation.shortages}
+        error={reservation.error}
+        onBackToCart={backToCart}
+      />
 
       {/* Inner Content */}
       <View className="flex-1 px-5 pt-6 flex-col">
@@ -139,14 +183,14 @@ export default function CheckoutScreen() {
               borderRadius: 16,
               alignItems: "center",
               justifyContent: "center",
-              opacity: selectedMethod ? 1 : 0.5,
+              opacity: canContinue ? 1 : 0.5,
               shadowColor: "#000",
               shadowOpacity: 0.15,
               shadowRadius: 8,
               elevation: 4,
             }}
             onPress={handleContinue}
-            disabled={!selectedMethod}
+            disabled={!canContinue}
           >
             <Text className="text-white font-Urbanist-Bold text-[16px]">
               Continue to Payment

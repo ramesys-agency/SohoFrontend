@@ -25,11 +25,14 @@ const WARDROBE_EXTRA_BOTTOM = 96;
 import { Feather } from "@expo/vector-icons";
 import { useToastStore } from "@/store/toastStore";
 import { CheckoutStepper } from "./address";
+import ReservationBanner from "@/app/components/checkout/ReservationBanner";
+import { useCheckoutReservation } from "@/hooks/useCheckoutReservation";
 
 export default function PaymentScreen() {
   const {
     addressId,
     paymentMethod,
+    checkoutId,
     buyNowVariantId,
     buyNowProductName,
     buyNowVariantName,
@@ -38,6 +41,8 @@ export default function PaymentScreen() {
   } = useLocalSearchParams<{
     addressId: string;
     paymentMethod: string;
+    /** Stock hold taken on the previous step; absent if reservations are off. */
+    checkoutId?: string;
     buyNowVariantId?: string;
     buyNowProductName?: string;
     buyNowVariantName?: string;
@@ -53,7 +58,7 @@ export default function PaymentScreen() {
   } | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [orderError, setOrderError] = useState<{
-    type: "network" | "server";
+    type: "network" | "server" | "stock";
     message: string;
   } | null>(null);
   const { showToast } = useToastStore();
@@ -61,6 +66,19 @@ export default function PaymentScreen() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSavingPhone, setIsSavingPhone] = useState(false);
+
+  // Continue the hold taken on the checkout step — the customer keeps seeing
+  // how long their items are theirs while they review and pay.
+  const reservation = useCheckoutReservation({
+    existingCheckoutId: checkoutId,
+    skip: !checkoutId,
+  });
+
+  const backToCart = () => {
+    router.replace(
+      _ctx === "checkout" ? ("/checkout" as any) : ("/(tabs)/wardrobe" as any),
+    );
+  };
 
   // Fetch user profile to check for phone number
   const { data: profileData } = useQuery({
@@ -150,6 +168,20 @@ export default function PaymentScreen() {
         error?.code === "ERR_NETWORK" ||
         error?.message === "Network Error" ||
         !error?.response;
+
+      // 409 means the hold lapsed or an item sold out — retrying the same order
+      // cannot help, so send the customer back to their cart instead.
+      if (error?.response?.status === 409) {
+        setOrderError({
+          type: "stock",
+          message:
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            "Your reserved items are no longer available.",
+        });
+        return;
+      }
+
       setOrderError({
         type: isNetworkError ? "network" : "server",
         message: isNetworkError
@@ -179,6 +211,9 @@ export default function PaymentScreen() {
         addressId: addressId as string,
         paymentMethod: paymentMethod || "COD",
         couponCode: appliedCoupon?.code,
+        // Lets the server spend the hold taken at checkout instead of racing
+        // for the stock all over again.
+        ...(checkoutId && { checkoutId }),
         ...(isBuyNow && { buyNow: { variantId: buyNowVariantId, quantity: 1 } }),
       });
     } catch (error: any) {
@@ -202,6 +237,8 @@ export default function PaymentScreen() {
       addressId: addressId as string,
       paymentMethod: paymentMethod || "COD",
       couponCode: appliedCoupon?.code,
+      // Spends the hold taken at checkout rather than re-racing for the stock.
+      ...(checkoutId && { checkoutId }),
       ...(isBuyNow && { buyNow: { variantId: buyNowVariantId, quantity: 1 } }),
     });
   };
@@ -251,6 +288,16 @@ export default function PaymentScreen() {
 
       {/* Stepper with step 3 active */}
       <CheckoutStepper currentStep={3} />
+
+      <ReservationBanner
+        loading={reservation.loading}
+        enabled={reservation.enabled && !!checkoutId}
+        secondsLeft={reservation.secondsLeft}
+        expired={reservation.expired}
+        shortages={reservation.shortages}
+        error={reservation.error}
+        onBackToCart={backToCart}
+      />
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
@@ -426,7 +473,13 @@ export default function PaymentScreen() {
             }}
           >
             <Feather
-              name="wifi-off"
+              name={
+                orderError.type === "network"
+                  ? "wifi-off"
+                  : orderError.type === "stock"
+                    ? "shopping-bag"
+                    : "alert-circle"
+              }
               size={16}
               color="#DC2626"
               style={{ marginTop: 1, marginRight: 8 }}
@@ -444,8 +497,12 @@ export default function PaymentScreen() {
             </Text>
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
+            {/* Retrying a sold-out order can only fail again — the only useful
+                move is back to the cart. */}
             <TouchableOpacity
-              onPress={handlePlaceOrder}
+              onPress={
+                orderError.type === "stock" ? backToCart : handlePlaceOrder
+              }
               style={{
                 flex: 1,
                 backgroundColor: "#DC2626",
@@ -461,7 +518,7 @@ export default function PaymentScreen() {
                   fontFamily: "Urbanist-Bold",
                 }}
               >
-                Try Again
+                {orderError.type === "stock" ? "Back to Cart" : "Try Again"}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
