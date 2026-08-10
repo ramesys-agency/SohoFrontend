@@ -175,6 +175,20 @@ export default function OrderDetailsScreen() {
               value={order.payments?.[0]?.paymentMethod || "COD"}
               boldValue
             />
+            {/* Broken out so the total reconciles with the item prices above —
+                the delivery charge is part of what was collected. */}
+            {parseFloat(order.discountAmount ?? "0") > 0 && (
+              <DetailRow
+                label="Discount:"
+                value={`-৳${parseFloat(order.discountAmount).toLocaleString()}`}
+                boldValue
+              />
+            )}
+            <DetailRow
+              label="Delivery Charge:"
+              value={`৳${parseFloat(order.shippingFee ?? "0").toLocaleString()}`}
+              boldValue
+            />
             <DetailRow
               label="Total Amount:"
               value={`৳${parseFloat(order.totalAmount).toLocaleString()}`}

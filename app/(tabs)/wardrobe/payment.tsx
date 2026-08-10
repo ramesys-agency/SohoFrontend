@@ -1,4 +1,5 @@
 import { cartApi } from "@/api/cart.api";
+import { checkoutApi } from "@/api/checkout.api";
 import { orderApi } from "@/api/order.api";
 import { userApi } from "@/api/user.api";
 import SubHeader from "@/app/components/navbar/SubHeader";
@@ -122,7 +123,16 @@ export default function PaymentScreen() {
       acc + parseFloat(item.variant.basePrice) * item.quantity,
     0,
   );
-  const shippingCharge = 150; // Flat fee for now
+  // The server owns this number and applies it to the order itself — showing a
+  // locally hardcoded fee is how the displayed total and the amount the courier
+  // collects drift apart.
+  const { data: checkoutConfig, isLoading: isLoadingFee } = useQuery({
+    queryKey: ["checkoutConfig"],
+    queryFn: checkoutApi.getConfig,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const shippingCharge = checkoutConfig?.deliveryFee ?? 0;
   const discountAmount = appliedCoupon?.discountAmount || 0;
   const total = Math.max(0, subtotal + shippingCharge - discountAmount);
 
@@ -364,7 +374,7 @@ export default function PaymentScreen() {
                 Shipping Charge
               </Text>
               <Text className="text-black font-Urbanist-Bold">
-                ৳{shippingCharge}
+                {isLoadingFee ? "—" : `৳${shippingCharge.toLocaleString()}`}
               </Text>
             </View>
 
@@ -583,15 +593,17 @@ export default function PaymentScreen() {
           .
         </Text>
 
+        {/* Ordering is held back until the delivery fee is known, so the button
+            can never quote a total that leaves the charge out. */}
         <TouchableOpacity
           className={`bg-black rounded-2xl items-center justify-center flex-row shadow-xl ${
-            placeOrderMutation.isPending ? "opacity-70" : ""
+            placeOrderMutation.isPending || isLoadingFee ? "opacity-70" : ""
           }`}
           style={{ paddingVertical: 18, paddingHorizontal: 16 }}
           onPress={handlePlaceOrder}
-          disabled={placeOrderMutation.isPending}
+          disabled={placeOrderMutation.isPending || isLoadingFee}
         >
-          {placeOrderMutation.isPending ? (
+          {placeOrderMutation.isPending || isLoadingFee ? (
             <ActivityIndicator color="white" className="mr-2" />
           ) : (
             <Feather
@@ -602,11 +614,13 @@ export default function PaymentScreen() {
             />
           )}
           <Text className="text-white font-Urbanist-Bold text-lg ml-2">
-            {placeOrderMutation.isPending
-              ? "Processing..."
-              : paymentMethod === "COD"
-                ? `Place Order • ৳${(total || 0).toLocaleString()}`
-                : `Pay and Place Order • ৳${(total || 0).toLocaleString()}`}
+            {isLoadingFee
+              ? "Loading total..."
+              : placeOrderMutation.isPending
+                ? "Processing..."
+                : paymentMethod === "COD"
+                  ? `Place Order • ৳${(total || 0).toLocaleString()}`
+                  : `Pay and Place Order • ৳${(total || 0).toLocaleString()}`}
           </Text>
         </TouchableOpacity>
       </View>

@@ -25,7 +25,24 @@ export interface CheckoutShortage {
   available: number;
 }
 
+/** Checkout pricing that the server, not the app, decides. */
+export interface CheckoutConfig {
+  /** Flat delivery charge added to every order, in `currency`. */
+  deliveryFee: number;
+  currency: string;
+}
+
 export const checkoutApi = {
+  /**
+   * The delivery fee is read from here rather than hardcoded: the server adds
+   * it to the order total and it is what the courier collects, so a local copy
+   * would eventually show the customer a price they aren't charged.
+   */
+  getConfig: async (): Promise<CheckoutConfig> => {
+    const response = await apiClient.get(API_ROUTES.CHECKOUT.CONFIG);
+    return response.data.data;
+  },
+
   reserve: async (body?: {
     buyNow?: { variantId: string; quantity?: number };
   }): Promise<CheckoutHold> => {
