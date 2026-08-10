@@ -413,6 +413,9 @@ export default function ProductDetailsScreen() {
       pathname: "/checkout/address",
       params: {
         _ctx: "checkout",
+        // Carried through checkout so bailing out can return here — the
+        // buy-now flow has no cart to fall back to.
+        buyNowProductId: id,
         buyNowVariantId: selectedVariant.id,
         buyNowProductName: product?.name || "",
         buyNowVariantName: [selectedVariant.colorName, selectedVariant.size]

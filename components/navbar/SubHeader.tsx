@@ -5,7 +5,12 @@ import { NavigationContext } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useContext } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 interface SubHeaderProps {
   title: string;
@@ -25,6 +30,11 @@ const SubHeader: React.FC<SubHeaderProps> = ({
   const navigation = useContext(NavigationContext);
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { width } = useWindowDimensions();
+
+  // Start from a size that already fits the device rather than a fixed 36px,
+  // then let adjustsFontSizeToFit close the gap for longer titles.
+  const titleFontSize = Math.max(22, Math.min(36, width * 0.09));
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["notifications-unread-count"],
@@ -44,26 +54,28 @@ const SubHeader: React.FC<SubHeaderProps> = ({
   return (
     <View className="bg-white px-4">
       <View className="flex-row justify-between items-center py-4">
-        <View className="flex-row items-center flex-1">
+        <View className="flex-row items-center flex-1 mr-3">
           {showBackButton && (
             <TouchableOpacity
               onPress={handleBackPress}
-              className="mr-3 w-9 h-9 items-center justify-center bg-[#F2F2F7] rounded-full -ml-1"
+              className="mr-3 w-9 h-9 items-center justify-center bg-[#F2F2F7] rounded-full -ml-1 shrink-0"
               activeOpacity={0.7}
             >
               <Feather name="chevron-left" size={20} color="black" />
             </TouchableOpacity>
           )}
           <Text
-            className="text-4xl text-black tracking-tight w-[80%]"
+            className="flex-1 text-black tracking-tight"
             numberOfLines={1}
-            style={{ fontFamily: "Classyvogue" }}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
+            style={{ fontFamily: "Classyvogue", fontSize: titleFontSize }}
           >
             {title}
           </Text>
         </View>
 
-        <View className="flex-row gap-x-5">
+        <View className="flex-row gap-x-5 shrink-0">
           {!hideSearch && (
             <TouchableOpacity
               activeOpacity={0.7}

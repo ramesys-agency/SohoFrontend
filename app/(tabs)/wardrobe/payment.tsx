@@ -4,6 +4,7 @@ import { orderApi } from "@/api/order.api";
 import { userApi } from "@/api/user.api";
 import SubHeader from "@/components/navbar/SubHeader";
 import { openLegalDocument } from "@/config/legal";
+import { exitCheckout, exitCheckoutLabel } from "@/utils/checkoutExit";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
@@ -16,7 +17,7 @@ import {
   TextInput,
   Alert,
   Modal,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from "react-native";
 import { couponApi } from "@/api/coupon.api";
@@ -34,6 +35,7 @@ export default function PaymentScreen() {
     addressId,
     paymentMethod,
     checkoutId,
+    buyNowProductId,
     buyNowVariantId,
     buyNowProductName,
     buyNowVariantName,
@@ -44,6 +46,7 @@ export default function PaymentScreen() {
     paymentMethod: string;
     /** Stock hold taken on the previous step; absent if reservations are off. */
     checkoutId?: string;
+    buyNowProductId?: string;
     buyNowVariantId?: string;
     buyNowProductName?: string;
     buyNowVariantName?: string;
@@ -65,8 +68,38 @@ export default function PaymentScreen() {
   const { showToast } = useToastStore();
 
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSavingPhone, setIsSavingPhone] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Android edge-to-edge (SDK 54) stops the modal window from resizing when the
+  // keyboard opens, so KeyboardAvoidingView has nothing to shrink and the sheet
+  // stays hidden behind the keys. Track the height and lift the sheet ourselves.
+  React.useEffect(() => {
+    if (!showPhoneModal) {
+      setKeyboardHeight(0);
+      return;
+    }
+    const isIOS = Platform.OS === "ios";
+    const showSub = Keyboard.addListener(
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hideSub = Keyboard.addListener(
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardHeight(0),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [showPhoneModal]);
+
+  const closePhoneModal = () => {
+    Keyboard.dismiss();
+    setShowPhoneModal(false);
+  };
 
   // Continue the hold taken on the checkout step — the customer keeps seeing
   // how long their items are theirs while they review and pay.
@@ -75,10 +108,12 @@ export default function PaymentScreen() {
     skip: !checkoutId,
   });
 
+  // Leaving the flow for good — hand the units back now rather than let them sit
+  // until the hold lapses. Stepping back to the checkout screen goes through the
+  // header instead, and keeps the hold.
   const backToCart = () => {
-    router.replace(
-      _ctx === "checkout" ? ("/checkout" as any) : ("/(tabs)/wardrobe" as any),
-    );
+    void reservation.release();
+    exitCheckout({ ctx: _ctx, buyNowProductId });
   };
 
   // Fetch user profile to check for phone number
@@ -237,6 +272,24 @@ export default function PaymentScreen() {
     }
   };
 
+  // Tapping the button only asks; nothing is charged or reserved until the
+  // customer confirms in the sheet below.
+  const handleReviewOrder = () => {
+    setOrderError(null);
+    setShowConfirmModal(true);
+  };
+
+  // Handing straight from one Modal to another skips the slide-out animation and
+  // leaves iOS showing a blank sheet, so let this one close before the next opens.
+  const handleConfirmOrder = () => {
+    setShowConfirmModal(false);
+    if (!profileData?.phone) {
+      setTimeout(() => setShowPhoneModal(true), 300);
+      return;
+    }
+    handlePlaceOrder();
+  };
+
   const handlePlaceOrder = () => {
     setOrderError(null);
     if (!profileData?.phone) {
@@ -307,6 +360,7 @@ export default function PaymentScreen() {
         shortages={reservation.shortages}
         error={reservation.error}
         onBackToCart={backToCart}
+        backLabel={exitCheckoutLabel(_ctx)}
       />
 
       {isLoading ? (
@@ -508,7 +562,7 @@ export default function PaymentScreen() {
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {/* Retrying a sold-out order can only fail again — the only useful
-                move is back to the cart. */}
+                move is out of checkout, to the cart or the product page. */}
             <TouchableOpacity
               onPress={
                 orderError.type === "stock" ? backToCart : handlePlaceOrder
@@ -528,7 +582,9 @@ export default function PaymentScreen() {
                   fontFamily: "Urbanist-Bold",
                 }}
               >
-                {orderError.type === "stock" ? "Back to Cart" : "Try Again"}
+                {orderError.type === "stock"
+                  ? exitCheckoutLabel(_ctx)
+                  : "Try Again"}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -600,7 +656,7 @@ export default function PaymentScreen() {
             placeOrderMutation.isPending || isLoadingFee ? "opacity-70" : ""
           }`}
           style={{ paddingVertical: 18, paddingHorizontal: 16 }}
-          onPress={handlePlaceOrder}
+          onPress={handleReviewOrder}
           disabled={placeOrderMutation.isPending || isLoadingFee}
         >
           {placeOrderMutation.isPending || isLoadingFee ? (
@@ -625,71 +681,169 @@ export default function PaymentScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Phone Number Input Modal */}
-      <Modal visible={showPhoneModal} animationType="slide" transparent={true}>
+      {/* Order Confirmation Modal — last stop before the order is submitted. */}
+      <Modal
+        visible={showConfirmModal}
+        animationType="slide"
+        transparent={true}
+        statusBarTranslucent
+        onRequestClose={() => setShowConfirmModal(false)}
+      >
         <View className="flex-1 justify-end bg-black/50">
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            className="w-full"
+          <View
+            className="bg-white rounded-t-[30px] p-6 w-full"
+            style={{ paddingBottom: 48 }}
           >
-            <View className="bg-white rounded-t-[30px] p-6 pb-12 w-full">
-              <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-xl font-Urbanist-Bold text-black">
-                  Enter Phone Number
-                </Text>
-                <TouchableOpacity onPress={() => setShowPhoneModal(false)} hitSlop={10}>
-                  <Feather name="x" size={24} color="black" />
-                </TouchableOpacity>
-              </View>
-              
-              <Text className="text-[14px] font-Urbanist text-gray-500 mb-6 leading-5">
-                A phone number is required to place your order so we can contact you for delivery.
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-Urbanist-Bold text-black">
+                Confirm Your Order
               </Text>
+              <TouchableOpacity
+                onPress={() => setShowConfirmModal(false)}
+                hitSlop={10}
+              >
+                <Feather name="x" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
 
-              <View className="mb-6">
-                <Text className="text-gray-700 font-Urbanist-Medium text-[15px] mb-2">
-                  Phone Number
+            <Text className="text-[14px] font-Urbanist text-gray-500 mb-6 leading-5">
+              {paymentMethod === "COD"
+                ? "Please review the details below. You'll pay the courier when your order arrives."
+                : "Please review the details below before we take your payment."}
+            </Text>
+
+            <View className="bg-gray-50 rounded-2xl p-5 mb-6">
+              <View className="flex-row justify-between mb-3">
+                <Text className="text-gray-500 font-Urbanist-Medium">
+                  Items
                 </Text>
-                <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5">
-                  <Feather name="phone" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
-                  <Text className="font-Urbanist-Medium text-gray-400 text-[15px] mr-1">+880</Text>
-                  <View className="w-px h-5 bg-gray-200 mr-3" />
-                  <TextInput
-                    placeholder="01711234567"
-                    placeholderTextColor="#9CA3AF"
-                    value={phoneNumber}
-                    onChangeText={(text) => setPhoneNumber(text.replace(/\D/g, "").slice(0, 13))}
-                    keyboardType="number-pad"
-                    autoFocus={true}
-                    maxLength={13}
-                    className="flex-1 font-Urbanist-Medium text-black text-[15px]"
-                  />
-                </View>
+                <Text className="text-black font-Urbanist-Bold">
+                  {items.length} {items.length === 1 ? "item" : "items"}
+                </Text>
               </View>
-
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  onPress={() => setShowPhoneModal(false)}
-                  className="flex-1 border border-gray-200 py-4 rounded-xl items-center justify-center"
-                >
-                  <Text className="font-Urbanist-Bold text-gray-700">Cancel</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  onPress={handleSavePhoneAndOrder}
-                  disabled={isSavingPhone}
-                  className={`flex-1 bg-black py-4 rounded-xl items-center justify-center flex-row ${
-                    isSavingPhone ? "opacity-70" : ""
-                  }`}
-                >
-                  {isSavingPhone && <ActivityIndicator color="white" className="mr-2" />}
-                  <Text className="text-white font-Urbanist-Bold">
-                    {isSavingPhone ? "Saving..." : "Confirm & Place"}
+              <View className="flex-row justify-between mb-3">
+                <Text className="text-gray-500 font-Urbanist-Medium">
+                  Payment
+                </Text>
+                <Text className="text-black font-Urbanist-Bold">
+                  {methodDetails.title}
+                </Text>
+              </View>
+              {appliedCoupon && (
+                <View className="flex-row justify-between mb-3">
+                  <Text className="text-gray-500 font-Urbanist-Medium">
+                    Discount
                   </Text>
-                </TouchableOpacity>
+                  <Text className="text-green-600 font-Urbanist-Bold">
+                    -৳{(appliedCoupon.discountAmount || 0).toLocaleString()}
+                  </Text>
+                </View>
+              )}
+              <View className="border-t border-gray-200 pt-3 flex-row justify-between">
+                <Text className="text-black font-Urbanist-Bold text-lg">
+                  Total
+                </Text>
+                <Text className="text-black font-Urbanist-Bold text-lg">
+                  ৳{(total || 0).toLocaleString()}
+                </Text>
               </View>
             </View>
-          </KeyboardAvoidingView>
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setShowConfirmModal(false)}
+                className="flex-1 border border-gray-200 py-4 rounded-xl items-center justify-center"
+              >
+                <Text className="font-Urbanist-Bold text-gray-700">
+                  Go Back
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleConfirmOrder}
+                className="flex-1 bg-black py-4 rounded-xl items-center justify-center"
+              >
+                <Text className="text-white font-Urbanist-Bold">
+                  Confirm Order
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Phone Number Input Modal */}
+      <Modal
+        visible={showPhoneModal}
+        animationType="slide"
+        transparent={true}
+        statusBarTranslucent
+        onRequestClose={closePhoneModal}
+      >
+        <View
+          className="flex-1 justify-end bg-black/50"
+          style={{ paddingBottom: keyboardHeight }}
+        >
+          <View
+            className="bg-white rounded-t-[30px] p-6 w-full"
+            style={{ paddingBottom: keyboardHeight > 0 ? 24 : 48 }}
+          >
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-Urbanist-Bold text-black">
+                Enter Phone Number
+              </Text>
+              <TouchableOpacity onPress={closePhoneModal} hitSlop={10}>
+                <Feather name="x" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-[14px] font-Urbanist text-gray-500 mb-6 leading-5">
+              A phone number is required to place your order so we can contact you for delivery.
+            </Text>
+
+            <View className="mb-6">
+              <Text className="text-gray-700 font-Urbanist-Medium text-[15px] mb-2">
+                Phone Number
+              </Text>
+              <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5">
+                <Feather name="phone" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+                <Text className="font-Urbanist-Medium text-gray-400 text-[15px] mr-1">+880</Text>
+                <View className="w-px h-5 bg-gray-200 mr-3" />
+                <TextInput
+                  placeholder="01711234567"
+                  placeholderTextColor="#9CA3AF"
+                  value={phoneNumber}
+                  onChangeText={(text) => setPhoneNumber(text.replace(/\D/g, "").slice(0, 13))}
+                  keyboardType="number-pad"
+                  autoFocus={true}
+                  maxLength={13}
+                  className="flex-1 font-Urbanist-Medium text-black text-[15px]"
+                />
+              </View>
+            </View>
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={closePhoneModal}
+                className="flex-1 border border-gray-200 py-4 rounded-xl items-center justify-center"
+              >
+                <Text className="font-Urbanist-Bold text-gray-700">Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleSavePhoneAndOrder}
+                disabled={isSavingPhone}
+                className={`flex-1 bg-black py-4 rounded-xl items-center justify-center flex-row ${
+                  isSavingPhone ? "opacity-70" : ""
+                }`}
+              >
+                {isSavingPhone && <ActivityIndicator color="white" className="mr-2" />}
+                <Text className="text-white font-Urbanist-Bold">
+                  {isSavingPhone ? "Saving..." : "Confirm & Place"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>

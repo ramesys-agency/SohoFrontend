@@ -22,7 +22,7 @@ interface AuthState {
     refreshToken: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (user: User) => void;
+  updateUser: (user: Partial<User>) => void;
   setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   hydrate: () => Promise<void>;
 }

@@ -130,8 +130,8 @@ export default function OrderDetailsScreen() {
             activeOpacity={0.7}
             onPress={() =>
               router.push({
-                pathname: `/product/${item.productId}`,
-                params: { variantId: item.variantId },
+                pathname: "/product/[id]",
+                params: { id: item.productId, variantId: item.variantId },
               })
             }
             className="bg-gray-50 rounded-2xl p-4 mb-4 flex-row gap-4 border border-gray-100"

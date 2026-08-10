@@ -1,8 +1,9 @@
 import SubHeader from "@/components/navbar/SubHeader";
 import ReservationBanner from "@/components/checkout/ReservationBanner";
 import { useCheckoutReservation } from "@/hooks/useCheckoutReservation";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import { exitCheckout, exitCheckoutLabel } from "@/utils/checkoutExit";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useState } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -15,15 +16,23 @@ import { CheckoutStepper } from "./address";
 const WARDROBE_EXTRA_BOTTOM = 96;
 
 export default function CheckoutScreen() {
-  const { addressId, buyNowVariantId, buyNowProductName, buyNowVariantName, buyNowPrice, _ctx } =
-    useLocalSearchParams<{
-      addressId: string;
-      buyNowVariantId?: string;
-      buyNowProductName?: string;
-      buyNowVariantName?: string;
-      buyNowPrice?: string;
-      _ctx?: string;
-    }>();
+  const {
+    addressId,
+    buyNowProductId,
+    buyNowVariantId,
+    buyNowProductName,
+    buyNowVariantName,
+    buyNowPrice,
+    _ctx,
+  } = useLocalSearchParams<{
+    addressId: string;
+    buyNowProductId?: string;
+    buyNowVariantId?: string;
+    buyNowProductName?: string;
+    buyNowVariantName?: string;
+    buyNowPrice?: string;
+    _ctx?: string;
+  }>();
   // Card, wallet and net banking are not live yet. Unreleased methods are kept
   // out of the list entirely rather than shown disabled — App Review rejects
   // builds that display features which don't work (Guideline 2.1).
@@ -44,22 +53,14 @@ export default function CheckoutScreen() {
     buyNow: buyNowVariantId ? { variantId: buyNowVariantId, quantity: 1 } : undefined,
   });
 
-  // Moving forward to payment must keep the hold; only leaving checkout gives
-  // the units back.
-  const movingForwardRef = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        if (!movingForwardRef.current) {
-          void reservation.release();
-        }
-      };
-    }, [reservation])
-  );
-
+  // Ordinary navigation needs no release here: the hook hands the units back
+  // once neither this screen nor payment is showing the hold. Releasing on blur
+  // instead would give them away the moment the customer stepped forward to pay.
+  // Bailing out is different — it leaves the flow for good, and it does it with
+  // `replace`, which can leave this screen sitting in the stack.
   const backToCart = () => {
-    movingForwardRef.current = false;
-    router.replace(_ctx === "checkout" ? ("/checkout" as any) : ("/(tabs)/wardrobe" as any));
+    void reservation.release();
+    exitCheckout({ ctx: _ctx, buyNowProductId });
   };
 
   const canContinue =
@@ -70,7 +71,6 @@ export default function CheckoutScreen() {
 
   const handleContinue = () => {
     if (!canContinue) return;
-    movingForwardRef.current = true;
     const basePath = _ctx === "checkout" ? "/checkout" : "/wardrobe";
     router.push({
       pathname: `${basePath}/payment` as any,
@@ -79,6 +79,7 @@ export default function CheckoutScreen() {
         paymentMethod: selectedMethod as string,
         ...(reservation.checkoutId && { checkoutId: reservation.checkoutId }),
         ...(buyNowVariantId && {
+          buyNowProductId,
           buyNowVariantId,
           buyNowProductName,
           buyNowVariantName,
@@ -105,6 +106,7 @@ export default function CheckoutScreen() {
         shortages={reservation.shortages}
         error={reservation.error}
         onBackToCart={backToCart}
+        backLabel={exitCheckoutLabel(_ctx)}
       />
 
       {/* Inner Content */}

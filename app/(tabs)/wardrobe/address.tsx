@@ -47,14 +47,21 @@ export const CheckoutStepper = ({ currentStep }: { currentStep: number }) => (
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function AddressSelectionScreen() {
-  const { buyNowVariantId, buyNowProductName, buyNowVariantName, buyNowPrice, _ctx } =
-    useLocalSearchParams<{
-      buyNowVariantId?: string;
-      buyNowProductName?: string;
-      buyNowVariantName?: string;
-      buyNowPrice?: string;
-      _ctx?: string;
-    }>();
+  const {
+    buyNowProductId,
+    buyNowVariantId,
+    buyNowProductName,
+    buyNowVariantName,
+    buyNowPrice,
+    _ctx,
+  } = useLocalSearchParams<{
+    buyNowProductId?: string;
+    buyNowVariantId?: string;
+    buyNowProductName?: string;
+    buyNowVariantName?: string;
+    buyNowPrice?: string;
+    _ctx?: string;
+  }>();
 
   const insets = useSafeAreaInsets();
   // In the wardrobe tab flow the tab bar overlaps the bottom of the screen.
@@ -96,12 +103,21 @@ export default function AddressSelectionScreen() {
 
   const handleContinue = () => {
     if (!selectedAddressId) return;
-    const basePath = _ctx === "checkout" ? "/checkout" : "/wardrobe";
+    // The order review step is `/wardrobe/checkout` in the tab flow, but in the
+    // buy-now flow it is the `/checkout` group's index route — there is no
+    // `/checkout/checkout`, so building it from a base path lands on +not-found.
+    const reviewPath = _ctx === "checkout" ? "/checkout" : "/wardrobe/checkout";
     router.push({
-      pathname: `${basePath}/checkout` as any,
+      pathname: reviewPath as any,
       params: {
         addressId: selectedAddressId,
-        ...(buyNowVariantId && { buyNowVariantId, buyNowProductName, buyNowVariantName, buyNowPrice }),
+        ...(buyNowVariantId && {
+          buyNowProductId,
+          buyNowVariantId,
+          buyNowProductName,
+          buyNowVariantName,
+          buyNowPrice,
+        }),
         ...(_ctx && { _ctx }),
       },
     });

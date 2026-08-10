@@ -56,7 +56,7 @@ export default function RegisterStep2() {
 
       await login(user, result.accessToken, result.refreshToken);
 
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/home");
     } catch (error: any) {
       const message =
         error?.response?.data?.error ||

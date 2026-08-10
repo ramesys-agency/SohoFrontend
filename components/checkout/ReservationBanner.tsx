@@ -10,8 +10,13 @@ interface ReservationBannerProps {
   expired: boolean;
   shortages: CheckoutShortage[];
   error: string | null;
-  /** Sends the customer back to the cart when their hold is gone. */
+  /** Sends the customer out of checkout when their hold is gone. */
   onBackToCart: () => void;
+  /**
+   * Label for that button. The buy-now flow has no cart to return to, so it
+   * sends the customer to the product page instead.
+   */
+  backLabel?: string;
 }
 
 function formatCountdown(seconds: number): string {
@@ -32,6 +37,7 @@ export default function ReservationBanner({
   shortages,
   error,
   onBackToCart,
+  backLabel = "Back to cart",
 }: ReservationBannerProps) {
   // Nothing to say when the feature is off server-side.
   if (!enabled && !loading && !error) return null;
@@ -73,7 +79,7 @@ export default function ReservationBanner({
           className="mt-3 items-center rounded-xl bg-red-600 py-2.5"
         >
           <Text className="font-Urbanist-Bold text-[13px] text-white">
-            Back to cart
+            {backLabel}
           </Text>
         </TouchableOpacity>
       </View>
@@ -86,8 +92,8 @@ export default function ReservationBanner({
         <View className="flex-row items-start">
           <Feather name="clock" size={16} color="#B45309" style={{ marginTop: 2 }} />
           <Text className="ml-2 flex-1 font-Urbanist-Medium text-[13px] text-amber-900">
-            Your items are no longer reserved. Go back to your cart to check
-            they're still available.
+            Your items are no longer reserved. Go back to check they&apos;re
+            still available.
           </Text>
         </View>
         <TouchableOpacity
@@ -95,7 +101,7 @@ export default function ReservationBanner({
           className="mt-3 items-center rounded-xl bg-amber-600 py-2.5"
         >
           <Text className="font-Urbanist-Bold text-[13px] text-white">
-            Back to cart
+            {backLabel}
           </Text>
         </TouchableOpacity>
       </View>

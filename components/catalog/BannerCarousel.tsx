@@ -20,6 +20,9 @@ interface BannerItem {
   subtitle?: string;
   discount?: string;
   image: string;
+  /** Collection placement the banner was built from — forwarded to the
+   *  category screen so it lists only that placement's products. */
+  placementId?: string;
 }
 
 interface BannerProps {

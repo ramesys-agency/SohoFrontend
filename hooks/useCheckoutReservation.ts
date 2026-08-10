@@ -1,3 +1,4 @@
+import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import {
@@ -35,13 +36,74 @@ export interface CheckoutReservation {
 const RENEW_AT_SECONDS = 60;
 
 /**
+ * A screen leaving the stack and the next one adopting the same hold happen in
+ * separate commits, so a hold is only really abandoned if nobody has claimed it
+ * back a moment later.
+ */
+const RELEASE_GRACE_MS = 500;
+
+interface HoldEntry {
+  /** Mounted screens currently showing this hold. */
+  holders: number;
+  timer: ReturnType<typeof setTimeout> | null;
+}
+
+/**
+ * Which holds are still on screen somewhere, across screens.
+ *
+ * Checkout and payment share one hold: checkout takes it, payment adopts it, and
+ * the units must stay held for as long as the customer is on either. Ownership
+ * therefore cannot live in a single screen — the one that took the hold blurs
+ * the moment the customer moves on. Counting holders is what lets the hold
+ * survive the handoff and still be given back the moment the customer leaves
+ * the flow entirely.
+ */
+const activeHolds = new Map<string, HoldEntry>();
+
+function retainHold(checkoutId: string): void {
+  const entry = activeHolds.get(checkoutId) ?? { holders: 0, timer: null };
+  // Somebody picked the hold back up inside the grace window — it isn't going
+  // anywhere after all.
+  if (entry.timer) {
+    clearTimeout(entry.timer);
+    entry.timer = null;
+  }
+  entry.holders += 1;
+  activeHolds.set(checkoutId, entry);
+}
+
+function releaseHold(checkoutId: string): void {
+  const entry = activeHolds.get(checkoutId);
+  if (!entry) return;
+
+  entry.holders = Math.max(0, entry.holders - 1);
+  // Still on screen elsewhere (checkout, while the customer is on payment).
+  if (entry.holders > 0) return;
+
+  entry.timer = setTimeout(() => {
+    activeHolds.delete(checkoutId);
+    void checkoutApi.release(checkoutId).catch(() => {
+      // Nothing to do — the hold expires on its own within minutes.
+    });
+  }, RELEASE_GRACE_MS);
+}
+
+function abandonHold(checkoutId: string): Promise<unknown> {
+  const entry = activeHolds.get(checkoutId);
+  if (entry?.timer) clearTimeout(entry.timer);
+  activeHolds.delete(checkoutId);
+  return checkoutApi.release(checkoutId);
+}
+
+/**
  * Holds the customer's items while they work through checkout.
  *
  * The hold is taken when the screen mounts, ticked down locally, re-synced with
  * the server whenever the app comes back to the foreground (a backgrounded phone
  * stops firing timers, so the countdown would otherwise lie), and renewed while
- * the customer is still active. Releasing is the caller's decision — moving
- * forward to payment must keep the hold, only backing out gives it up.
+ * the customer is still active. It is given back automatically once no screen is
+ * showing it any more, so moving between checkout and payment keeps the units
+ * while leaving the flow hands them straight back.
  */
 export function useCheckoutReservation(
   options: UseCheckoutReservationOptions = {}
@@ -101,13 +163,39 @@ export function useCheckoutReservation(
     }
   }, [applyHold, buyNow]);
 
+  /** Re-read the hold from the server — the only source that can't drift. */
+  const syncFromServer = useCallback(async () => {
+    if (!checkoutId) return;
+    try {
+      const status = await checkoutApi.status(checkoutId);
+      setExpiresAt(status?.expiresAt ? new Date(status.expiresAt).getTime() : null);
+    } catch {
+      // Leave the local countdown alone if the check fails.
+    }
+  }, [checkoutId]);
+
+  /**
+   * Give the units back now, without waiting for the screens to unmount. Only
+   * for an explicit bail-out — ordinary navigation is handled by the holder
+   * count below.
+   */
   const release = useCallback(async () => {
     if (!checkoutId) return;
     try {
-      await checkoutApi.release(checkoutId);
+      await abandonHold(checkoutId);
     } catch {
       // Nothing to do — the hold expires on its own within minutes.
     }
+  }, [checkoutId]);
+
+  // Keep the hold alive for as long as a screen is showing it. Checkout pushes
+  // payment on top of itself, so both are mounted during the handoff and the
+  // count never reaches zero mid-flow; popping out of checkout unmounts both and
+  // the units go back immediately instead of sitting idle until the TTL lapses.
+  useEffect(() => {
+    if (!checkoutId) return;
+    retainHold(checkoutId);
+    return () => releaseHold(checkoutId);
   }, [checkoutId]);
 
   // Initial hold — either adopt the one the previous step took, or take a new one.
@@ -178,19 +266,24 @@ export function useCheckoutReservation(
   useEffect(() => {
     if (!checkoutId || !enabled) return;
 
-    const onChange = async (state: AppStateStatus) => {
+    const onChange = (state: AppStateStatus) => {
       if (state !== "active") return;
-      try {
-        const status = await checkoutApi.status(checkoutId);
-        setExpiresAt(status?.expiresAt ? new Date(status.expiresAt).getTime() : null);
-      } catch {
-        // Leave the local countdown alone if the check fails.
-      }
+      void syncFromServer();
     };
 
     const subscription = AppState.addEventListener("change", onChange);
     return () => subscription.remove();
-  }, [checkoutId, enabled]);
+  }, [checkoutId, enabled, syncFromServer]);
+
+  // Same reason on the way back: while this screen sat behind payment its
+  // countdown kept ticking against an expiry that payment may have renewed, so
+  // re-read the hold rather than showing a number that is only going down.
+  useFocusEffect(
+    useCallback(() => {
+      if (!checkoutId || !enabled) return;
+      void syncFromServer();
+    }, [checkoutId, enabled, syncFromServer])
+  );
 
   return {
     checkoutId,
