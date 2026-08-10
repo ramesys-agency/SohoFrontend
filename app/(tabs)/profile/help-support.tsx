@@ -1,4 +1,4 @@
-import SubHeader from "@/app/components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import { openLegalDocument } from "@/config/legal";
 import { SUPPORT, emailUrl, phoneUrl, whatsappUrl } from "@/config/support";
 import { Feather } from "@expo/vector-icons";

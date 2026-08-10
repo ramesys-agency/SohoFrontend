@@ -1,7 +1,7 @@
 import { cartApi } from "@/api/cart.api";
 import { wishlistApi } from "@/api/wishlist.api";
-import SubHeader from "@/app/components/navbar/SubHeader";
-import WishlistItem from "@/app/components/wishlist/WishlistItem";
+import SubHeader from "@/components/navbar/SubHeader";
+import WishlistItem from "@/components/wishlist/WishlistItem";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useToastStore } from "@/store/toastStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

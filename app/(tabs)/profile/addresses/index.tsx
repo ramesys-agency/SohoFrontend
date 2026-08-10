@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { addressApi } from "../../../../api/address.api";
 import { IconSymbol } from "../../../../components/ui/icon-symbol";
-import SubHeader from "../../../components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import { useToastStore } from "../../../../store/toastStore";
 
 interface Address {

@@ -1,4 +1,4 @@
-import SubHeader from "@/app/components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import {
   LEGAL_DOCUMENTS,
   copyrightLine,

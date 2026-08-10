@@ -20,7 +20,7 @@ import {
   notificationApi,
   type AppNotification,
 } from "../api/notification.api";
-import SubHeader from "./components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 
 function timeAgo(dateString: string): string {
   const date = new Date(dateString);

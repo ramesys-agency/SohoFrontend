@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { userApi } from "../../../api/user.api";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
 import { useAuthStore } from "../../../store/authStore";
-import SubHeader from "../../components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 
 export default function ProfileScreen() {
   const { logout } = useAuthStore();

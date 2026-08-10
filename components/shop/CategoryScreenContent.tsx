@@ -1,7 +1,7 @@
 import { categoryApi } from "@/api/category.api";
 import { productApi } from "@/api/product.api";
-import ProductCard from "@/app/components/common/ProductCard";
-import SubHeader from "@/app/components/navbar/SubHeader";
+import ProductCard from "@/components/common/ProductCard";
+import SubHeader from "@/components/navbar/SubHeader";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";

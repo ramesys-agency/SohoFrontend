@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { logisticsApi } from "../../../api/logistics.api";
 import { userApi } from "../../../api/user.api";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
-import SubHeader from "../../components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 
 export default function RegionScreen() {
   const queryClient = useQueryClient();

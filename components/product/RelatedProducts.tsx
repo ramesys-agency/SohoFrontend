@@ -1,4 +1,4 @@
-import ProductCard from "@/app/components/common/ProductCard";
+import ProductCard from "@/components/common/ProductCard";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 

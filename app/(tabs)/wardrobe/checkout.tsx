@@ -1,5 +1,5 @@
-import SubHeader from "@/app/components/navbar/SubHeader";
-import ReservationBanner from "@/app/components/checkout/ReservationBanner";
+import SubHeader from "@/components/navbar/SubHeader";
+import ReservationBanner from "@/components/checkout/ReservationBanner";
 import { useCheckoutReservation } from "@/hooks/useCheckoutReservation";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";

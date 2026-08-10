@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import { wishlistApi } from "../../../api/wishlist.api";
+import { wishlistApi } from "../../api/wishlist.api";
 
 interface ProductCardProps {
   id: string;

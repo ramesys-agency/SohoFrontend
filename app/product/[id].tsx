@@ -1,7 +1,7 @@
 import { cartApi } from "@/api/cart.api";
 import { productApi } from "@/api/product.api";
 import { wishlistApi } from "@/api/wishlist.api";
-import ReviewList, { Review } from "@/app/components/product/ReviewList";
+import ReviewList, { Review } from "@/components/product/ReviewList";
 import { useToastStore } from "@/store/toastStore";
 import { useAuthStore } from "@/store/authStore";
 import { reviewApi } from "@/api/review.api";
@@ -29,15 +29,15 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import ColorSelector, { ColorOption } from "./components/ColorSelector";
-import DetailsTabContent from "./components/DetailsTabContent";
-import ProductBottomBar from "./components/ProductBottomBar";
-import ProductHeader from "./components/ProductHeader";
-import ProductImageCarousel from "./components/ProductImageCarousel";
-import ProductTabs from "./components/ProductTabs";
-import RelatedProducts from "./components/RelatedProducts";
-import ShippingTabContent from "./components/ShippingTabContent";
-import SizeSelector from "./components/SizeSelector";
+import ColorSelector, { ColorOption } from "@/components/product/ColorSelector";
+import DetailsTabContent from "@/components/product/DetailsTabContent";
+import ProductBottomBar from "@/components/product/ProductBottomBar";
+import ProductHeader from "@/components/product/ProductHeader";
+import ProductImageCarousel from "@/components/product/ProductImageCarousel";
+import ProductTabs from "@/components/product/ProductTabs";
+import RelatedProducts from "@/components/product/RelatedProducts";
+import ShippingTabContent from "@/components/product/ShippingTabContent";
+import SizeSelector from "@/components/product/SizeSelector";
 
 const { width } = Dimensions.get("window");
 

@@ -1,5 +1,5 @@
-import ProductCard from "@/app/components/common/ProductCard";
-import TopNavBar from "@/app/components/navbar/TopNavBar";
+import ProductCard from "@/components/common/ProductCard";
+import TopNavBar from "@/components/navbar/TopNavBar";
 import { productApi } from "@/api/product.api";
 import { homePromoApi } from "@/api/homePromo.api";
 import { useQuery } from "@tanstack/react-query";
@@ -12,9 +12,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FeaturedSection from "../../components/home/FeaturedSection";
-import HeroBanner from "../../components/home/HeroBanner";
-import SectionHeader from "../../components/home/SectionHeader";
+import FeaturedSection from "@/components/home/FeaturedSection";
+import HeroBanner from "@/components/home/HeroBanner";
+import SectionHeader from "@/components/home/SectionHeader";
 import type { HeroSlide } from "@/api/homePromo.api";
 
 export default function HomeScreen() {

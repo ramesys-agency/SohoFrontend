@@ -1,11 +1,11 @@
 import { collectionApi } from "@/api/collection.api";
-import SubHeader from "@/app/components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import OfferCard, { OfferItem } from "../../components/home/OfferCard";
+import OfferCard, { OfferItem } from "@/components/home/OfferCard";
 
 const OffersScreen = () => {
   const navigation = useNavigation();

@@ -1,5 +1,5 @@
 import { addressApi } from "@/api/address.api";
-import SubHeader from "@/app/components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";

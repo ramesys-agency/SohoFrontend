@@ -23,7 +23,7 @@ import { userApi } from "../../../api/user.api";
 import { useAuthStore } from "../../../store/authStore";
 import { useToastStore } from "../../../store/toastStore";
 import { IconSymbol } from "../../../components/ui/icon-symbol";
-import SubHeader from "../../components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 
 const profileSchema = z.object({
   fullName: z.string().min(1, "Name is required"),

@@ -78,7 +78,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
 
                 <View className="mt-8">
                   <Image
-                    source={require("../../../assets/images/arrow-down-right.png")}
+                    source={require("../../assets/images/arrow-down-right.png")}
                     className="w-5 h-5"
                     resizeMode="cover"
                   />
@@ -102,7 +102,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
             <View className="flex-1 mr-4">
               <View className="mb-2 w-8 h-8">
                 <Image
-                  source={require("../../../assets/images/arrow-down-right.png")}
+                  source={require("../../assets/images/arrow-down-right.png")}
                   className="w-5 h-5"
                   resizeMode="cover"
                 />
@@ -153,7 +153,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({
             <View className="px-1">
               <View className="mb-2 w-8 h-8">
                 <Image
-                  source={require("../../../assets/images/arrow-down-right.png")}
+                  source={require("../../assets/images/arrow-down-right.png")}
                   className="w-5 h-5"
                   resizeMode="cover"
                 />

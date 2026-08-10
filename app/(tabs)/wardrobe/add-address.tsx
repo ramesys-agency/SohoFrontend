@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 import { addressApi } from "@/api/address.api";
 import { logisticsApi } from "@/api/logistics.api";
-import SubHeader from "@/app/components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import React, { useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { useToastStore } from "@/store/toastStore";

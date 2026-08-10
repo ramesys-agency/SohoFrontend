@@ -2,7 +2,7 @@ import { cartApi } from "@/api/cart.api";
 import { checkoutApi } from "@/api/checkout.api";
 import { orderApi } from "@/api/order.api";
 import { userApi } from "@/api/user.api";
-import SubHeader from "@/app/components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import { openLegalDocument } from "@/config/legal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -26,7 +26,7 @@ const WARDROBE_EXTRA_BOTTOM = 96;
 import { Feather } from "@expo/vector-icons";
 import { useToastStore } from "@/store/toastStore";
 import { CheckoutStepper } from "./address";
-import ReservationBanner from "@/app/components/checkout/ReservationBanner";
+import ReservationBanner from "@/components/checkout/ReservationBanner";
 import { useCheckoutReservation } from "@/hooks/useCheckoutReservation";
 
 export default function PaymentScreen() {

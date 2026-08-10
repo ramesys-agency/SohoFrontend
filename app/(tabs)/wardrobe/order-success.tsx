@@ -3,7 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { router, useLocalSearchParams } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SubHeader from "../../components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 import { Feather } from "@expo/vector-icons";
 
 export default function OrderSuccessScreen() {

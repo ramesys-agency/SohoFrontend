@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import type { HeroSlide } from "../../../api/homePromo.api";
+import type { HeroSlide } from "../../api/homePromo.api";
 
 const { width } = Dimensions.get("window");
 const SLIDE_WIDTH = width - 32; // mx-4 on each side

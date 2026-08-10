@@ -1,7 +1,7 @@
 import { categoryApi } from "@/api/category.api";
 import { collectionApi } from "@/api/collection.api";
-import BannerCarousel from "@/app/components/catalog/BannerCarousel";
-import SubHeader from "@/app/components/navbar/SubHeader";
+import BannerCarousel from "@/components/catalog/BannerCarousel";
+import SubHeader from "@/components/navbar/SubHeader";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -12,8 +12,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CategoryCircle from "@/app/components/catalog/CategoryCircle";
-import CategoryGridItem from "@/app/components/catalog/CategoryGridItem";
+import CategoryCircle from "@/components/catalog/CategoryCircle";
+import CategoryGridItem from "@/components/catalog/CategoryGridItem";
 
 export default function CatalogScreen() {
   const [genderCategory, setGenderCategory] = useState("women");

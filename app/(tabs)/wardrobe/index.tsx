@@ -1,5 +1,5 @@
 import { cartApi } from "@/api/cart.api";
-import WardrobeItem from "@/app/components/wardrobe/WardrobeItem";
+import WardrobeItem from "@/components/wardrobe/WardrobeItem";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SubHeader from "../../components/navbar/SubHeader";
+import SubHeader from "@/components/navbar/SubHeader";
 
 export default function WardrobeScreen() {
   const router = useRouter();

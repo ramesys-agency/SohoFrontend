@@ -1,6 +1,6 @@
 import { productApi } from "@/api/product.api";
-import ProductCard from "@/app/components/common/ProductCard";
-import FilterModal from "@/app/components/search/FilterModal";
+import ProductCard from "@/components/common/ProductCard";
+import FilterModal from "@/components/search/FilterModal";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
