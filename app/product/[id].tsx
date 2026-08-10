@@ -109,7 +109,7 @@ export default function ProductDetailsScreen() {
           .some((varItem: any) => unitsLeft(varItem) > 0);
         options.push({
           name: v.colorName,
-          value: v.colorValue ?? v.colorName,
+          hex: v.colorValue ?? v.colorName,
           inStock: hasStock,
         });
       }

@@ -6,7 +6,7 @@ export interface ColorOption {
   /** Display name, used as the selection key (e.g. "Red", "White") */
   name: string;
   /** CSS hex color value for the swatch (e.g. "#FF0000") */
-  value: string;
+  hex: string;
   /** Whether the color has any stock available */
   inStock?: boolean;
 }
@@ -39,14 +39,14 @@ export default function ColorSelector({
             className={`w-8 h-8 rounded-full items-center justify-center border relative overflow-hidden ${
               selectedColor === color.name ? "border-2 border-black" : "border-gray-300"
             }`}
-            style={{ backgroundColor: color.value, opacity: color.inStock === false ? 0.4 : 1 }}
+            style={{ backgroundColor: color.hex, opacity: color.inStock === false ? 0.4 : 1 }}
           >
             {selectedColor === color.name && (
               <Feather
                 name="check"
                 size={16}
                 color={
-                  color.value === "#FFFFFF" || color.value === "#F0F0F0"
+                  color.hex === "#FFFFFF" || color.hex === "#F0F0F0"
                     ? "black"
                     : "white"
                 }
