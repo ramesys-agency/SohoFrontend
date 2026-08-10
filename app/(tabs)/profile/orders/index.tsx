@@ -93,6 +93,11 @@ export default function OrdersListScreen() {
               ),
             );
 
+            // A refund outranks a return chip — it's the end of the story.
+            const isRefunded = (order.payments || []).some(
+              (p: any) => p.status === "refunded",
+            );
+
             return (
               <TouchableOpacity
                 key={order.id}
@@ -121,18 +126,28 @@ export default function OrdersListScreen() {
                       Order No:{" "}
                       {order.orderCode || order.id.slice(0, 8).toUpperCase()}
                     </Text>
-                    {openReturns.length > 0 && (
+                    {isRefunded ? (
                       <View className="flex-row items-center mt-1.5">
-                        <View className="bg-orange-100 px-2 py-0.5 rounded-full">
-                          <Text className="text-orange-700 text-[10px] font-Urbanist-Bold uppercase">
-                            {openReturns.some(
-                              (r: any) => r.status === "approved",
-                            )
-                              ? "Return approved"
-                              : "Return under review"}
+                        <View className="bg-purple-100 px-2 py-0.5 rounded-full">
+                          <Text className="text-purple-700 text-[10px] font-Urbanist-Bold uppercase">
+                            Refunded
                           </Text>
                         </View>
                       </View>
+                    ) : (
+                      openReturns.length > 0 && (
+                        <View className="flex-row items-center mt-1.5">
+                          <View className="bg-orange-100 px-2 py-0.5 rounded-full">
+                            <Text className="text-orange-700 text-[10px] font-Urbanist-Bold uppercase">
+                              {openReturns.some(
+                                (r: any) => r.status === "approved",
+                              )
+                                ? "Return approved"
+                                : "Return under review"}
+                            </Text>
+                          </View>
+                        </View>
+                      )
                     )}
                   </View>
 

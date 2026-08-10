@@ -24,6 +24,10 @@ const liveReturnedUnits = (returns: any[] | undefined): number =>
     .filter((r: any) => r.status !== "rejected")
     .reduce((sum: number, r: any) => sum + (r.quantity ?? 1), 0);
 
+/** Nothing more is coming for this order — it arrived, or it never will. */
+const isSettled = (status?: string): boolean =>
+  ["delivered", "cancelled", "returned"].includes((status || "").toLowerCase());
+
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
 
@@ -123,6 +127,28 @@ export default function OrderDetailsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
+        {/* The courier's delivery code, for the rider at the door. Hidden once the
+            order is settled — a code for a delivery that already happened is
+            just clutter, and a stale one invites confusion on the next order. */}
+        {order.otp && !isSettled(order.status) && (
+          <View className="bg-black rounded-2xl px-5 py-4 mt-4 mb-2 flex-row items-center justify-between">
+            <View className="flex-1 pr-4">
+              <Text className="text-white/50 text-[10px] font-Urbanist-Bold uppercase tracking-widest mb-1">
+                Delivery Code
+              </Text>
+              <Text className="text-white/80 font-Urbanist text-xs">
+                Give this to the rider when your order arrives.
+              </Text>
+            </View>
+            <Text
+              className="text-white font-Urbanist-Bold text-2xl"
+              style={{ letterSpacing: 4 }}
+            >
+              {order.otp}
+            </Text>
+          </View>
+        )}
+
         {/* Product Cards */}
         {order.items.map((item: any, index: number) => (
           <TouchableOpacity
@@ -172,8 +198,12 @@ export default function OrderDetailsScreen() {
             />
             <DetailRow
               label="Payment Method:"
-              value={order.payments?.[0]?.paymentMethod || "COD"}
+              value={order.payments?.[0]?.provider || "COD"}
               boldValue
+            />
+            <PaymentStatusRow
+              status={order.payments?.[0]?.status}
+              cod={order.cod}
             />
             {/* Broken out so the total reconciles with the item prices above —
                 the delivery charge is part of what was collected. */}
@@ -239,9 +269,7 @@ export default function OrderDetailsScreen() {
               />
             ))}
             {/* If the order hasn't reached a terminal state, show a placeholder step */}
-            {!["delivered", "cancelled", "returned"].includes(
-              (order.status || "").toLowerCase(),
-            ) && (
+            {!isSettled(order.status) && (
               <TimelineStep
                 title="Future Update"
                 date="Awaiting next update..."
@@ -314,6 +342,56 @@ function DetailRow({
       >
         {value}
       </Text>
+    </View>
+  );
+}
+
+/**
+ * What the payment is doing, in the customer's language.
+ *
+ * `pending` and `cod_pending` differ only in how the money will arrive, and
+ * `failed` is deliberately soft — an admin flags it when cash never reached the
+ * rider, which the customer reads as "still owed", not as an error.
+ */
+const PAYMENT_STATUS_STYLES: Record<
+  string,
+  { label: string; bg: string; text: string }
+> = {
+  success: { label: "Paid", bg: "bg-green-100", text: "text-green-700" },
+  cod_collected: { label: "Paid", bg: "bg-green-100", text: "text-green-700" },
+  refunded: { label: "Refunded", bg: "bg-purple-100", text: "text-purple-700" },
+  failed: { label: "Not received", bg: "bg-red-100", text: "text-red-700" },
+  cod_pending: {
+    label: "Pay on delivery",
+    bg: "bg-yellow-100",
+    text: "text-yellow-700",
+  },
+  pending: { label: "Awaiting payment", bg: "bg-yellow-100", text: "text-yellow-700" },
+};
+
+function PaymentStatusRow({
+  status,
+  cod,
+}: {
+  status?: string;
+  cod?: boolean;
+}) {
+  const style =
+    PAYMENT_STATUS_STYLES[(status || "").toLowerCase()] ??
+    (cod ? PAYMENT_STATUS_STYLES.cod_pending : PAYMENT_STATUS_STYLES.pending);
+
+  return (
+    <View className="flex-row justify-between items-center">
+      <Text className="text-gray-500 font-Urbanist text-sm">
+        Payment Status:
+      </Text>
+      <View className={`px-3 py-1 rounded-full ${style.bg}`}>
+        <Text
+          className={`font-Urbanist-Bold text-xs uppercase tracking-wide ${style.text}`}
+        >
+          {style.label}
+        </Text>
+      </View>
     </View>
   );
 }

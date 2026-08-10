@@ -17,10 +17,11 @@ import { useAuthStore } from "../store/authStore";
 import { API_URL } from "../config/env";
 import { registerForPushNotifications } from "../utils/registerForPushNotifications";
 
-// Show notifications as banners while the app is in the foreground
+// Show notifications as banners while the app is in the foreground.
+// `shouldShowBanner` / `shouldShowList` replaced the old `shouldShowAlert`,
+// which SDK 54 warns about — banner is the heads-up, list is the tray.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
     shouldShowBanner: true,
