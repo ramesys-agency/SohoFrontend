@@ -17,6 +17,11 @@ export const authApi = {
     return response.data.data || response.data;
   },
 
+  facebookLogin: async (accessToken: string) => {
+    const response = await apiClient.post(API_ROUTES.AUTH.FACEBOOK, { accessToken });
+    return response.data.data || response.data;
+  },
+
   register: async (data: {
     email: string;
     password: string;

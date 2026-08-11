@@ -1,4 +1,5 @@
 import { notificationApi } from "@/api/notification.api";
+import Logo from "@/components/ui/Logo";
 import { useAuthStore } from "@/store/authStore";
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -99,13 +100,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           </TouchableOpacity>
         </View>
       </View>
-      <View className="items-center -mt-4">
-        <Text
-          className="text-8xl text-black"
-          style={{ fontFamily: "Classyvogue" }}
-        >
-          Soho
-        </Text>
+      <View className="items-center -mt-1 pb-2">
+        <Logo width={200} />
       </View>
     </View>
   );

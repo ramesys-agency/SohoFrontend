@@ -40,10 +40,12 @@ export default {
       [
         "expo-notifications",
         {
-          // Android draws this as a silhouette, so it needs the transparent
-          // wordmark, not the opaque square app icon (that renders as a
-          // solid white block in the status bar). iOS ignores it entirely.
-          icon: "./assets/images/soho.png",
+          // Android draws this as a silhouette cut from the alpha channel, so
+          // it needs the transparent wordmark rather than any of the
+          // white-backed assets (those render as a solid white block in the
+          // status bar). This is the only asset that keeps its transparency.
+          // iOS ignores it entirely.
+          icon: "./assets/images/notification-icon.png",
           color: "#FFFFFF",
           defaultChannel: "default",
         },
@@ -63,7 +65,12 @@ export default {
         "expo-splash-screen",
         {
           image: "./assets/images/soho.png",
-          imageWidth: 200,
+          // Android 12+ masks the splash icon to a 192dp circle (96dp radius).
+          // The wordmark's widest points sit 0.506 * imageWidth from centre, so
+          // anything over ~189 gets its left tip shaved off — 200 clipped 4dp.
+          // 180 keeps it inside with ~5dp to spare. Keep app/index.tsx's <Logo>
+          // at this same width so the native splash hands off without a jump.
+          imageWidth: 180,
           resizeMode: "contain",
           backgroundColor: "#ffffff",
           // No dark variant: the app is locked to userInterfaceStyle "light",
@@ -76,6 +83,29 @@ export default {
           iosUrlScheme: `com.googleusercontent.apps.${process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.split(".apps.googleusercontent.com")[0]}`,
         },
       ],
+      // Facebook login is on hold. The plugin throws "missing appID in the
+      // plugin properties" whenever EXPO_PUBLIC_FACEBOOK_APP_ID is blank, which
+      // stops `expo start` before Metro boots. Fill in the Facebook App ID and
+      // client token in .env, uncomment this block, then run
+      // `npx expo prebuild --clean` to put the native config back.
+      // [
+      //   "react-native-fbsdk-next",
+      //   {
+      //     appID: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID,
+      //     clientToken: process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN,
+      //     displayName: "Soho",
+      //     // Facebook redirects back through this exact scheme; it must be the
+      //     // literal string "fb" + the app ID or the login never returns.
+      //     scheme: `fb${process.env.EXPO_PUBLIC_FACEBOOK_APP_ID}`,
+      //     // The app only uses Facebook to sign people in. Leaving the ad/analytics
+      //     // side on would put an ATT prompt and an IDFA collection disclosure into
+      //     // an App Store build for tracking the app never actually does.
+      //     isAutoInitEnabled: true,
+      //     autoLogAppEventsEnabled: false,
+      //     advertiserIDCollectionEnabled: false,
+      //     iosUserTrackingPermission: false,
+      //   },
+      // ],
     ],
     experiments: {
       typedRoutes: true,

@@ -3,6 +3,9 @@ import { Platform, Text, TouchableOpacity, View, ActivityIndicator, Modal } from
 import { IconSymbol } from "../ui/icon-symbol";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as AppleAuthentication from "expo-apple-authentication";
+// Facebook login is on hold — see the commented plugin block in app.config.js.
+// react-native-fbsdk-next is uninstalled, so this import would not resolve.
+// import { AccessToken, LoginManager, Settings } from "react-native-fbsdk-next";
 import { useAuthStore } from "../../store/authStore";
 import { useToastStore } from "../../store/toastStore";
 import { authApi } from "../../api/auth.api";
@@ -23,6 +26,12 @@ export function SocialLogin() {
       scopes: ["email", "profile"],
       offlineAccess: true,
     });
+
+    // Facebook login is on hold. Restore this alongside the import above:
+    // the app ID and client token come from the native config the plugin wrote;
+    // this only tells the SDK to start up. Without it the iOS login sheet opens
+    // and immediately fails.
+    // Settings.initializeSDK();
   }, []);
 
   const handleAppleSignIn = async () => {
@@ -111,6 +120,52 @@ export function SocialLogin() {
     }
   };
 
+  /* Facebook login is on hold — restore with the import and initializeSDK() above.
+  const handleFacebookSignIn = async () => {
+    try {
+      setIsLoading(true);
+      // Clear any session left over from a previous user, so the token we send
+      // to the backend always belongs to whoever just signed in.
+      LoginManager.logOut();
+
+      const result = await LoginManager.logInWithPermissions(["public_profile", "email"]);
+
+      if (result.isCancelled) {
+        // User backed out of the Facebook sheet
+        return;
+      }
+
+      // Facebook lets people uncheck email on the consent screen. The backend
+      // keys accounts by email, so catch it here rather than sending a token
+      // that can only fail.
+      if (result.declinedPermissions?.includes("email")) {
+        throw new Error(
+          "Soho needs your email address to create an account. Please allow it and try again.",
+        );
+      }
+
+      const tokenData = await AccessToken.getCurrentAccessToken();
+      if (!tokenData?.accessToken) {
+        throw new Error("No access token received from Facebook");
+      }
+
+      const loginResult = await authApi.facebookLogin(tokenData.accessToken.toString());
+
+      const { user, accessToken, refreshToken } = loginResult;
+      await login(user, accessToken, refreshToken);
+      showToast({ message: "Facebook login successful!", type: "success" });
+    } catch (error: any) {
+      console.error("Facebook Sign-In Error:", error);
+      showToast({
+        message: error.response?.data?.error || error.message || "Facebook sign in failed.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  */
+
   return (
     <View className="items-center mt-8">
       {/* Loading Overlay */}
@@ -141,6 +196,15 @@ export function SocialLogin() {
         >
           <IconSymbol name="google.logo" size={24} color="#000000" />
         </TouchableOpacity>
+        {/* Facebook login is on hold — restore with handleFacebookSignIn above.
+        <TouchableOpacity
+          className="w-14 h-14 bg-[#F2F2F2] rounded-xl items-center justify-center"
+          onPress={handleFacebookSignIn}
+          disabled={isLoading}
+        >
+          <IconSymbol name="facebook.logo" size={24} color="#000000" />
+        </TouchableOpacity>
+        */}
       </View>
     </View>
   );

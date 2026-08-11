@@ -1,3 +1,4 @@
+import Logo from "@/components/ui/Logo";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
@@ -105,12 +106,9 @@ export default function AppEntry() {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <Animated.View style={animatedStyle}>
-          <Text
-            style={{ fontFamily: "AlexBrush", fontSize: 100 }}
-            className="text-black"
-          >
-            Soho
-          </Text>
+          {/* Matches imageWidth in app.config.js's expo-splash-screen block so
+              the native splash hands off to this one without the logo jumping. */}
+          <Logo width={180} />
         </Animated.View>
       </View>
     );
@@ -120,7 +118,7 @@ export default function AppEntry() {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <Animated.View style={animatedStyle} className="items-center">
-          <Text className="text-6xl font-Classyvogue mb-10">Soho</Text>
+          <Logo width={150} style={{ marginBottom: 40 }} />
           <View className="flex-row gap-3">
             {[0, 1, 2, 3].map((idx) => (
               <View

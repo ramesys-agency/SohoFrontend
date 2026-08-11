@@ -12,6 +12,7 @@ export const API_ROUTES = {
     VERIFY_OTP: "/api/v1/auth/verify-otp",
     GOOGLE: "/api/v1/auth/google",
     APPLE: "/api/v1/auth/apple",
+    FACEBOOK: "/api/v1/auth/facebook",
   },
   // Add other routes here as needed
   USERS: {
