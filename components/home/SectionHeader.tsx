@@ -19,16 +19,18 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
       >
         {title}
       </Text>
-      <TouchableOpacity
-        onPress={onSeeAllPress}
-        className="flex-row items-center mb-2"
-        activeOpacity={0.7}
-      >
-        <Text className="text-gray-400 text-sm font-Urbanist mr-1">
-          See All
-        </Text>
-        <Feather name="chevrons-right" size={16} color="#9CA3AF" />
-      </TouchableOpacity>
+      {onSeeAllPress && (
+        <TouchableOpacity
+          onPress={onSeeAllPress}
+          className="flex-row items-center mb-2"
+          activeOpacity={0.7}
+        >
+          <Text className="text-gray-400 text-sm font-Urbanist mr-1">
+            See All
+          </Text>
+          <Feather name="chevrons-right" size={16} color="#9CA3AF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

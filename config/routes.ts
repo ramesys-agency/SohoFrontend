@@ -36,8 +36,8 @@ export const API_ROUTES = {
   PRODUCT: {
     GET_PRODUCTS: "/api/v1/products",
   },
-  HOME_PROMO: {
-    GET: "/api/v1/home-promo",
+  PLACEMENT: {
+    GET_PLACEMENTS: "/api/v1/app-placement",
   },
   CATEGORY: {
     GET_CATEGORIES: "/api/v1/categories",

@@ -3,7 +3,8 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 
 interface CategoryGridItemProps {
   name: string;
-  image: string;
+  /** Placements may not have a cover image yet — fall back to the grey tile. */
+  image: string | null;
   onPress?: () => void;
 }
 
@@ -19,11 +20,13 @@ const CategoryGridItem: React.FC<CategoryGridItemProps> = ({
       className="flex-1 m-1 mb-4"
     >
       <View className="aspect-[3/4] rounded-xl overflow-hidden mb-2 bg-gray-100 shadow-sm border border-gray-100">
-        <Image
-          source={{ uri: image }}
-          className="w-full h-full"
-          resizeMode="cover"
-        />
+        {image ? (
+          <Image
+            source={{ uri: image }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        ) : null}
       </View>
       <Text
         className="text-lg text-black ml-1"

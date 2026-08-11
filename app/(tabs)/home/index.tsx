@@ -1,116 +1,125 @@
 import ProductCard from "@/components/common/ProductCard";
 import TopNavBar from "@/components/navbar/TopNavBar";
 import { productApi } from "@/api/product.api";
-import { homePromoApi } from "@/api/homePromo.api";
+import { placementApi, type Placement } from "@/api/placement.api";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  View,
-  RefreshControl,
-} from "react-native";
+import { ActivityIndicator, ScrollView, View, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FeaturedSection from "@/components/home/FeaturedSection";
 import HeroBanner from "@/components/home/HeroBanner";
 import SectionHeader from "@/components/home/SectionHeader";
-import type { HeroSlide } from "@/api/homePromo.api";
+
+/** The home screen shows four promo sections, cycling through the four layouts. */
+const PROMO_VARIANTS = ["large", "collage", "side", "horizontal"] as const;
+const PROMO_LIMIT = 4;
+
+/**
+ * Best Sellers is curated when a HOME placement of that name exists. Until an
+ * admin creates one, the grid falls back to the most-reviewed products so the
+ * section is never empty.
+ */
+const BEST_SELLERS_FALLBACK = { sortBy: "popularity", limit: 2 } as const;
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
 
   const {
-    data: heroSlides = [],
-    isLoading: loadingHero,
-    refetch: refetchHero,
+    data: placements = [],
+    isLoading,
+    refetch: refetchPlacements,
   } = useQuery({
-    queryKey: ["home-hero-slides"],
-    queryFn: () => homePromoApi.getHeroSlides(),
+    queryKey: ["home-placements"],
+    queryFn: () => placementApi.getPlacements("HOME"),
   });
 
+  const heroSlides = placements.filter((p) => p.section === "HERO");
+  const sections = placements.filter((p) => p.section !== "HERO");
+
+  // Best Sellers keeps its own product grid rather than a promo image, so it is
+  // pulled out of the list before the remaining sections become promo cards.
+  const bestSellers = sections.find((p) => /best\s*-?\s*sell/i.test(p.name));
+  const promos = sections
+    .filter((p) => p.id !== bestSellers?.id)
+    .slice(0, PROMO_LIMIT);
+
   const {
-    data: bestSellers,
+    data: bestSellerProducts,
     isLoading: loadingBestSellers,
     refetch: refetchBestSellers,
   } = useQuery({
-    queryKey: ["best-sellers-home"],
+    queryKey: ["best-sellers-home", bestSellers?.id ?? "popular"],
+    // A placement's curated products live on the placement, not on its
+    // collection, so placementId is the only filter that finds them.
     queryFn: () =>
-      productApi.getProducts({ collectionSlug: "best-sellers", limit: 2 }),
-  });
-
-  const {
-    data: homePromos = [],
-    isLoading: loadingPromos,
-    refetch: refetchPromos,
-  } = useQuery({
-    queryKey: ["home-promos-list"],
-    queryFn: () => homePromoApi.getPromos(),
+      productApi.getProducts(
+        bestSellers
+          ? { placementId: bestSellers.id, limit: 2 }
+          : BEST_SELLERS_FALLBACK,
+      ),
+    enabled: !isLoading,
   });
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchHero(), refetchBestSellers(), refetchPromos()]);
+      await Promise.all([refetchPlacements(), refetchBestSellers()]);
     } catch (error) {
       console.error("Failed to refresh homepage data:", error);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchHero, refetchBestSellers, refetchPromos]);
+  }, [refetchPlacements, refetchBestSellers]);
 
-  const renderPromos = () => {
-    if (loadingPromos) {
-      return <ActivityIndicator color="#000" style={{ marginVertical: 20 }} />;
+  /** A placement either deep-links to one product or opens its own list. */
+  const openPlacement = (placement: Placement) => {
+    if (placement.productId) {
+      router.push(`/product/${placement.productId}`);
+      return;
     }
 
-    return homePromos.map((promo, index) => {
-      const variants = ["large", "collage", "side", "horizontal"] as const;
-      const variant = variants[index % variants.length];
-
-      const handlePromoPress = () => {
-        if (promo.contentType === "PRODUCT" && promo.productId) {
-          router.push(`/product/${promo.productId}`);
-        } else if (promo.contentType === "COLLECTION" && promo.collectionId) {
-          router.push({
-            pathname: "/(tabs)/home/shop/[category]",
-            params: {
-              category: promo.title,
-              gender: "",
-              collectionId: promo.collectionId,
-            },
-          });
-        }
-      };
-
-      let images: { uri: string; onPress?: () => void }[] = [];
-      if (promo.imageUrl) {
-        images.push({
-          uri: promo.imageUrl,
-          onPress: handlePromoPress,
-        });
-      }
-
-      if (variant === "collage") {
-        if (images.length === 0) {
-          images.push({
-            uri: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=800&auto=format&fit=crop",
-            onPress: handlePromoPress,
-          });
-        }
-      }
-
-      return (
-        <FeaturedSection
-          key={promo.id}
-          title={promo.title}
-          description={promo.description}
-          images={images}
-          variant={variant}
-          onPress={handlePromoPress}
-        />
-      );
+    router.push({
+      pathname: "/(tabs)/home/shop/[category]",
+      params: {
+        category: placement.name,
+        gender: "",
+        collectionSlug: placement.slug,
+        placementId: placement.id,
+      },
     });
+  };
+
+  // Without a placement behind it there is no curated list to open, so the
+  // header drops its "See All" rather than pushing an empty screen.
+  const openBestSellers = bestSellers
+    ? () => openPlacement(bestSellers)
+    : undefined;
+
+  const renderPromo = (placement: Placement, index: number) => {
+    const variant = PROMO_VARIANTS[index % PROMO_VARIANTS.length];
+    const onPress = () => openPlacement(placement);
+
+    // The collage layout draws the cover plus the first two product images.
+    const uris =
+      variant === "collage"
+        ? [placement.imageUrl, ...placement.previewImages]
+        : [placement.imageUrl];
+
+    const images = uris
+      .filter((uri): uri is string => Boolean(uri))
+      .map((uri) => ({ uri, onPress }));
+
+    return (
+      <FeaturedSection
+        key={placement.id}
+        title={placement.name}
+        description={placement.description ?? ""}
+        images={images}
+        variant={variant}
+        onPress={onPress}
+      />
+    );
   };
 
   return (
@@ -130,34 +139,15 @@ export default function HomeScreen() {
           />
           <HeroBanner
             slides={heroSlides}
-            loading={loadingHero}
-            onSlidePress={(slide: HeroSlide) =>
-              router.push({
-                pathname: "/(tabs)/home/shop/[category]",
-                params: {
-                  category: slide.collectionName,
-                  gender: "",
-                  collectionSlug: slide.collectionSlug,
-                  placementId: slide.placementId,
-                },
-              })
-            }
+            loading={isLoading}
+            onSlidePress={openPlacement}
           />
         </View>
 
         <View className="py-6">
           <SectionHeader
-            title="Best Sellers"
-            onSeeAllPress={() =>
-              router.push({
-                pathname: "/(tabs)/home/shop/[category]",
-                params: {
-                  category: "Best Sellers",
-                  gender: "",
-                  collectionSlug: "best-sellers",
-                },
-              })
-            }
+            title={bestSellers?.name ?? "Best Sellers"}
+            onSeeAllPress={openBestSellers}
           />
           <View className="flex-row flex-wrap justify-between px-4">
             {loadingBestSellers ? (
@@ -166,7 +156,7 @@ export default function HomeScreen() {
                 style={{ marginTop: 20, flex: 1 }}
               />
             ) : (
-              (bestSellers?.products ?? bestSellers ?? [])
+              (bestSellerProducts?.products ?? bestSellerProducts ?? [])
                 .slice(0, 2)
                 .map((product: any) => (
                   <ProductCard
@@ -184,7 +174,11 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {renderPromos()}
+        {isLoading ? (
+          <ActivityIndicator color="#000" style={{ marginVertical: 40 }} />
+        ) : (
+          promos.map(renderPromo)
+        )}
 
         <View className="h-10" />
       </ScrollView>

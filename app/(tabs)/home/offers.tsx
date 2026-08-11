@@ -1,46 +1,56 @@
-import { collectionApi } from "@/api/collection.api";
+import { placementApi, type Placement } from "@/api/placement.api";
 import SubHeader from "@/components/navbar/SubHeader";
 import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OfferCard, { OfferItem } from "@/components/home/OfferCard";
 
+const FALLBACK_OFFER_IMAGE =
+  "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=800&auto=format&fit=crop";
+
 const OffersScreen = () => {
   const navigation = useNavigation();
-  const [offers, setOffers] = useState<OfferItem[]>([]);
+  const [offers, setOffers] = useState<Placement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchOffers = async () => {
     try {
-      const data = await collectionApi.getCollections({
-        isActive: true,
-        placementPage: "OFFER",
-        placementIsActive: true,
-      });
-
-      const formattedOffers: (OfferItem & { placementId?: string })[] = data.map((collection: any) => ({
-        id: collection.id,
-        placementId: collection.collectionPlacements?.[0]?.id,
-        title: collection.name,
-        subtitle: "For Selected Items",
-        discount: "",
-        image: {
-          uri:
-            collection.collectionPlacements?.[0]?.imageUrl ||
-            "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=800&auto=format&fit=crop",
-        },
-      }));
-
-      setOffers(formattedOffers);
+      setOffers(await placementApi.getPlacements("OFFERS"));
     } catch (error) {
       console.error("Error fetching offers:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  /** Each offer card is its own placement — own name, image and product list. */
+  const openOffer = (placement: Placement) => {
+    if (placement.productId) {
+      router.push(`/product/${placement.productId}`);
+      return;
+    }
+
+    router.push({
+      pathname: "/(tabs)/home/shop/[category]",
+      params: {
+        category: placement.name,
+        gender: "",
+        collectionSlug: placement.slug,
+        placementId: placement.id,
+      },
+    });
+  };
+
+  const toOfferItem = (placement: Placement): OfferItem => ({
+    id: placement.id,
+    title: placement.name,
+    subtitle: placement.description ?? "For Selected Items",
+    discount: "",
+    image: { uri: placement.imageUrl || FALLBACK_OFFER_IMAGE },
+  });
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -62,28 +72,20 @@ const OffersScreen = () => {
 
       {/* Offers List */}
       {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#000" />
+        <View className="px-10 pt-10">
+          {[1, 2, 3].map((key) => (
+            <View
+              key={key}
+              className="w-full h-[400px] bg-gray-200 rounded-3xl mb-6 opacity-50"
+            />
+          ))}
         </View>
       ) : (
         <FlatList
           className="px-10 pt-10 mb-10"
           data={offers}
           renderItem={({ item }) => (
-            <OfferCard
-              item={item}
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/home/shop/[category]",
-                  params: {
-                    category: (item.title || "").toLowerCase(),
-                    gender: "",
-                    collectionId: item.id,
-                    placementId: (item as any).placementId,
-                  },
-                })
-              }
-            />
+            <OfferCard item={toOfferItem(item)} onPress={() => openOffer(item)} />
           )}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}

@@ -9,15 +9,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import type { HeroSlide } from "../../api/homePromo.api";
+import type { Placement } from "../../api/placement.api";
 
 const { width } = Dimensions.get("window");
 const SLIDE_WIDTH = width - 32; // mx-4 on each side
 
 interface HeroBannerProps {
-  slides: HeroSlide[];
+  slides: Placement[];
   loading?: boolean;
-  onSlidePress?: (slide: HeroSlide) => void;
+  onSlidePress?: (slide: Placement) => void;
 }
 
 const HeroBanner: React.FC<HeroBannerProps> = ({ slides, loading, onSlidePress }) => {
@@ -73,13 +73,13 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ slides, loading, onSlidePress }
       >
         {slides.map((slide) => (
           <TouchableOpacity
-            key={slide.placementId}
+            key={slide.id}
             activeOpacity={0.9}
             onPress={() => onSlidePress?.(slide)}
             style={{ width: SLIDE_WIDTH, height: 208 }}
           >
             <Image
-              source={{ uri: slide.imageUrl }}
+              source={{ uri: slide.imageUrl ?? "" }}
               style={{ width: "100%", height: "100%" }}
               resizeMode="cover"
             />

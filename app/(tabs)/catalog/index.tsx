@@ -1,5 +1,9 @@
 import { categoryApi } from "@/api/category.api";
-import { collectionApi } from "@/api/collection.api";
+import {
+  placementApi,
+  type Placement,
+  type PlacementPage,
+} from "@/api/placement.api";
 import BannerCarousel from "@/components/catalog/BannerCarousel";
 import SubHeader from "@/components/navbar/SubHeader";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
@@ -18,8 +22,8 @@ import CategoryGridItem from "@/components/catalog/CategoryGridItem";
 export default function CatalogScreen() {
   const [genderCategory, setGenderCategory] = useState("women");
   const [categories, setCategories] = useState<any[]>([]);
-  const [gridCollections, setGridCollections] = useState<any[]>([]);
-  const [rowCollections, setRowCollections] = useState<any[]>([]);
+  const [gridPlacements, setGridPlacements] = useState<Placement[]>([]);
+  const [bannerPlacements, setBannerPlacements] = useState<Placement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
@@ -54,65 +58,56 @@ export default function CatalogScreen() {
     }
   };
 
-  const fetchCollections = async () => {
+  const fetchPlacements = async () => {
     try {
-      const data = await collectionApi.getCollections({
-        isActive: true,
-        placementPage: genderCategory.toUpperCase(),
-        placementIsActive: true,
-      });
+      const data = await placementApi.getPlacements(
+        genderCategory.toUpperCase() as PlacementPage,
+      );
 
-      if (Array.isArray(data)) {
-        const formattedGridCollections: any[] = data
-          .map(
-            (collection: any) =>
-              collection?.collectionPlacements?.[0]?.section ===
-                "GRID_SECTION" && {
-                id: collection.id,
-                placementId: collection.collectionPlacements?.[0]?.id,
-                name: collection.name,
-                image: collection.collectionPlacements?.[0]?.imageUrl,
-              },
-          )
-          .filter(Boolean);
-
-        const formattedRowCollections: any[] = data
-          .map(
-            (collection: any) =>
-              collection?.collectionPlacements?.[0]?.section ===
-                "FEATURED_ROW" && {
-                id: collection.id,
-                placementId: collection.collectionPlacements?.[0]?.id,
-                name: collection.name,
-                image: collection.collectionPlacements?.[0]?.imageUrl,
-              },
-          )
-          .filter(Boolean);
-
-        setGridCollections(formattedGridCollections);
-        setRowCollections(formattedRowCollections);
-      } else {
-        console.warn("Collections data is not an array:", data);
-      }
+      // Banners span HERO and FEATURED_ROW; everything else fills the grid.
+      setBannerPlacements(
+        data.filter((p) => p.section === "HERO" || p.section === "FEATURED_ROW"),
+      );
+      setGridPlacements(data.filter((p) => p.section === "GRID_SECTION"));
     } catch (error) {
-      console.error("Error fetching collections:", error);
+      console.error("Error fetching placements:", error);
+      setBannerPlacements([]);
+      setGridPlacements([]);
     }
   };
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchCategories(), fetchCollections()]);
+    await Promise.all([fetchCategories(), fetchPlacements()]);
     setRefreshing(false);
   }, [genderCategory]);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchCategories(), fetchCollections()]);
+      await Promise.all([fetchCategories(), fetchPlacements()]);
       setLoading(false);
     };
     loadData();
   }, [genderCategory]);
+
+  /** Each card carries its own name, handle and curated product list. */
+  const openPlacement = (placement: Placement) => {
+    if (placement.productId) {
+      router.push(`/product/${placement.productId}`);
+      return;
+    }
+
+    router.push({
+      pathname: "/(tabs)/catalog/shop/[category]",
+      params: {
+        category: placement.name,
+        gender: genderCategory,
+        collectionSlug: placement.slug,
+        placementId: placement.id,
+      },
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white pb-28" edges={["top"]}>
@@ -177,46 +172,29 @@ export default function CatalogScreen() {
           </ScrollView>
 
           {/* Promotional Banner */}
-          {rowCollections.filter((collection) => collection).length > 0 && (
+          {bannerPlacements.length > 0 && (
             <BannerCarousel
-              banners={rowCollections.filter((collection) => collection)}
-              onPress={(item) => {
-                router.push({
-                  pathname: "/(tabs)/catalog/shop/[category]",
-                  params: {
-                    category: (item.name || item.title || "").toLowerCase(),
-                    gender: genderCategory,
-                    collectionId: item.id,
-                    placementId: item.placementId,
-                  },
-                });
-              }}
+              banners={bannerPlacements.map((placement) => ({
+                id: placement.id,
+                name: placement.name,
+                image: placement.imageUrl,
+                placement,
+              }))}
+              onPress={(item) => openPlacement(item.placement)}
             />
           )}
 
-          {/* Collection Grid */}
+          {/* Placement Grid */}
           <View className="flex-row flex-wrap -mx-1">
-            {gridCollections
-              .filter((collection) => collection)
-              .map((collection) => (
-                <View key={collection.id} className="w-1/2 p-1">
-                  <CategoryGridItem
-                    name={collection.name}
-                    image={collection.image}
-                    onPress={() => {
-                      router.push({
-                        pathname: "/(tabs)/catalog/shop/[category]",
-                        params: {
-                          category: collection.name.toLowerCase(),
-                          gender: genderCategory,
-                          collectionId: collection.id,
-                          placementId: collection.placementId,
-                        },
-                      });
-                    }}
-                  />
-                </View>
-              ))}
+            {gridPlacements.map((placement) => (
+              <View key={placement.id} className="w-1/2 p-1">
+                <CategoryGridItem
+                  name={placement.name}
+                  image={placement.imageUrl}
+                  onPress={() => openPlacement(placement)}
+                />
+              </View>
+            ))}
           </View>
         </ScrollView>
       )}

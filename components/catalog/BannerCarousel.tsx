@@ -19,18 +19,17 @@ interface BannerItem {
   title?: string;
   subtitle?: string;
   discount?: string;
-  image: string;
-  /** Collection placement the banner was built from — forwarded to the
-   *  category screen so it lists only that placement's products. */
-  placementId?: string;
+  image: string | null;
 }
 
-interface BannerProps {
-  banners: BannerItem[];
-  onPress?: (item: BannerItem) => void;
+/** Generic over the item so callers can hang their own payload off each banner
+ *  (the placement it was built from) and get it back typed in onPress. */
+interface BannerProps<T extends BannerItem> {
+  banners: T[];
+  onPress?: (item: T) => void;
 }
 
-const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
+function BannerCarousel<T extends BannerItem>({ banners, onPress }: BannerProps<T>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -41,7 +40,7 @@ const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
     setActiveIndex(roundIndex);
   };
 
-  const renderItem = ({ item }: { item: BannerItem }) => {
+  const renderItem = ({ item }: { item: T }) => {
     return (
       <View
         style={{ width: BANNER_WIDTH }}
@@ -53,7 +52,7 @@ const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
           className="flex-1"
         >
           <ImageBackground
-            source={{ uri: item.image }}
+            source={{ uri: item.image ?? "" }}
             className="w-full h-full justify-center px-6"
             resizeMode="cover"
           >
@@ -117,6 +116,6 @@ const BannerCarousel: React.FC<BannerProps> = ({ banners, onPress }) => {
       </View>
     </View>
   );
-};
+}
 
 export default BannerCarousel;
