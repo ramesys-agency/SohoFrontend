@@ -1,4 +1,3 @@
-import { categoryApi } from "@/api/category.api";
 import {
   placementApi,
   type Placement,
@@ -21,7 +20,7 @@ import CategoryGridItem from "@/components/catalog/CategoryGridItem";
 
 export default function CatalogScreen() {
   const [genderCategory, setGenderCategory] = useState("women");
-  const [categories, setCategories] = useState<any[]>([]);
+  const [circlePlacements, setCirclePlacements] = useState<Placement[]>([]);
   const [gridPlacements, setGridPlacements] = useState<Placement[]>([]);
   const [bannerPlacements, setBannerPlacements] = useState<Placement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,36 +33,15 @@ export default function CatalogScreen() {
     { label: "Kids", value: "kids" },
   ];
 
-  const fetchCategories = async () => {
-    try {
-      const data = await categoryApi.getCategories({
-        isActive: true,
-        gender: genderCategory.toUpperCase(),
-      });
-
-      if (Array.isArray(data)) {
-        const formattedCategories: any[] = data.map((category: any) => ({
-          id: category.id,
-          name: category.name,
-          image: category.imageUrl,
-        }));
-        setCategories(formattedCategories);
-      } else {
-        console.warn("Categories data is not an array:", data);
-        setCategories([]);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setCategories([]);
-    }
-  };
-
+  // Every row on the page — circles included — is a placement, so one call
+  // fills the whole tab.
   const fetchPlacements = async () => {
     try {
       const data = await placementApi.getPlacements(
         genderCategory.toUpperCase() as PlacementPage,
       );
 
+      setCirclePlacements(data.filter((p) => p.section === "CATEGORY_CIRCLE"));
       // Banners span HERO and FEATURED_ROW; everything else fills the grid.
       setBannerPlacements(
         data.filter((p) => p.section === "HERO" || p.section === "FEATURED_ROW"),
@@ -71,6 +49,7 @@ export default function CatalogScreen() {
       setGridPlacements(data.filter((p) => p.section === "GRID_SECTION"));
     } catch (error) {
       console.error("Error fetching placements:", error);
+      setCirclePlacements([]);
       setBannerPlacements([]);
       setGridPlacements([]);
     }
@@ -78,14 +57,14 @@ export default function CatalogScreen() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchCategories(), fetchPlacements()]);
+    await fetchPlacements();
     setRefreshing(false);
   }, [genderCategory]);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchCategories(), fetchPlacements()]);
+      await fetchPlacements();
       setLoading(false);
     };
     loadData();
@@ -152,21 +131,12 @@ export default function CatalogScreen() {
             showsHorizontalScrollIndicator={false}
             className="py-4"
           >
-            {categories.map((item) => (
+            {circlePlacements.map((placement) => (
               <CategoryCircle
-                key={item.id}
-                name={item.name}
-                image={item.image}
-                onPress={() => {
-                  router.push({
-                    pathname: "/(tabs)/catalog/shop/[category]",
-                    params: {
-                      category: item.name.toLowerCase(),
-                      gender: genderCategory,
-                      categoryId: item.id,
-                    },
-                  });
-                }}
+                key={placement.id}
+                name={placement.name}
+                image={placement.imageUrl ?? ""}
+                onPress={() => openPlacement(placement)}
               />
             ))}
           </ScrollView>

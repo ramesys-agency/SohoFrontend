@@ -283,6 +283,12 @@ export default function EditProfileScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* The picker crops to a square, so the only thing worth saying is
+                how much detail survives that crop. */}
+            <Text className="text-gray-400 text-[11px] font-Urbanist mt-3">
+              Square photo, at least 400 × 400 px
+            </Text>
+
             {selectedImage && (
               <TouchableOpacity
                 onPress={handleUploadAvatar}

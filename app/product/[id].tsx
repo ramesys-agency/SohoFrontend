@@ -608,7 +608,7 @@ export default function ProductDetailsScreen() {
             Something went wrong
           </Text>
           <Text className="text-sm font-Urbanist text-[#999999] text-center mb-8">
-            We couldn't load this product. Check your connection and try again.
+            We couldn&apos;t load this product. Check your connection and try again.
           </Text>
           <TouchableOpacity
             className="bg-black px-8 py-3.5 rounded-xl"

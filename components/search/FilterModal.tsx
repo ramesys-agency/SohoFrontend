@@ -23,7 +23,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const sizes = ["XS", "S", "M", "L", "XL"];
   const colors = ["#000000", "#1E88E5", "#F44336", "#FFB300", "#791F1F"];
-  const priceRanges = ["0 - 20,000", "20,000 - 40,000", "Custom"];
+  const priceRanges = ["৳0 - ৳20,000", "৳20,000 - ৳40,000", "Custom"];
   const brands = ["Gucci", "Fendi", "Adidas", "Custom"];
   const categories = ["Bags", "Shoes", "Clothes", "Custom"];
 

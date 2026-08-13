@@ -11,9 +11,8 @@ import FeaturedSection from "@/components/home/FeaturedSection";
 import HeroBanner from "@/components/home/HeroBanner";
 import SectionHeader from "@/components/home/SectionHeader";
 
-/** The home screen shows four promo sections, cycling through the four layouts. */
+/** Every promo section renders, cycling through the four layouts in order. */
 const PROMO_VARIANTS = ["large", "collage", "side", "horizontal"] as const;
-const PROMO_LIMIT = 4;
 
 /**
  * Best Sellers is curated when a HOME placement of that name exists. Until an
@@ -40,9 +39,7 @@ export default function HomeScreen() {
   // Best Sellers keeps its own product grid rather than a promo image, so it is
   // pulled out of the list before the remaining sections become promo cards.
   const bestSellers = sections.find((p) => /best\s*-?\s*sell/i.test(p.name));
-  const promos = sections
-    .filter((p) => p.id !== bestSellers?.id)
-    .slice(0, PROMO_LIMIT);
+  const promos = sections.filter((p) => p.id !== bestSellers?.id);
 
   const {
     data: bestSellerProducts,
