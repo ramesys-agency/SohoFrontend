@@ -160,14 +160,26 @@ export default function PaymentScreen() {
   );
   // The server owns this number and applies it to the order itself — showing a
   // locally hardcoded fee is how the displayed total and the amount the courier
-  // collects drift apart.
-  const { data: checkoutConfig, isLoading: isLoadingFee } = useQuery({
-    queryKey: ["checkoutConfig"],
-    queryFn: checkoutApi.getConfig,
+  // collects drift apart. It depends on where the parcel is going, so it is
+  // resolved from the address chosen on the previous step rather than the flat
+  // rate in the checkout config.
+  const {
+    data: deliveryFee,
+    isLoading: isLoadingFee,
+    isError: isFeeError,
+    refetch: refetchFee,
+  } = useQuery({
+    queryKey: ["deliveryFee", addressId],
+    queryFn: () => checkoutApi.getDeliveryFee(addressId as string),
+    enabled: !!addressId,
     staleTime: 5 * 60 * 1000,
   });
 
-  const shippingCharge = checkoutConfig?.deliveryFee ?? 0;
+  const shippingCharge = deliveryFee?.fee ?? 0;
+  // Until the fee is known the total on screen is not the total that will be
+  // charged, so ordering waits for it rather than quoting one and charging
+  // another.
+  const isFeeUnknown = !deliveryFee;
   const discountAmount = appliedCoupon?.discountAmount || 0;
   const total = Math.max(0, subtotal + shippingCharge - discountAmount);
 
@@ -426,11 +438,25 @@ export default function PaymentScreen() {
             <View className="flex-row justify-between mb-4">
               <Text className="text-gray-500 font-Urbanist-Medium">
                 Shipping Charge
+                {/* Naming the region makes the two different totals customers
+                    see across orders explainable at a glance. */}
+                {deliveryFee ? ` (${deliveryFee.label})` : ""}
               </Text>
               <Text className="text-black font-Urbanist-Bold">
-                {isLoadingFee ? "—" : `৳${shippingCharge.toLocaleString()}`}
+                {isFeeUnknown ? "—" : `৳${shippingCharge.toLocaleString()}`}
               </Text>
             </View>
+
+            {isFeeError && (
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-red-600 font-Urbanist-Medium flex-1 mr-2">
+                  Couldn&apos;t load the delivery charge for this address.
+                </Text>
+                <TouchableOpacity onPress={() => refetchFee()}>
+                  <Text className="text-black font-Urbanist-Bold">Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {appliedCoupon && (
               <View className="flex-row justify-between mb-4">
@@ -653,11 +679,11 @@ export default function PaymentScreen() {
             can never quote a total that leaves the charge out. */}
         <TouchableOpacity
           className={`bg-black rounded-2xl items-center justify-center flex-row shadow-xl ${
-            placeOrderMutation.isPending || isLoadingFee ? "opacity-70" : ""
+            placeOrderMutation.isPending || isFeeUnknown ? "opacity-70" : ""
           }`}
           style={{ paddingVertical: 18, paddingHorizontal: 16 }}
           onPress={handleReviewOrder}
-          disabled={placeOrderMutation.isPending || isLoadingFee}
+          disabled={placeOrderMutation.isPending || isFeeUnknown}
         >
           {placeOrderMutation.isPending || isLoadingFee ? (
             <ActivityIndicator color="white" className="mr-2" />
@@ -674,9 +700,11 @@ export default function PaymentScreen() {
               ? "Loading total..."
               : placeOrderMutation.isPending
                 ? "Processing..."
-                : paymentMethod === "COD"
-                  ? `Place Order • ৳${(total || 0).toLocaleString()}`
-                  : `Pay and Place Order • ৳${(total || 0).toLocaleString()}`}
+                : isFeeUnknown
+                  ? "Delivery charge unavailable"
+                  : paymentMethod === "COD"
+                    ? `Place Order • ৳${(total || 0).toLocaleString()}`
+                    : `Pay and Place Order • ৳${(total || 0).toLocaleString()}`}
           </Text>
         </TouchableOpacity>
       </View>

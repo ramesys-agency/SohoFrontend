@@ -25,10 +25,33 @@ export interface CheckoutShortage {
   available: number;
 }
 
+/** Which delivery rate an address falls under. Decided by the server. */
+export type DeliveryRegion = "INSIDE_DHAKA" | "OUTSIDE_DHAKA";
+
+/** One region and what it costs to deliver there. */
+export interface DeliveryRegionOption {
+  region: DeliveryRegion;
+  label: string;
+  fee: number;
+}
+
 /** Checkout pricing that the server, not the app, decides. */
 export interface CheckoutConfig {
-  /** Flat delivery charge added to every order, in `currency`. */
+  /**
+   * The highest regional charge. Only for screens that have no address to work
+   * from and must not quote under what the order will be charged — prefer
+   * `deliveryFees`/`deliveryRegions` wherever the region is known.
+   */
   deliveryFee: number;
+  /** The charge per region, in `currency`. */
+  deliveryFees: Record<DeliveryRegion, number>;
+  /** The same rates as a list, for pickers. */
+  deliveryRegions: DeliveryRegionOption[];
+  currency: string;
+}
+
+/** The delivery charge resolved for one saved address. */
+export interface AddressDeliveryFee extends DeliveryRegionOption {
   currency: string;
 }
 
@@ -40,6 +63,18 @@ export const checkoutApi = {
    */
   getConfig: async (): Promise<CheckoutConfig> => {
     const response = await apiClient.get(API_ROUTES.CHECKOUT.CONFIG);
+    return response.data.data;
+  },
+
+  /**
+   * The charge for delivering to one of the customer's saved addresses. The
+   * region behind it is resolved by the same code that prices the order, so the
+   * total on the payment screen is the total the courier collects.
+   */
+  getDeliveryFee: async (addressId: string): Promise<AddressDeliveryFee> => {
+    const response = await apiClient.get(API_ROUTES.CHECKOUT.DELIVERY_FEE, {
+      params: { addressId },
+    });
     return response.data.data;
   },
 

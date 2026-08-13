@@ -14,6 +14,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SubHeader from "@/components/navbar/SubHeader";
+import {
+  useDefaultAddressDeliveryFee,
+  useDeliveryRegions,
+} from "@/hooks/useDeliveryFee";
 
 export default function WardrobeScreen() {
   const router = useRouter();
@@ -92,8 +96,18 @@ export default function WardrobeScreen() {
     (sum: number, item: any) => sum + item.price * item.quantity,
     0,
   );
-  const shipping = items.length > 0 ? 150 : 0;
-  const total = subTotal + shipping;
+  // Delivery is priced by region (Dhaka district vs the rest of the country), so
+  // the cart quotes the rate for the address this customer would ship to. With
+  // no saved address there is no region to price yet, and the cheapest rate is
+  // shown as a floor rather than a total that could come out lower than it says.
+  const { deliveryFee, hasAddress } = useDefaultAddressDeliveryFee();
+  const { regions } = useDeliveryRegions();
+  const lowestFee = regions.length
+    ? Math.min(...regions.map((option) => option.fee))
+    : undefined;
+
+  const shipping = items.length > 0 ? deliveryFee?.fee : undefined;
+  const total = subTotal + (shipping ?? 0);
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -163,6 +177,17 @@ export default function WardrobeScreen() {
                 <Text className="text-gray-500 font-medium mb-1">Total</Text>
                 <Text className="text-gray-900 text-2xl font-Urbanist-Bold">
                   ৳{total.toLocaleString()}
+                </Text>
+                <Text className="text-gray-500 text-xs font-Urbanist-Medium mt-1">
+                  {shipping !== undefined
+                    ? `Incl. ৳${shipping.toLocaleString()} delivery${
+                        deliveryFee ? ` (${deliveryFee.label})` : ""
+                      }`
+                    : hasAddress
+                      ? "Delivery calculated at checkout"
+                      : lowestFee !== undefined
+                        ? `+ delivery from ৳${lowestFee.toLocaleString()}`
+                        : "+ delivery"}
                 </Text>
               </View>
 
