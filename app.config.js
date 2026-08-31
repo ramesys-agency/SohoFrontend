@@ -28,8 +28,21 @@ export default {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: "com.sohobd.shop",
-      usesCleartextTraffic: true,
       googleServicesFile: "./google-services.json",
+      // Permissions pulled in by dependencies that this app never exercises.
+      // They ship in the release manifest otherwise, and Play surfaces them on
+      // the listing — "Display over other apps" in particular reads badly on a
+      // shopping app and invites questions during review.
+      //   SYSTEM_ALERT_WINDOW — expo-dev-client's debug overlay; dead weight in release.
+      //   READ/WRITE_EXTERNAL_STORAGE — expo-image-picker's legacy (API <= 32) path.
+      //     edit-profile.tsx calls launchImageLibraryAsync straight off, with no
+      //     requestMediaLibraryPermissionsAsync, so it goes through the system
+      //     photo picker and needs neither.
+      blockedPermissions: [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+      ],
     },
     web: {
       output: "static",
