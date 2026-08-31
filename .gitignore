@@ -46,6 +46,13 @@ app-example
 # env files
 .env
 
-# OAuth Files
-google-services.json
-GoogleService-Info.plist
+# Firebase secret files
+*-firebase-adminsdk-*.json
+
+# Google Cloud / Play service account keys (e.g. eas-play-publisher).
+# These do NOT match the firebase-adminsdk pattern above — Google names them
+# <gcp-project>-<random>.json, which is indistinguishable from an ordinary
+# config file. Keep the explicit rules below in sync if a new key is added.
+soho-application-*.json
+!google-services.json
+

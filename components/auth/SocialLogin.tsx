@@ -14,15 +14,30 @@ export function SocialLogin() {
   const { login } = useAuthStore();
   const showToast = useToastStore((state) => state.showToast);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleConfigured, setIsGoogleConfigured] = useState(false);
 
   useEffect(() => {
+    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+
+    // These deliberately have no fallback. They used to default to client IDs
+    // from a different Google project, so a build where the env vars failed to
+    // resolve signed people in against the wrong project instead of failing —
+    // which only ever surfaced in release builds. Loudly broken beats quietly
+    // wrong. Both are read at *build* time, so an empty value here means they
+    // are missing from .env and from eas.json build.<profile>.env.
+    if (!webClientId || !iosClientId) {
+      console.error(
+        "Google Sign-In is not configured: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID and " +
+          "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID must both be set at build time.",
+      );
+      return;
+    }
+    setIsGoogleConfigured(true);
+
     GoogleSignin.configure({
-      webClientId:
-        process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
-        "715630615184-p2nfvaq34e0uc96ih44rvpim3j5vaopg.apps.googleusercontent.com",
-      iosClientId:
-        process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ||
-        "715630615184-tqriebjkqt7tkqqan4cs4rv2punvd1g6.apps.googleusercontent.com",
+      webClientId,
+      iosClientId,
       scopes: ["email", "profile"],
       offlineAccess: true,
     });
@@ -86,6 +101,14 @@ export function SocialLogin() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!isGoogleConfigured) {
+      showToast({
+        message: "Google sign in is unavailable in this build.",
+        type: "error",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       await GoogleSignin.hasPlayServices();

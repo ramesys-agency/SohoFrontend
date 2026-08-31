@@ -11,7 +11,7 @@ export default {
     newArchEnabled: true,
     ios: {
       supportsTablet: false,
-      bundleIdentifier: "com.sohobd.app",
+      bundleIdentifier: "com.sohobd.shop",
       googleServicesFile: "./GoogleService-Info.plist",
       // buildNumber is managed remotely by EAS (eas.json -> cli.appVersionSource)
       config: {
@@ -27,7 +27,7 @@ export default {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package: "com.sohobd.app",
+      package: "com.sohobd.shop",
       usesCleartextTraffic: true,
       googleServicesFile: "./google-services.json",
     },
@@ -117,6 +117,6 @@ export default {
         projectId: "b48b075e-995e-423c-aebb-bb92542259c9",
       },
     },
-    owner: "arshad.code",
+    owner: "soho-bd",
   },
 };
