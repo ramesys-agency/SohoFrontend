@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "669243567596-gpo0frfd1n38t6bfh1i2moogut2dla14.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sohobd.shop",
+            "certificate_hash": "ed93ad87231c9c72619c0a3c2faaf678b49a06ce"
+          }
+        },
+        {
           "client_id": "669243567596-qj74t0ic7smf7ddcsus6ar80s5cir96r.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
