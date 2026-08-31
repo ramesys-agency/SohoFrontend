@@ -54,5 +54,6 @@ app-example
 # <gcp-project>-<random>.json, which is indistinguishable from an ordinary
 # config file. Keep the explicit rules below in sync if a new key is added.
 soho-application-*.json
+google-play-service-account.json
 !google-services.json
 

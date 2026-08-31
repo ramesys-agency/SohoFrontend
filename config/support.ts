@@ -12,7 +12,7 @@
 export const SUPPORT = {
   whatsappNumber: process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP ?? "",
   phoneNumber: process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? "",
-  email: process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? "support@soho.com",
+  email: process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? "sohoadminbd@gmail.com",
   hours: "10 AM - 8 PM",
 };
 

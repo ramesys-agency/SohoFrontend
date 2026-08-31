@@ -1,51 +1,110 @@
+import { type SearchFacets } from "@/api/product.api";
 import { Feather } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+
+/**
+ * The filter sheet is built from the facets the current search returned, so it
+ * only ever offers sizes, colours and categories that lead to products. The
+ * hard-coded brand and category lists it used to show matched nothing in the
+ * catalogue and emptied the results whenever they were applied.
+ */
+
+export interface SearchFilters {
+  categoryId: string | null;
+  gender: string | null;
+  sizes: string[];
+  /** Colour names, matched against the variant's colour. */
+  colors: string[];
+  minPrice: number | null;
+  maxPrice: number | null;
+  inStockOnly: boolean;
+}
+
+export const EMPTY_FILTERS: SearchFilters = {
+  categoryId: null,
+  gender: null,
+  sizes: [],
+  colors: [],
+  minPrice: null,
+  maxPrice: null,
+  inStockOnly: false,
+};
+
+export const countActiveFilters = (filters: SearchFilters): number =>
+  (filters.categoryId ? 1 : 0) +
+  (filters.gender ? 1 : 0) +
+  filters.sizes.length +
+  filters.colors.length +
+  (filters.minPrice !== null || filters.maxPrice !== null ? 1 : 0) +
+  (filters.inStockOnly ? 1 : 0);
 
 interface FilterModalProps {
   visible: boolean;
+  /** Undefined until the first search comes back. */
+  facets?: SearchFacets;
+  filters: SearchFilters;
   onClose: () => void;
-  onApply: (filters: any) => void;
+  onApply: (filters: SearchFilters) => void;
 }
+
+const GENDER_LABELS: Record<string, string> = {
+  MEN: "Men",
+  WOMEN: "Women",
+  KIDS: "Kids",
+};
 
 const FilterModal: React.FC<FilterModalProps> = ({
   visible,
+  facets,
+  filters,
   onClose,
   onApply,
 }) => {
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(
-    null,
-  );
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  // Edited in the sheet and only handed back on Apply, so backing out of a
+  // half-made choice leaves the results alone.
+  const [draft, setDraft] = useState<SearchFilters>(filters);
+  const [minPriceText, setMinPriceText] = useState("");
+  const [maxPriceText, setMaxPriceText] = useState("");
 
-  const sizes = ["XS", "S", "M", "L", "XL"];
-  const colors = ["#000000", "#1E88E5", "#F44336", "#FFB300", "#791F1F"];
-  const priceRanges = ["৳0 - ৳20,000", "৳20,000 - ৳40,000", "Custom"];
-  const brands = ["Gucci", "Fendi", "Adidas", "Custom"];
-  const categories = ["Bags", "Shoes", "Clothes", "Custom"];
+  useEffect(() => {
+    if (!visible) return;
+    setDraft(filters);
+    setMinPriceText(filters.minPrice !== null ? String(filters.minPrice) : "");
+    setMaxPriceText(filters.maxPrice !== null ? String(filters.maxPrice) : "");
+  }, [visible, filters]);
+
+  const toggle = (list: string[], value: string): string[] =>
+    list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+
+  const parsePrice = (text: string): number | null => {
+    const value = Number(text.replace(/[^0-9.]/g, ""));
+    return text.trim() && Number.isFinite(value) ? value : null;
+  };
 
   const handleApply = () => {
     onApply({
-      size: selectedSize,
-      color: selectedColor,
-      priceRange: selectedPriceRange,
-      brand: selectedBrand,
-      category: selectedCategory,
+      ...draft,
+      minPrice: parsePrice(minPriceText),
+      maxPrice: parsePrice(maxPriceText),
     });
     onClose();
   };
 
   const handleClear = () => {
-    setSelectedSize(null);
-    setSelectedColor(null);
-    setSelectedPriceRange(null);
-    setSelectedBrand(null);
-    setSelectedCategory(null);
-    onApply(null);
+    setDraft(EMPTY_FILTERS);
+    setMinPriceText("");
+    setMaxPriceText("");
+    onApply(EMPTY_FILTERS);
   };
+
+  const priceRange = facets?.priceRange;
+  const hasAnyFacet =
+    Boolean(facets) &&
+    (facets!.categories.length > 0 ||
+      facets!.colors.length > 0 ||
+      facets!.sizes.length > 0 ||
+      facets!.genders.length > 0);
 
   const Section = ({
     title,
@@ -62,52 +121,30 @@ const FilterModal: React.FC<FilterModalProps> = ({
     </View>
   );
 
-  const FilterItem = ({
+  const Chip = ({
     label,
+    count,
     isSelected,
     onPress,
-    isCircle = false,
-    color,
   }: {
-    label?: string;
+    label: string;
+    count?: number;
     isSelected: boolean;
     onPress: () => void;
-    isCircle?: boolean;
-    color?: string;
-  }) => {
-    if (isCircle) {
-      return (
-        <TouchableOpacity
-          onPress={onPress}
-          className={`w-10 h-10 rounded-full items-center justify-center ${
-            isSelected ? "border-2 border-black" : ""
-          }`}
-          style={{ padding: 2 }}
-        >
-          <View
-            className="w-full h-full rounded-full"
-            style={{ backgroundColor: color }}
-          />
-        </TouchableOpacity>
-      );
-    }
-
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        className={`px-5 py-2.5 rounded-xl ${
-          isSelected ? "bg-black" : "bg-gray-100"
-        }`}
+  }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      className={`px-5 py-2.5 rounded-xl ${isSelected ? "bg-black" : "bg-gray-100"}`}
+    >
+      <Text
+        className={`text-base ${isSelected ? "text-white" : "text-gray-500"}`}
+        style={{ fontFamily: "Urbanist" }}
       >
-        <Text
-          className={`text-base ${isSelected ? "text-white" : "text-gray-500"}`}
-          style={{ fontFamily: "Urbanist" }}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+        {label}
+        {count !== undefined ? ` (${count})` : ""}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -139,62 +176,150 @@ const FilterModal: React.FC<FilterModalProps> = ({
           <ScrollView
             className="flex-1 px-4 pt-4"
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Section title="Sizes">
-              {sizes.map((size) => (
-                <FilterItem
-                  key={size}
-                  label={size}
-                  isSelected={selectedSize === size}
-                  onPress={() => setSelectedSize(size)}
-                />
-              ))}
-            </Section>
+            {!hasAnyFacet && (
+              <Text
+                className="text-gray-400 text-base py-6"
+                style={{ fontFamily: "Urbanist" }}
+              >
+                Nothing to filter yet — search for something first.
+              </Text>
+            )}
 
-            <Section title="Colour">
-              {colors.map((color) => (
-                <FilterItem
-                  key={color}
-                  isCircle
-                  color={color}
-                  isSelected={selectedColor === color}
-                  onPress={() => setSelectedColor(color)}
-                />
-              ))}
-            </Section>
+            {facets && facets.categories.length > 0 && (
+              <Section title="Categories">
+                {facets.categories.map((category) => (
+                  <Chip
+                    key={category.id}
+                    label={category.name}
+                    count={category.count}
+                    isSelected={draft.categoryId === category.id}
+                    onPress={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        categoryId:
+                          prev.categoryId === category.id ? null : category.id,
+                      }))
+                    }
+                  />
+                ))}
+              </Section>
+            )}
 
-            <Section title="Price range">
-              {priceRanges.map((range) => (
-                <FilterItem
-                  key={range}
-                  label={range}
-                  isSelected={selectedPriceRange === range}
-                  onPress={() => setSelectedPriceRange(range)}
-                />
-              ))}
-            </Section>
+            {facets && facets.genders.length > 1 && (
+              <Section title="Shop for">
+                {facets.genders.map(({ gender, count }) => (
+                  <Chip
+                    key={gender}
+                    label={GENDER_LABELS[gender] ?? gender}
+                    count={count}
+                    isSelected={draft.gender === gender}
+                    onPress={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        gender: prev.gender === gender ? null : gender,
+                      }))
+                    }
+                  />
+                ))}
+              </Section>
+            )}
 
-            <Section title="Brands">
-              {brands.map((brand) => (
-                <FilterItem
-                  key={brand}
-                  label={brand}
-                  isSelected={selectedBrand === brand}
-                  onPress={() => setSelectedBrand(brand)}
-                />
-              ))}
-            </Section>
+            {facets && facets.sizes.length > 0 && (
+              <Section title="Sizes">
+                {facets.sizes.map(({ size, count }) => (
+                  <Chip
+                    key={size}
+                    label={size}
+                    count={count}
+                    isSelected={draft.sizes.includes(size)}
+                    onPress={() =>
+                      setDraft((prev) => ({ ...prev, sizes: toggle(prev.sizes, size) }))
+                    }
+                  />
+                ))}
+              </Section>
+            )}
 
-            <Section title="Categories">
-              {categories.map((cat) => (
-                <FilterItem
-                  key={cat}
-                  label={cat}
-                  isSelected={selectedCategory === cat}
-                  onPress={() => setSelectedCategory(cat)}
+            {facets && facets.colors.length > 0 && (
+              <Section title="Colour">
+                {facets.colors.map(({ colorName, colorValue }) => {
+                  const isSelected = draft.colors.includes(colorName);
+                  return (
+                    <TouchableOpacity
+                      key={`${colorName}-${colorValue}`}
+                      onPress={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          colors: toggle(prev.colors, colorName),
+                        }))
+                      }
+                      className="items-center w-16"
+                    >
+                      <View
+                        className={`w-10 h-10 rounded-full items-center justify-center ${
+                          isSelected ? "border-2 border-black" : ""
+                        }`}
+                        style={{ padding: 2 }}
+                      >
+                        <View
+                          className="w-full h-full rounded-full border border-gray-200"
+                          style={{ backgroundColor: colorValue }}
+                        />
+                      </View>
+                      <Text
+                        numberOfLines={1}
+                        className="text-[11px] text-gray-500 mt-1"
+                        style={{ fontFamily: "Urbanist" }}
+                      >
+                        {colorName}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </Section>
+            )}
+
+            {priceRange && (
+              <Section title="Price range">
+                <View className="flex-row items-center gap-x-3 w-full">
+                  <TextInput
+                    className="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-base"
+                    placeholder={`৳${priceRange.min}`}
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={minPriceText}
+                    onChangeText={setMinPriceText}
+                    style={{ fontFamily: "Urbanist" }}
+                  />
+                  <Text className="text-gray-400" style={{ fontFamily: "Urbanist" }}>
+                    to
+                  </Text>
+                  <TextInput
+                    className="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-base"
+                    placeholder={`৳${priceRange.max}`}
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={maxPriceText}
+                    onChangeText={setMaxPriceText}
+                    style={{ fontFamily: "Urbanist" }}
+                  />
+                </View>
+              </Section>
+            )}
+
+            {hasAnyFacet && (
+              <Section title="Availability">
+                <Chip
+                  label="In stock only"
+                  isSelected={draft.inStockOnly}
+                  onPress={() =>
+                    setDraft((prev) => ({ ...prev, inStockOnly: !prev.inStockOnly }))
+                  }
                 />
-              ))}
-            </Section>
+              </Section>
+            )}
 
             <View className="flex flex-row justify-evenly mt-8 mb-10 gap-x-4">
               <TouchableOpacity
